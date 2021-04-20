@@ -230,18 +230,16 @@ PJ_BEGIN_DECL
 
 
 /**
- * High level traffic classification.
+ * 流量分类
  */
 typedef enum pj_qos_type
 {
-    PJ_QOS_TYPE_BEST_EFFORT,	/**< Best effort traffic (default value).
-				     Any QoS function calls with specifying
-				     this value are effectively no-op	*/
-    PJ_QOS_TYPE_BACKGROUND,	/**< Background traffic.		*/    
-    PJ_QOS_TYPE_VIDEO,		/**< Video traffic.			*/
-    PJ_QOS_TYPE_VOICE,		/**< Voice traffic.			*/
-    PJ_QOS_TYPE_CONTROL,	/**< Control traffic.			*/
-    PJ_QOS_TYPE_SIGNALLING	/**< Signalling traffic.		*/
+    PJ_QOS_TYPE_BEST_EFFORT,	/**< 尽力而为 */
+    PJ_QOS_TYPE_BACKGROUND,	/**< 背景	*/
+    PJ_QOS_TYPE_VIDEO,		/**< 视频		*/
+    PJ_QOS_TYPE_VOICE,		/**< 语音		*/
+    PJ_QOS_TYPE_CONTROL,	/**< 控制		*/
+    PJ_QOS_TYPE_SIGNALLING	/**< 信号	*/
 } pj_qos_type;
 
 /**
