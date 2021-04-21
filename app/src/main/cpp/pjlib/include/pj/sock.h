@@ -22,7 +22,7 @@
 
 /**
  * @file sock.h
- * @brief Socket Abstraction.
+ * @brief Socket 抽象
  */
 
 #include <pj/types.h>
@@ -31,61 +31,60 @@ PJ_BEGIN_DECL
 
 
 /**
- * @defgroup PJ_SOCK Socket Abstraction
+ * @defgroup PJ_SOCK Socket 抽象
  * @ingroup PJ_IO
  * @{
  *
- * The PJLIB socket abstraction layer is a thin and very portable abstraction
- * for socket API. It provides API similar to BSD socket API. The abstraction
- * is needed because BSD socket API is not always available on all platforms,
- * therefore it wouldn't be possible to create a trully portable network
- * programs unless we provide such abstraction.
+ * PJLIB socket抽象层是 socketapi 的一个精简的、非常可移植的抽象层。它提供了类似于BSD套接字API的API。
+ * 这种抽象是必要的，因为BSD套接字API并非总是在所有平台上都可用，因此除非我们提供这种抽象，否则不可能创
+ * 建真正可移植的网络程序。
  *
- * Applications can use this API directly in their application, just
- * as they would when using traditional BSD socket API, provided they
- * call #pj_init() first.
+ * 应用程序可以在其应用程序中直接使用此API，就像使用传统的BSD套接字API一样，前提是它们首先调用 pj_init()。
  *
- * \section pj_sock_examples_sec Examples
+ * \section 例子
  *
- * For some examples on how to use the socket API, please see:
+ * 有关如何使用socket API的一些示例，请参见：
  *
  *  - \ref page_pjlib_sock_test
  *  - \ref page_pjlib_select_test
- *  - \ref page_pjlib_sock_perf_test
+ *  - \ref page_pjlib_sock_perf_test		perf  性能
  */
 
 
 /**
- * Supported address families. 
- * APPLICATION MUST USE THESE VALUES INSTEAD OF NORMAL AF_*, BECAUSE
- * THE LIBRARY WILL DO TRANSLATION TO THE NATIVE VALUE.
+ * 支持的协议族：
+ *	应用须使用以下值，来取代 AF_*，库会将这些值转换为原生值（AF_*）
  */
 
-/** Address family is unspecified. @see pj_AF_UNSPEC() */
+/** 未指定协议族. */
 extern const pj_uint16_t PJ_AF_UNSPEC;
 
-/** Unix domain socket.	@see pj_AF_UNIX() */
+/**
+ * Unix 域 socket
+ * unix本机进程间通信
+ * */
 extern const pj_uint16_t PJ_AF_UNIX;
 
 /** POSIX name for AF_UNIX	*/
 #define PJ_AF_LOCAL	 PJ_AF_UNIX;
 
-/** Internet IP protocol. @see pj_AF_INET() */
+/**IPv4
+ * @see pj_AF_INET() */
 extern const pj_uint16_t PJ_AF_INET;
 
-/** IP version 6. @see pj_AF_INET6() */
+/**IPv6
+ * @see pj_AF_INET6() */
 extern const pj_uint16_t PJ_AF_INET6;
 
-/** Packet family. @see pj_AF_PACKET() */
+/**Packet family.
+ * @see pj_AF_PACKET() */
 extern const pj_uint16_t PJ_AF_PACKET;
 
 /** IRDA sockets. @see pj_AF_IRDA() */
 extern const pj_uint16_t PJ_AF_IRDA;
 
 /*
- * Accessor functions for various address family constants. These
- * functions are provided because Symbian doesn't allow exporting
- * global variables from a DLL.
+ * 各种地址族常量的访问器函数。提供这些函数是因为Symbian不允许从DLL导出全局变量。
  */
 
 #if defined(PJ_DLL)
@@ -102,8 +101,8 @@ extern const pj_uint16_t PJ_AF_IRDA;
     /** Get #PJ_AF_IRDA value. */
     PJ_DECL(pj_uint16_t) pj_AF_IRDA(void);
 #else
-    /* When pjlib is not built as DLL, these accessor functions are
-     * simply a macro to get their constants
+    /**
+     * 当pjlib不是作为DLL构建的时候，这些访问器函数只是一个宏来获取它们的常量
      */
     /** Get #PJ_AF_UNSPEC value */
 #   define pj_AF_UNSPEC()   PJ_AF_UNSPEC
@@ -121,20 +120,20 @@ extern const pj_uint16_t PJ_AF_IRDA;
 
 
 /**
- * Supported types of sockets.
- * APPLICATION MUST USE THESE VALUES INSTEAD OF NORMAL SOCK_*, BECAUSE
- * THE LIBRARY WILL TRANSLATE THE VALUE TO THE NATIVE VALUE.
+ * 支持的Sokcet类型
+ * 	应用必须使用这些值来代替常规的 SOCK_*
  */
 
-/** Sequenced, reliable, connection-based byte streams.
+/** TCP
  *  @see pj_SOCK_STREAM() */
 extern const pj_uint16_t PJ_SOCK_STREAM;
 
-/** Connectionless, unreliable datagrams of fixed maximum lengths.
+/** UDP
  *  @see pj_SOCK_DGRAM() */
 extern const pj_uint16_t PJ_SOCK_DGRAM;
 
-/** Raw protocol interface. @see pj_SOCK_RAW() */
+/** Raw
+ *  @see pj_SOCK_RAW() */
 extern const pj_uint16_t PJ_SOCK_RAW;
 
 /** Reliably-delivered messages.  @see pj_SOCK_RDM() */

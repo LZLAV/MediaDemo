@@ -1,21 +1,5 @@
-/* $Id: sock_qos.h 5445 2016-10-05 09:52:39Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已看完
  */
 #ifndef __PJ_SOCK_QOS_H__
 #define __PJ_SOCK_QOS_H__
@@ -31,151 +15,124 @@ PJ_BEGIN_DECL
 
 
 /**
- * @defgroup socket_qos Socket Quality of Service (QoS) API: TOS, DSCP, WMM, IEEE 802.1p
+ * @defgroup socket_qos Socket 服务质量(QoS) API: TOS, DSCP, WMM, IEEE 802.1p
  * @ingroup PJ_SOCK
  * @{
 
 
-    \section intro QoS Technologies
+    \section Qos技术简介
 
-    QoS settings are available for both Layer 2 and 3 of TCP/IP protocols:
+    QoS设置可用于TCP/IP协议的第2层和第3层：
 
-    \subsection intro_ieee8021p Layer 2: IEEE 802.1p for Ethernet
+    \subsection 简介IEEE802.1p第2层：用于以太网的 IEEE802.1p
 
-    IEEE 802.1p tagging will mark frames sent by a host for prioritized 
-    delivery using a 3-bit Priority field in the virtual local area network 
-    (VLAN) header of the Ethernet frame. The VLAN header is placed inside 
-    the Ethernet header, between the Source Address field and either the 
-    Length field (for an IEEE 802.3 frame) or the EtherType field (for an
-    Ethernet II frame).
+    ieee802.1p标记将使用以太网帧的虚拟局域网（VLAN）报头中的3位优先级字段标记主机发送的帧以进行优先级传递。
+    VLAN 报头位于以太网报头内部，位于源地址字段和长度字段（对于IEEE 802.3帧）或以太网类型字段（对于Ethernet II帧）之间。
 
-    \subsection intro_wmm Layer 2: WMM
+    \subsection 简介WMM层 2: WMM （Wi-Fi 多媒体联盟）
 
-    At the Network Interface layer for IEEE 802.11 wireless, the Wi-Fi 
-    Alliance certification for Wi-Fi Multimedia (WMM) defines four access 
-    categories for prioritizing network traffic. These access categories 
-    are (in order of highest to lowest priority) voice, video, best-effort, 
-    and background. Host support for WMM prioritization requires that both 
-    wireless network adapters and their drivers support WMM. Wireless 
-    access points (APs) must have WMM enabled.
+    在ieee802.11无线网络接口层，Wi-Fi多媒体联盟认证（Wi-Fi Alliance certification for Wi-Fi Multimedia，WMM）
+    定义了四种用于优先处理网络流量的访问类别。这些访问类别是（按优先级从高到低的顺序）语音、视频、尽力而为和背景。主机对WMM
+    优先级的支持要求无线网络适配器及其驱动程序都支持WMM。无线接入点（AP）必须启用WMM。
 
-    \subsection intro_dscp Layer 3: DSCP
+    \subsection 简介dscp 3 层: DSCP
 
-    At the Internet layer, you can use Differentiated Services/Diffserv and
-    set the value of the Differentiated Services Code Point (DSCP) in the 
-    IP header. As defined in RFC 2474, the DSCP value is the high-order 6 bits
-    of the IP version 4 (IPv4) TOS field and the IP version 6 (IPv6) Traffic 
-    Class field.
+    在 Internet层，您可以使用区分Qos并在IP报头中设置differential Services代码点（DSCP）的值。
+    如RFC 2474中所定义，DSCP值是IPv4 TOS字段和IPv6 Traffic Class字段的高位6位。
 
-    \subsection intro_other Layer 3: Other
+    \subsection 简介其他 3层: 其他
 
-    Other mechanisms exist (such as RSVP, IntServ) but this will not be 
-    implemented.
+    存在其他机制（如RSVP、IntServ），但不会实现
 
 
-    \section availability QoS Availability
+    \section Qos 可用性
 
-    \subsection linux Linux
+    \subsection Linux
 
-    DSCP is available via IP TOS option.
+    DSCP通过IP TOS选项提供
 
-    Ethernet 802.1p tagging is done by setting setsockopt(SO_PRIORITY) option 
-    of the socket, then with the set_egress_map option of the vconfig utility 
-    to convert this to set vlan-qos field of the packet.
+ 	以太网 802.1p 标记是通过设置套接字的 setsockopt（SO_PRIORITY）选项来完成的，
+ 	然后使用vconfig 程序的set_egress_map 选项将其转换为数据包中设置 vlan_qos字段。
 
-    WMM is not known to be available.
+    尚不清楚 WMM 是否可用
 
-    \subsection windows Windows and Windows Mobile
+    \subsection Windows and Windows Mobile
 
     (It's a mess!)
 
-    DSCP is settable with setsockopt() on Windows 2000 or older, but Windows 
-    would silently ignore this call on WinXP or later, unless administrator 
-    modifies the registry. On Windows 2000, Windows XP, and Windows Server 
-    2003, GQoS (Generic QoS) API is the standard API, but this API may not be
-    supported in the future. On Vista and Windows 7, the is a new QoS2 API, 
-    also known as Quality Windows Audio-Video Experience (qWAVE).
+    在Windows 2000或更旧版本上，可以使用setsockopt（）设置DSCP，但在WinXP或更高版本上，
+    Windows将自动忽略此调用，除非管理员修改注册表。在Windows 2000、Windows XP和Windows Server 2003上，
+    GQoS（通用QoS）API是标准API，但将来可能不支持此API。在Vista和windows7上，是一个新的qos2api，
+    也称为优质Windows音频视频体验（qWAVE）。
 
-    IEEE 802.1p tagging is available via Traffic Control (TC) API, available
-    on Windows XP SP2, but this needs administrator access. For Vista and 
-    later, it's in qWAVE.
+ 	IEEE 802.1p 标记可通过在Windows XP SP2上提供的流量控制（TC）API获得，但这需要管理员访问。
+ 	对于 Vista 和更高版本，它在qWAVE中。
 
-    WMM is available for mobile platforms on Windows Mobile 6 platform and 
-    Windows Embedded CE 6, via setsockopt(IP_DSCP_TRAFFIC_TYPE). qWAVE 
-    supports this as well.
+ 	WMM通过 setsockopt(IP_DSCP_TRAFFIC_TYPE) 可用于Windows mobile 6平台和Windows Embedded CE 6上的移动平台。
+ 	qWAVE也支持这一点。
 
     \subsection symbian Symbian S60 3rd Ed
 
-    Both DSCP and WMM is supported via RSocket::SetOpt() with will set both 
-    Layer 2 and Layer 3 QoS settings accordingly. Internally, PJLIB sets the
-    DSCP field of the socket, and based on certain DSCP values mapping,
-    Symbian will set the WMM tag accordingly.
 
-    \section api PJLIB's QoS API Abstraction
+	DSCP和WMM都通过 RSocket::SetOpt() 支持，它将相应地设置第 2 层和第 3 层的QoS设置。
+ 	在内部，PJLIB设置套接字的 DSCP字段，并且基于某些 DSCP值映射，Symbian将相应地设置 WMM标记。
 
-    Based on the above, the following API is implemented.
+    \section PJLIB的 QoS api抽象
 
-    Declare the following "standard" traffic types.
-
+    在此基础上，实现了以下API。声明以下“标准”流量类型。
     \code
      typedef enum pj_qos_type
      {
-	PJ_QOS_TYPE_BEST_EFFORT,
-	PJ_QOS_TYPE_BACKGROUND,	
-	PJ_QOS_TYPE_VIDEO,
-	PJ_QOS_TYPE_VOICE,
-	PJ_QOS_TYPE_CONTROL,
-	PJ_QOS_TYPE_SIGNALLING
+	PJ_QOS_TYPE_BEST_EFFORT,		尽力而为
+	PJ_QOS_TYPE_BACKGROUND,			背景
+	PJ_QOS_TYPE_VIDEO,				视频
+	PJ_QOS_TYPE_VOICE,				语音
+	PJ_QOS_TYPE_CONTROL,			控制
+	PJ_QOS_TYPE_SIGNALLING			信号
      } pj_qos_type;
     \endcode
 
-    The traffic classes above will determine how the Layer 2 and 3 QoS 
-    settings will be used. The standard mapping between the classes above 
-    to the corresponding Layer 2 and 3 settings are as follows:
+    上面的流量类别将决定如何使用第2层和第3层的QoS设置。上述类别与相应的第2层和第3层设置之间的标准映射如下：
 
     \code
     =================================================================
-    PJLIB Traffic Type 	IP DSCP 	WMM 		    802.1p
+    PJLIB流量类型 		IP DSCP 		WMM 		   802.1p
     -----------------------------------------------------------------
-    BEST_EFFORT 	0x00 		BE (Bulk Effort) 	0
-    BACKGROUND 		0x08 		BK (Bulk) 		2
-    VIDEO 		0x28 		VI (Video) 		5
-    VOICE 		0x30 		VO (Voice) 		6
-    CONTROL 		0x38 		VO (Voice) 		7
-    SIGNALLING 		0x28 		VI (Video) 		5
+    BEST_EFFORT 		0x00 		BE (Bulk Effort) 	0
+    BACKGROUND 			0x08 		BK (Bulk) 			2
+    VIDEO 				0x28 		VI (Video) 			5
+    VOICE 				0x30 		VO (Voice) 			6
+    CONTROL 			0x38 		VO (Voice) 			7
+    SIGNALLING 			0x28 		VI (Video) 			5
     =================================================================
     \endcode
 
-    There are two sets of API provided to manipulate the QoS parameters.
+ 	提供了两组API来操作QoS参数。
 
-    \subsection portable_api Portable API
+    \subsection 可移植API
 
-    The first set of API is:
+    第一套API:
 
     \code
-     // Set QoS parameters
+     // 设置 QoS 参数
      PJ_DECL(pj_status_t) pj_sock_set_qos_type(pj_sock_t sock,
 					       pj_qos_type val);
 
-     // Get QoS parameters
+     // 获取 QoS 参数
      PJ_DECL(pj_status_t) pj_sock_get_qos_type(pj_sock_t sock,
 					       pj_qos_type *p_val);
     \endcode
 
-    The API will set the traffic type according to the DSCP class, for both 
-    Layer 2 and Layer 3 QoS settings, where it's available. If any of the 
-    layer QoS setting is not settable, the API will silently ignore it. 
-    If both layers are not setable, the API will return error.
+ 	API将根据 DSCP类为第2层和第3层 QoS设置（如果可用）设置流量类型。如果任何一个层 QoS设置不可设置，
+ 	API将自动忽略它。如果两个层都不可设置，API将返回错误。
 
-    The API above is the recommended use of QoS, since it is the most 
-    portable across all platforms.
+ 	上面的API是推荐使用的QoS，因为它在所有平台上都是最可移植的
 
-    \subsection detail_api Fine Grained Control API
+    \subsection 详细API
 
-    The second set of API is intended for application that wants to fine 
-    tune the QoS parameters.
+ 	第二组API用于希望微调QoS参数的应用程序
 
-    The Layer 2 and 3 QoS parameters are stored in pj_qos_params structure:
+ 	第 2 层和第 3 层QoS参数存储在 pj_qos_params 结构中：
 
     \code
      typedef enum pj_qos_flag
@@ -195,67 +152,62 @@ PJ_BEGIN_DECL
 
      typedef struct pj_qos_params
      {
-	pj_uint8_t      flags;    // Determines which values to 
-				  // set, bitmask of pj_qos_flag
-	pj_uint8_t      dscp_val; // The 6 bits DSCP value to set
-	pj_uint8_t      so_prio;  // SO_PRIORITY value
-	pj_qos_wmm_prio wmm_prio; // WMM priority value
+	pj_uint8_t      flags;    // 确定要设置的值，pj_qos_flag 位
+	pj_uint8_t      dscp_val; // 设置 6位 DSCP值
+	pj_uint8_t      so_prio;  // SO_PRIORITY 值
+	pj_qos_wmm_prio wmm_prio; // WMM priority 值
      } pj_qos_params;
     \endcode
 
-    The second set of API with more fine-grained control over the parameters 
-    are:
+    第二组API对参数进行更详细的设置，包括：
 
     \code
-     // Retrieve QoS params for the specified traffic type
+     // 检索指定流量类型的QoS参数
      PJ_DECL(pj_status_t) pj_qos_get_params(pj_qos_type type, 
 					    pj_qos_params *p);
 
-     // Set QoS parameters to the socket
+     // 设置Socket 的 Qos 参数
      PJ_DECL(pj_status_t) pj_sock_set_qos_params(pj_sock_t sock,
 						 const pj_qos_params *p);
 
-     // Get QoS parameters from the socket
+     // 从Socket 获取 Qos 参数
      PJ_DECL(pj_status_t) pj_sock_get_qos_params(pj_sock_t sock,
 						 pj_qos_params *p);
     \endcode
 
 
-    Important:
-
-    The pj_sock_set/get_qos_params() APIs are not portable, and it's probably 
-    only going to be implemented on Linux. Application should always try to 
-    use pj_sock_set_qos_type() instead.
+    重要:
+		pj_sock_set/get_qos_params() API是不可移植的，它可能只能在Linux上实现。
+		应用程序应始终尝试 pj_sock_set_qos_type() 。
  */
 
 
 /**
- * ��������
+ * 流量分类
  */
 typedef enum pj_qos_type
 {
-    PJ_QOS_TYPE_BEST_EFFORT,	/**< ������Ϊ */
-    PJ_QOS_TYPE_BACKGROUND,	/**< ����	*/
-    PJ_QOS_TYPE_VIDEO,		/**< ��Ƶ		*/
-    PJ_QOS_TYPE_VOICE,		/**< ����		*/
-    PJ_QOS_TYPE_CONTROL,	/**< ����		*/
-    PJ_QOS_TYPE_SIGNALLING	/**< �ź�	*/
+    PJ_QOS_TYPE_BEST_EFFORT,	/**< 尽力而为 */
+    PJ_QOS_TYPE_BACKGROUND,	/**< 背景	*/
+    PJ_QOS_TYPE_VIDEO,		/**< 视频		*/
+    PJ_QOS_TYPE_VOICE,		/**< 语音		*/
+    PJ_QOS_TYPE_CONTROL,	/**< 控制		*/
+    PJ_QOS_TYPE_SIGNALLING	/**< 信号	*/
 } pj_qos_type;
 
 /**
- * Bitmask flag to indicate which QoS layer setting is set in the 
- * \a flags field of the #pj_qos_params structure. 
+ * pj_qos_params 中字段 flags 的Qos参数设置值
  */
 typedef enum pj_qos_flag
 {
-    PJ_QOS_PARAM_HAS_DSCP = 1,	    /**< DSCP field is set.	    */
-    PJ_QOS_PARAM_HAS_SO_PRIO = 2,   /**< Socket SO_PRIORITY	    */
-    PJ_QOS_PARAM_HAS_WMM = 4	    /**< WMM  field is set. 	    */
+    PJ_QOS_PARAM_HAS_DSCP = 1,	    /**< 设置支持 DSCP 参数    */
+    PJ_QOS_PARAM_HAS_SO_PRIO = 2,   /**< 设置支持优先级 Socket SO_PRIORITY 	    */
+    PJ_QOS_PARAM_HAS_WMM = 4	    /**< 设置支持Wi-Fi 	    */
 } pj_qos_flag;
 
 
 /**
- * Standard WMM priorities.
+ * 标准的 Wi-Fi 优先级
  */
 typedef enum pj_qos_wmm_prio
 {
@@ -267,70 +219,52 @@ typedef enum pj_qos_wmm_prio
 
 
 /**
- * QoS parameters to be set or retrieved to/from the socket.
+ * QoS 参数（Socket中）
  */
 typedef struct pj_qos_params
 {
-    pj_uint8_t      flags;    /**< Determines which values to 
-				   set, bitmask of pj_qos_flag	    */
-    pj_uint8_t      dscp_val; /**< The 6 bits DSCP value to set	    */
-    pj_uint8_t      so_prio;  /**< SO_PRIORITY value		    */
-    pj_qos_wmm_prio wmm_prio; /**< WMM priority value		    */
+    pj_uint8_t      flags;    /** 确定支持的类别 */
+    pj_uint8_t      dscp_val; /**< DSCP 设置的 6位 */
+    pj_uint8_t      so_prio;  /**< SO_PRIORITY 值 */
+    pj_qos_wmm_prio wmm_prio; /**< WMM 优先级  */
 } pj_qos_params;
 
 
 
 /**
- * This is the high level and portable API to enable QoS on the specified 
- * socket, by setting the traffic type to the specified parameter.
+ * 设置 socket qos type
  *
  * @param sock	    The socket.
- * @param type	    Traffic type to be set.
+ * @param type	    流量控制类别
  *
- * @return	    PJ_SUCCESS if at least Layer 2 or Layer 3 setting is
- *		    successfully set. If both Layer 2 and Layer 3 settings
- *		    can't be set, this function will return error.
+ * @return	    PJ_SUCCESS 第2层或第3层设置成功，则返回 PJ_SUCCESS;否则返回 PJ_FALSE
  */
 PJ_DECL(pj_status_t) pj_sock_set_qos_type(pj_sock_t sock,
 					  pj_qos_type type);
 
 /**
- * This is the high level and portable API to get the traffic type that has
- * been set on the socket. On occasions where the Layer 2 or Layer 3 settings
- * were modified by using low level API, this function may return approximation
- * of the closest QoS type that matches the settings.
+ * 在使用低级API修改第2层 或第3层设置的情况下，此函数可能返回与设置匹配的最近QoS类型的近似值。
  *
  * @param sock	    The socket.
  * @param p_type    Pointer to receive the traffic type of the socket.
  *
- * @return	    PJ_SUCCESS if traffic type for the socket can be obtained
- *		    or approximated..
+ * @return	    PJ_SUCCESS 可从socket 获取流量类型或者近似的类型则返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pj_sock_get_qos_type(pj_sock_t sock,
 					  pj_qos_type *p_type);
 
 
 /**
- * This is a convenience function to apply QoS to the socket, and print error
- * logging if the operations failed. Both QoS traffic type and the low level
- * QoS parameters can be applied with this function.
+ * 用于将QoS应用于套接字
  *
- * @param sock		The socket handle.
- * @param qos_type	QoS traffic type. The QoS traffic type will be applied
- *			only if the value is not PJ_QOS_TYPE_BEST_EFFORT,
- * @param qos_params	Optional low-level QoS parameters. This will be 
- *			applied only if this argument is not NULL and the 
- *			flags inside the structure is non-zero. Upon return, 
- *			the flags will indicate which parameters have been 
- *			applied successfully.
- * @param log_level	This function will print to log at this level upon
- *			encountering errors.
- * @param log_sender	Optional sender name in the log.
- * @param sock_name	Optional name to help identify the socket in the log.
+ * @param sock		socket句柄
+ * @param qos_type	QoS traffic type. 不是 PJ_QOS_TYPE_BEST_EFFORT 则会应用
+ * @param qos_params	可选的低级QoS参数。仅当此参数不为 NULL且结构中的标志不为零时，才会应用此选项。返回时，标志将指示哪些参数已成功应用。
+ * @param log_level	日志级别
+ * @param log_sender 日志tag
+ * @param sock_name	标识 socket 的名称
  *
- * @return		PJ_SUCCESS if at least Layer 2 or Layer 3 setting is
- *			successfully set. If both Layer 2 and Layer 3 settings
- *			can't be set, this function will return error.
+ * @return		PJ_SUCCESS 如果至少第2层或第3层设置成功。如果第2层和第3层设置都无法设置，此函数将返回错误。
  *
  * @see pj_sock_apply_qos2()
  */
@@ -342,8 +276,7 @@ PJ_DECL(pj_status_t) pj_sock_apply_qos(pj_sock_t sock,
 				       const char *sock_name);
 
 /**
- * Variant of #pj_sock_apply_qos() where the \a qos_params parameter is
- * const.
+ * pj_sock_apply_qos() 的重载,qos_params --> const qos_params
  *
  * @see pj_sock_apply_qos()
  */
@@ -355,63 +288,46 @@ PJ_DECL(pj_status_t) pj_sock_apply_qos2(pj_sock_t sock,
 				        const char *sock_name);
 
 /**
- * Retrieve the standard mapping of QoS params for the specified traffic
- * type.
+ * 检索指定流量类型的 QoS参数的标准映射
  *
- * @param type	    The traffic type from which the QoS parameters
- *		    are to be retrieved.
- * @param p_param   Pointer to receive the QoS parameters.
+ * @param type	    流量类型
+ * @param p_param   检索Qos参数的指针
  *
- * @return	    PJ_SUCCESS on success or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS 或者返回相应错误码
  */ 
 PJ_DECL(pj_status_t) pj_qos_get_params(pj_qos_type type, 
 				       pj_qos_params *p_param);
 
 
 /**
- * Retrieve the traffic type that matches the specified QoS parameters.
- * If no exact matching is found, this function will return an
- * approximation of the closest matching traffic type for the specified
- * QoS parameters.
+ * 检索与指定QoS参数匹配的通信量类型。如果找不到精确匹配，则此函数将返回指定QoS参数的最近匹配流量类型的近似值
  *
- * @param param	    Structure containing QoS parameters to map into
- *		    "standard" traffic types.
- * @param p_type    Pointer to receive the traffic type.
+ * @param param	    包含要映射到“标准”流量类型的QoS参数的结构
+ * @param p_type    接收通信量类型的指针
  *
- * @return	    PJ_SUCCESS on success or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS 或者返回相应错误码
  */ 
 PJ_DECL(pj_status_t) pj_qos_get_type(const pj_qos_params *param,
 				     pj_qos_type *p_type);
 
 
 /**
- * This is a low level API to set QoS parameters to the socket.
+ * 这是一个低级别API，用于设置Socket的 Qos参数
  *
- * @param sock	    The socket.
- * @param param	    Structure containing QoS parameters to be applied
- *		    to the socket. Upon return, the \a flags field
- *		    of this structure will be set with bitmask value
- *		    indicating which QoS settings have successfully
- *		    been applied to the socket.
- *
- * @return	    PJ_SUCCESS if at least one field setting has been
- *		    successfully set. If no setting can't be set, 
- *		    this function will return error.
+ * @param sock	    Socket句柄
+ * @param param	    用于Socket的QoS参数。返回时，此结构的标志字段将设置位掩码值，该值指示哪些QoS设置已成功应用于套接字。
+ * @return	    PJ_SUCCESS 至少设置成功一个字段，则返回 PJ_SUCCESS;否则返回错误
  */ 
 PJ_DECL(pj_status_t) pj_sock_set_qos_params(pj_sock_t sock,
 					    pj_qos_params *param);
 
 /**
- * This is a low level API to get QoS parameters from the socket.
+ * 低级api，从Socket获取QoS参数
  *
- * @param sock	    The socket.
- * @param p_param   Pointer to receive the parameters. Upon returning
- *		    successfully, the \a flags field of this structure
- *		    will be initialized with the appropriate bitmask
- *		    to indicate which fields have been successfully
- *		    retrieved.
+ * @param sock	    socket句柄
+ * @param p_param   接收参数的指针。成功返回后，将使用适当的位掩码初始化此结构的flags字段，以指示已成功检索到哪些字段。
  *
- * @return	    PJ_SUCCESS on success or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS 或者返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_sock_get_qos_params(pj_sock_t sock,
 					    pj_qos_params *p_param);

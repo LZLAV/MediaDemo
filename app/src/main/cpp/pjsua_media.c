@@ -31,17 +31,17 @@
 #endif
 
 /**
- * ³õÊ¼»¯Ã½Ìå×ÓÏµÍ³
+ * åˆå§‹åŒ–åª’ä½“å­ç³»ç»Ÿ
  */
 pj_status_t pjsua_media_subsys_init(const media_cofg *cfg) {
     pj_status_t status;
     pj_log_push_indent();
     /**
      * Create media endpoint.
-     * 1. ´´½¨ pjmedia_endpt ÊµÀı endpt
-     * 2. ³õÊ¼»¯ codec manager endpt->codec
-     * 3. ³õÊ¼»¯ ioqueue ÊµÀı endpt->ioqueue
-     * 4. ´´½¨¹¤×÷Ïß³Ìpj_ioqueue_poll(endpt->ioqueue) »ñÈ¡¶ÓÁĞÖĞµÄÊÂ¼ş
+     * 1. åˆ›å»º pjmedia_endpt å®ä¾‹ endpt
+     * 2. åˆå§‹åŒ– codec manager endpt->codec
+     * 3. åˆå§‹åŒ– ioqueue å®ä¾‹ endpt->ioqueue
+     * 4. åˆ›å»ºå·¥ä½œçº¿ç¨‹pj_ioqueue_poll(endpt->ioqueue) è·å–é˜Ÿåˆ—ä¸­çš„äº‹ä»¶
      * */
 //    status = pjmedia_endpt_create(&pjsua_var.cp.factory,
 //                                  pjsua_var.media_cfg.has_ioqueue ? NULL :
@@ -54,7 +54,7 @@ pj_status_t pjsua_media_subsys_init(const media_cofg *cfg) {
         goto on_error;
 
 #if defined(PJMEDIA_HAS_SRTP) && (PJMEDIA_HAS_SRTP != 0)
-    /* ³õÊ¼»¯ SRTP ¿â */
+    /* åˆå§‹åŒ– SRTP åº“ */
     status = pjmedia_srtp_init_lib(pjsua_var.med_endpt);
     if (status != PJ_SUCCESS) {
     pjsua_perror(THIS_FILE, "Error initializing SRTP library",
@@ -144,7 +144,7 @@ pj_status_t pjsua_media_subsys_destroy(unsigned flags) {
     PJ_LOG(4, (THIS_FILE, "Shutting down media.."));
     pj_log_push_indent();
     /**
-     * Í£Ö¹¹¤×÷Ïß³Ì£¬join()¡¢destroy()
+     * åœæ­¢å·¥ä½œçº¿ç¨‹ï¼Œjoin()ã€destroy()
      */
 //  pjmedia_endpt_stop_threads(pjsua_var.med_endpt);
 
@@ -152,7 +152,7 @@ pj_status_t pjsua_media_subsys_destroy(unsigned flags) {
 
 #if 0
     // This part has been moved out to pjsua_destroy() (see also #1717).
-    /* ¹Ø±ÕÃ½ÌåµÄ´«Êä */
+    /* å…³é—­åª’ä½“çš„ä¼ è¾“ */
     for (i=0; i<pjsua_var.ua_cfg.max_calls; ++i) {
         /* TODO: check if we're not allowed to send to network in the
          *       "flags", and if so do not do TURN allocation...
@@ -177,14 +177,14 @@ pj_status_t pjsua_media_subsys_destroy(unsigned flags) {
 }
 
 /**
- * ´´½¨ RTP ºÍ RTCP socket¶Ô£¬Ò²¿ÉÄÜÍ¨¹ı STUN ½â¾ö¹«¹²µØÖ·
+ * åˆ›å»º RTP å’Œ RTCP socketå¯¹ï¼Œä¹Ÿå¯èƒ½é€šè¿‡ STUN è§£å†³å…¬å…±åœ°å€
  */
 static pj_status_t create_rtp_rtcp_sock(pjmedia_sock_info *skinfo) {
     enum {
         RTP_RETRY = 100
     };
     int i;
-    pj_bool_t use_ipv6, use_nat64;      //ÅäÖÃ£¬ÊÇ·ñÊ¹ÓÃ ipv6
+    pj_bool_t use_ipv6, use_nat64;      //é…ç½®ï¼Œæ˜¯å¦ä½¿ç”¨ ipv6
     int af;
     pj_sockaddr bound_addr;
     pj_sockaddr mapped_addr[2];
@@ -223,7 +223,7 @@ static pj_status_t create_rtp_rtcp_sock(pjmedia_sock_info *skinfo) {
             return status;
         }
 
-        /* Èç¹ûÖ¸¶¨ÁË£¬Ôò¶ÔRTP Socket Ó¦ÓÃ Qos */
+        /* å¦‚æœæŒ‡å®šäº†ï¼Œåˆ™å¯¹RTP Socket åº”ç”¨ Qos */
         status = pj_sock_apply_qos2(sock[0], cfg->qos_type,
                                     &cfg->qos_params,
                                     2, THIS_FILE, "RTP socket");

@@ -22,7 +22,7 @@
 
 /**
  * @file config.h
- * @brief Audio config.
+ * @brief 音频配置
  */
 #include <pjmedia/types.h>
 #include <pj/pool.h>
@@ -31,21 +31,20 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup audio_device_api Audio Device API
- * @brief PJMEDIA audio device abstraction API.
+ * @defgroup 音频设备API
+ * @brief PJMEDIA 音频设备抽象API
  */
 
 /**
- * @defgroup s1_audio_device_config Compile time configurations
- * @ingroup audio_device_api
- * @brief Compile time configurations
+ * @defgroup 编译时配置
+ * @ingroup 音频设备API
+ * @brief 编译时配置
  * @{
  */
 
 /**
- * This setting controls the buffer length of audio device name.
- *
- * Default: 128 for Windows platforms, 64 for others
+ * 此设置控制音频设备名称长度
+ * Default: wins 128，其他 64
  */
 #ifndef PJMEDIA_AUD_DEV_INFO_NAME_LEN
 #   if (defined(PJ_WIN32) && PJ_WIN32!=0) || \
@@ -57,40 +56,36 @@ PJ_BEGIN_DECL
 #endif
 
 /**
- * This setting controls whether PortAudio support should be included.
- *
- * By default it is disabled.
+ * 此设置标识是否支持端口音频
+ * 默认不支持
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO
 #   define PJMEDIA_AUDIO_DEV_HAS_PORTAUDIO	0
 #endif
 
 /**
- * This setting controls whether Android OpenSL audio support should be
- * included.
+ * 此设置标识是否支持Opensl ES
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_OPENSL
 #   define PJMEDIA_AUDIO_DEV_HAS_OPENSL		0
 #endif
 
 /**
- * This setting controls whether Android JNI audio support should be
- * included.
+ * 此设置标识是否支持 Android JNI
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_ANDROID_JNI
 #   define PJMEDIA_AUDIO_DEV_HAS_ANDROID_JNI    PJ_ANDROID
 #endif
 
 /**
- * This setting controls whether BlackBerry 10 (BB10) audio support
- * should be included.
+ * 此设置标识是否支持黑莓音频(BlackBerry 10---BB10)
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_BB10
 #   define PJMEDIA_AUDIO_DEV_HAS_BB10		0
 #endif
 
 /**
- * This setting controls whether native ALSA support should be included.
+ * 标识是否支持原生 ALSA 音频
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_ALSA
 #   define PJMEDIA_AUDIO_DEV_HAS_ALSA		0
@@ -98,7 +93,7 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether null audio support should be included.
+ * 标识是否支持无音频
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_NULL_AUDIO
 #   define PJMEDIA_AUDIO_DEV_HAS_NULL_AUDIO	0
@@ -106,7 +101,7 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether coreaudio support should be included.
+ * 此标识是否支持 coreaudio （mac or iphone）
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_COREAUDIO
 #   define PJMEDIA_AUDIO_DEV_HAS_COREAUDIO	0
@@ -114,7 +109,7 @@ PJ_BEGIN_DECL
 
 
  /**
-  * This setting controls whether WMME support should be included.
+  * 标识是否支持 WMME （Windows Mobile）
   */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_WMME
 #  if (defined(PJ_WIN32_UWP) && PJ_WIN32_UWP!=0) || \
@@ -127,8 +122,7 @@ PJ_BEGIN_DECL
 
 
  /**
-  * This setting controls whether Windows Audio Session API (WASAPI)
-  * support should be included.
+  * 此标识为是否支持 Wins 音频会话API（Windows Audio Session API）
   */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_WASAPI
 #  if (defined(PJ_WIN32_UWP) && PJ_WIN32_UWP!=0) || \
@@ -141,7 +135,7 @@ PJ_BEGIN_DECL
 
 
  /**
- * This setting controls whether BDIMAD support should be included.
+  * 此标识为是否支持 BDIMAD
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_BDIMAD
 #	define PJMEDIA_AUDIO_DEV_HAS_BDIMAD	0
@@ -149,7 +143,8 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether Symbian APS support should be included.
+ * This setting controls whether Symbian APS
+ * 此标识为是否支持 Symbian APS
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_SYMB_APS
 #   define PJMEDIA_AUDIO_DEV_HAS_SYMB_APS	0
@@ -157,18 +152,14 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether Symbian APS should perform codec
- * detection in its factory initalization. Note that codec detection 
- * may take few seconds and detecting more codecs will take more time.
- * Possible values are:
- * - 0: no codec detection, all APS codec (AMR-NB, G.711, G.729, and
- *      iLBC) will be assumed as supported.
- * - 1: minimal codec detection, i.e: only detect for AMR-NB and G.711,
- *      (G.729 and iLBC are considered to be supported/unsupported when
- *      G.711 is supported/unsupported).
- * - 2: full codec detection, i.e: detect AMR-NB, G.711, G.729, and iLBC.
  * 
  * Default: 1 (minimal codec detection)
+ * 此设置控制 Symbian APS是否应在其工厂初始化中执行编解码器检测。请注意，检测编解码器可能需要几秒钟，
+ * 而检测更多编解码器则需要更多时间。可能的值为：
+ *  0 - 不检测编解码器，所有APS编解码器（AMR-NB、G.711、G.729和iLBC）将假定为受支持。
+ *  1 - 最小编解码检测，即：仅检测AMR-NB和G.711（当G.711支持/不支持时，G.729和iLBC被认为是支持/不支持的）
+ *  2 - 全编解码器检测，即：检测AMR-NB、G.711、G.729和iLBC
+ *
  */
 #ifndef PJMEDIA_AUDIO_DEV_SYMB_APS_DETECTS_CODEC
 #   define PJMEDIA_AUDIO_DEV_SYMB_APS_DETECTS_CODEC 1
@@ -176,17 +167,14 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether Symbian VAS support should be included.
+ * 此设置标识是否支持 Symbian VAS
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_SYMB_VAS
 #   define PJMEDIA_AUDIO_DEV_HAS_SYMB_VAS	0
 #endif
 
 /**
- * This setting controls Symbian VAS version to be used. Currently, valid
- * values are only 1 (for VAS 1.0) and 2 (for VAS 2.0).
- *
- * Default: 1 (VAS version 1.0)
+ * 此标识为 Symbian VAS 使用版本，仅限于 1（VAS 1.0）和 2（VAS 2.0）
  */
 #ifndef PJMEDIA_AUDIO_DEV_SYMB_VAS_VERSION
 #   define PJMEDIA_AUDIO_DEV_SYMB_VAS_VERSION	1
@@ -194,8 +182,7 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether Symbian audio (using built-in multimedia 
- * framework) support should be included.
+ * 此标识为是否支持 Symbian 音频(内建多媒体框架)
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_SYMB_MDA
 #   define PJMEDIA_AUDIO_DEV_HAS_SYMB_MDA	PJ_SYMBIAN
@@ -203,14 +190,13 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether the Symbian audio with built-in multimedia
- * framework backend should be started synchronously. Note that synchronous
- * start will block the application/UI, e.g: about 40ms for each direction
- * on N95. While asynchronous start may cause invalid value (always zero)
- * returned in input/output volume query, if the query is performed when
- * the internal start procedure is not completely finished.
- * 
- * Default: 1 (yes)
+ *
+ * 此设置控制是否同步启动带有内置多媒体框架后端的 Symbian音频。
+ * 同步启动将阻止应用程序/UI，例如：N95上每个方向约40毫秒。
+ * 而异步启动可能会导致输入/输出卷查询中返回无效值（始终为零），如果在内部启动过程未完全完成时执行查询。
+ *
+ * 默认值为 1，标识同步启动
+ *
  */
 #ifndef PJMEDIA_AUDIO_DEV_MDA_USE_SYNC_START
 #   define PJMEDIA_AUDIO_DEV_MDA_USE_SYNC_START	1
@@ -218,27 +204,16 @@ PJ_BEGIN_DECL
 
 
 /**
- * This setting controls whether the Audio Device API should support
- * device implementation that is based on the old sound device API
- * (sound.h). 
  *
- * Enable this API if:
- *  - you have implemented your own sound device using the old sound
- *    device API (sound.h), and
- *  - you wish to be able to use your sound device implementation
- *    using the new Audio Device API.
+ * 此设置控制音频设备API是否应支持基于旧声音设备API（sound.h）的设备实现。
+ * 在以下情况下启用此API：
+ *  -您已经使用旧的声音设备API（sound.h）实现了自己的声音设备，并且
+ *  -您希望能够使用新的音频设备API使用您的声音设备实现。
  *
- * Please see http://trac.pjsip.org/repos/wiki/Audio_Dev_API for more
- * info.
  */
 #ifndef PJMEDIA_AUDIO_DEV_HAS_LEGACY_DEVICE
 #   define PJMEDIA_AUDIO_DEV_HAS_LEGACY_DEVICE	0
 #endif
-
-
-/**
- * @}
- */
 
 PJ_END_DECL
 
@@ -246,260 +221,193 @@ PJ_END_DECL
 #endif	/* __PJMEDIA_AUDIODEV_CONFIG_H__ */
 
 /*
- --------------------- DOCUMENTATION FOLLOWS ---------------------------
+ --------------------- 更多文档 ---------------------------
  */
 
 /**
- * @addtogroup audio_device_api Audio Device API
+ * @addtogroup 音频设备API
  * @{
 
-PJMEDIA Audio Device API is a cross-platform audio API appropriate for use with
-VoIP applications and many other types of audio streaming applications. 
+ PJMedia 是一个跨平台的音频API，适用于 VoIP 应用程序和许多其他类型的音频流应用程序。
 
-The API abstracts many different audio API's on various platforms, such as:
- - PortAudio back-end for Win32, Windows Mobile, Linux, Unix, dan MacOS X.
- - native WMME audio for Win32 and Windows Mobile devices
- - native Symbian audio streaming/multimedia framework (MMF) implementation
- - native Nokia Audio Proxy Server (APS) implementation
- - null-audio implementation
- - and more to be implemented in the future
+ API在各种平台上抽象了许多不同的音频API，例如：
+    - 用于Win32、Windows Mobile、Linux、Unix和MacOS X的PortAudio后端。
+    - Win32和Windows Mobile设备的本机WMME音频
+    - 原生Symbian音频流/多媒体框架（MMF）实现
+    - 本机诺基亚音频代理服务器（APS）实现
+    - 空音频实现
 
-The Audio Device API/library is an evolution from PJMEDIA @ref PJMED_SND and 
-contains many enhancements:
+ 该音频API/库是从 PJMEDIA @ref PJMED_SND 演变而来，并且包含了许多增强功能：
 
- - Forward compatibility:
-\n
-   The new API has been designed to be extensible, it will support new API's as 
-   well as new features that may be introduced in the future without breaking 
-   compatibility with applications that use this API as well as compatibility 
-   with existing device implementations. 
+ - 正向兼容
+ 新的API被设计为可扩展的，它将支持新的API以及将来可能引入的新特性，而不会破坏与使用该API
+ 的应用程序的兼容性以及与现有设备实现的兼容性。
 
- - Device capabilities:
-\n
-   At the heart of the API is device capabilities management, where all possible
-   audio capabilities of audio devices should be able to be handled in a generic
-   manner. With this framework, new capabilities that may be discovered in the 
-   future can be handled in manner without breaking existing applications. 
+ - 设备能力
+    API的核心是设备能力管理，其中音频设备的所有可能的音频能力都应该能够以通用的方式处理。
+    有了这个框架，将来可能发现的新功能就可以在不破坏现有应用程序的情况下进行处理。
 
- - Built-in features:
-\n
-   The device capabilities framework enables applications to use and control 
-   audio features built-in in the device, such as:
-    - echo cancellation, 
-    - built-in codecs, 
-    - audio routing (e.g. to earpiece or loudspeaker),
-    - volume control,
-    - etc.
+ - 内置功能
+   设备功能框架使应用程序能够使用和控制设备内置的音频功能，例如：
+    -回声消除
+    -内置编解码器
+    -音频路由（例如到听筒或扬声器）
+    -音量控制
+    -等等
 
- - Codec support:
-\n
-   Some audio devices such as Nokia/Symbian Audio Proxy Server (APS) and Nokia 
-   VoIP Audio Services (VAS) support built-in hardware audio codecs (e.g. G.729,
-   iLBC, and AMR), and application can use the sound device in encoded mode to
-   make use of these hardware codecs. 
+ - 编解码支持
+   一些音频设备，如Nokia/Symbian audio Proxy Server（APS）和Nokia VoIP audio Services（VAS），
+   支持内置硬件音频编解码器（如g.729、iLBC和AMR），应用程序可以在编码模式下使用声音设备来使用这些硬件编解码器。
 
- - Multiple backends:
-\n
-   The new API supports multiple audio backends (called factories or drivers in 
-   the code) to be active simultaneously, and audio backends may be added or 
-   removed during run-time. 
+ - 多后端
+    新的API支持同时激活多个音频后端（在代码中称为工厂或驱动程序），并且可以在运行时添加或删除音频后端。
 
 
-@section using Overview on using the API
+@section API使用概述
 
-@subsection getting_started Getting started
+@subsection 开始
 
- -# <b>Configure the application's project settings</b>.\n
-    Add the following 
-    include:
-    \code
-    #include <pjmedia_audiodev.h>\endcode\n
-    And add <b>pjmedia-audiodev</b> library to your application link 
-    specifications.\n
- -# <b>Compile time settings</b>.\n
-    Use the compile time settings to enable or
-    disable specific audio drivers. For more information, please see
-    \ref s1_audio_device_config.
- -# <b>API initialization and cleaning up</b>.\n
-    Before anything else, application must initialize the API by calling:
-    \code
-    pjmedia_aud_subsys_init(pf);\endcode\n
-    And add this in the application cleanup sequence
-    \code
-    pjmedia_aud_subsys_shutdown();\endcode
+ - 配置应用程序设置
+    添加如下，包括：
+    - 代码
+        #include <pjmedia_audiodev.h>
+        指定链接库文件 pjmedia-audiodev
 
-@subsection devices Working with devices
+    - 编译时设置
+        通过编译时设置来开启或关闭指定的音频设备，更多的信息，请看@ref s1_audio_device_config
 
- -# The following code prints the list of audio devices detected
-    in the system.
-    \code
-    int dev_count;
-    pjmedia_aud_dev_index dev_idx;
-    pj_status_t status;
+    - API 初始化和销毁
+        初始化 API:
+            pjmedia_aud_subsys_init(pf)
+        销毁 API:
+            pjmedia_aud_subsys_shutdown()
 
-    dev_count = pjmedia_aud_dev_count();
-    printf("Got %d audio devices\n", dev_count);
+@subsection 使用设备
 
-    for (dev_idx=0; dev_idx<dev_count; ++i) {
-	pjmedia_aud_dev_info info;
+ -  打印出当前系统检测到的音频设备
+    代码：
+        int dev_count;
+        pjmedia_aud_dev_index dev_idx;
+        pj_status_t status;
+        dev_count = pjmedia_aud_dev_count();
+        printf("Got %d audio devices\n",dev_count);
+        for(dev_idx = 0;dev_idx < dev_count;++i)
+        {
+            pjmedia_aud_dev_info info;
+            status = pjmedia_aud_dev_get_info(dev_idx,&info);
+            printf("%d. %s (in=%d,out=%d)\n",dev_idx,info.name,info.input_count,info.output_count);
+        }
 
-	status = pjmedia_aud_dev_get_info(dev_idx, &info);
-	printf("%d. %s (in=%d, out=%d)\n",
-	       dev_idx, info.name, 
-	       info.input_count, info.output_count);
-    }
-    \endcode\n
- -# Info: The #PJMEDIA_AUD_DEFAULT_CAPTURE_DEV and #PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV
-    constants are used to denote default capture and playback devices
-    respectively.
- -# Info: You may save the device and driver's name in your application
-    setting, for example to specify the prefered devices to be
-    used by your application. You can then retrieve the device index
-    for the device by calling:
-    \code
-	const char *drv_name = "WMME";
-	const char *dev_name = "Wave mapper";
-	pjmedia_aud_dev_index dev_idx;
+ -  信息：
+        PJMEDIA_AUD_DEFAULT_CAPTURE_DEV 和 PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV 常量用于表示默认的捕获和回放设备
 
-        status = pjmedia_aud_dev_lookup(drv_name, dev_name, &dev_idx);
-	if (status==PJ_SUCCESS)
-	    printf("Device index is %d\n", dev_idx);
-    \endcode
+ -  信息：
+        可以在应用程序设置中保存设备和驱动程序的名称，例如指定应用程序要使用的首选设备。然后可以通过调用以下命令检索设备的设备索引：
 
-@subsection caps Device capabilities
+        const char *drv_name = "WMME";
+        const char *dev_name = "Wave mapper";
+        pjmedia_aud_dev_index dev_idx;
+        status = pjmedia_aud_dev_lookup(drv_name.dev_name.&dev_idx);
+        if(status == PJ_SUCCESS)
+        {
+            printf("Device index is %d\n",dev_idx);
+        }
 
-Capabilities are encoded as #pjmedia_aud_dev_cap enumeration. Please see
-#pjmedia_aud_dev_cap enumeration for more information.
+@subsection 设备能力捕获
+    能力通过 pjmedia_aud_dev_cap 枚举进行编码。更多信息详见 pjmedia_aud_dev_cap 枚举
+    - 打印设备支持的功能：
+        pjmedia_aud_dev_info info;
+        pj_status_t status;
 
- -# The following snippet prints the capabilities supported by the device:
-    \code
-    pjmedia_aud_dev_info info;
-    pj_status_t status;
+        status = pjmedia_aud_dev_get_info(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV,&info);
+        if(status == PJ_SUCCESS)
+        {
+            unsigned i;
+            //枚举能力位
+            printf("Device capabilities: ");
+            for(i=0;i<32;i++)
+            {
+                if(info.caps & (1<<i))
+                    printf("%s ",pjmedia_aud_dev_cap_name(1 << i,NULL));
+            }
+        }
 
-    status = pjmedia_aud_dev_get_info(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV, &info);
-    if (status == PJ_SUCCESS) {
-	unsigned i;
-	// Enumerate capability bits
-	printf("Device capabilities: ");
-	for (i=0; i<32; ++i) {
-	    if (info.caps & (1 << i))
-		printf("%s ", pjmedia_aud_dev_cap_name(1 << i, NULL));
-	}
-    }
-    \endcode\n
- -# Info: You can set the device settings when opening audio stream by setting
-    the flags and the appropriate setting in #pjmedia_aud_param when calling
-    #pjmedia_aud_stream_create()\n
- -# Info: Once the audio stream is running, you can retrieve or change the stream 
-    setting by specifying the capability in #pjmedia_aud_stream_get_cap()
-    and #pjmedia_aud_stream_set_cap() respectively.
+    - 当打开音频流，即调用 pjmedia_aud_stream_create(),可以设置音频参数，
+    根据标识和 pjmedia_aud_param 的相关设置
+    - 运行中的音频可通过 pjmedia_aud_stream_get_cap() 函数检索当前音频设置和通过 pjmedia_aud_stream_set_cap() 来改变音频设置
 
 
-@subsection creating_stream Creating audio streams
+@subsection 创建音频流
+    音频流使音频流能够捕获设备、回放设备或两者。
+    - 建议在使用 pjmedia_aud_param 之前用其默认值初始化它：
+        pjmedia_aud_param param;
+        pjmedia_aud_dev_index dev_idx;
+        pj_status_t status;
 
-The audio stream enables audio streaming to capture device, playback device,
-or both.
+        dev_idx = PJMEDIA_AUD_DEFAULT_CAPTURE_DEV;
+        status = pjmedia_aud_dev_default_param(dev_idx,&param);
 
- -# It is recommended to initialize the #pjmedia_aud_param with its default
-    values before using it:
-    \code
-    pjmedia_aud_param param;
-    pjmedia_aud_dev_index dev_idx;
-    pj_status_t status;
+    - 配置参数
+        param.dir = PJMEDIA_DIR_CAPTURE_PLAYBACK;
+        param.rec_id = PJMEDIA_AUD_DEFAULT_CAPTURE_DEV;
+        param.play_id = PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV;
+        param.clock_rate = 8000;
+        param.channel_count = 1;
+        param.samples_per_frame = 160;
+        param.bits_per_sample = 16;
+    - 使用 pjmedia_aud_param 指定编解码器，通过 pjmedia_aud_dev_info 查看支持的格式列表，确保设备支持编解码器，下面的代码将设置为使用 G.711 ULAW 编码：
+        //确保支持 Ulaw
+        if((info.caps & PJMEDIA_AUD_DEV_CAP_EXT_FORMAT) == 0)
+            error("Device does not support extended formats");
+        for(i = 0;i<info.ext_fmt_cnt;++i)
+        {
+            if(info.ext_fmt[i].id == PJMEDIA_FORMAT_ULAW)
+                break;
+        }
+        if(i == info.ext_fmt_cnt)
+        {
+            error("Device does not support Ulaw format");
+        }
 
-    dev_idx = PJMEDIA_AUD_DEFAULT_CAPTURE_DEV;
-    status = pjmedia_aud_dev_default_param(dev_idx, &param);
-    \endcode\n
- -# Configure the mandatory parameters:
-    \code
-    param.dir = PJMEDIA_DIR_CAPTURE_PLAYBACK;
-    param.rec_id = PJMEDIA_AUD_DEFAULT_CAPTURE_DEV;
-    param.play_id = PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV;
-    param.clock_rate = 8000;
-    param.channel_count = 1;
-    param.samples_per_frame = 160;
-    param.bits_per_sample = 16;
-    \endcode\n
- -# If you want the audio stream to use the device's built-in codec, specify
-    the codec in the #pjmedia_aud_param. You must make sure that the codec
-    is supported by the device, by looking at its supported format list in
-    the #pjmedia_aud_dev_info.\n
-    The snippet below sets the audio stream to use G.711 ULAW encoding:
-    \code
-    unsigned i;
+        //设置 Ulaw 格式
+        param.flags |= PJMEDIA_AUD_DEV_CAP_EXT_FORMAT;
+        param.ext_fmt.id = PJMEDIA_FORMAT_ULAW;
+        param.ext_fmt.bitrate = 64000;
+        param.ext_fmt.vad = PJ_FALSE;
 
-    // Make sure Ulaw is supported
-    if ((info.caps & PJMEDIA_AUD_DEV_CAP_EXT_FORMAT) == 0)
-	error("Device does not support extended formats");
-    for (i = 0; i < info.ext_fmt_cnt; ++i) {
-	if (info.ext_fmt[i].id == PJMEDIA_FORMAT_ULAW)
-	    break;
-    }
-    if (i == info.ext_fmt_cnt)
-	error("Device does not support Ulaw format");
+    - 注意：
+        音频配置为非 PCM 格式，则捕获和回放函数（分别为 pjmedia_aud_rec_cb 和 pjmedia_aud_play_cb） 的音频帧格式为 pjmedia_frame_ext 结构，而非 pjmedia_frame
 
-    // Set Ulaw format
-    param.flags |= PJMEDIA_AUD_DEV_CAP_EXT_FORMAT;
-    param.ext_fmt.id = PJMEDIA_FORMAT_ULAW;
-    param.ext_fmt.bitrate = 64000;
-    param.ext_fmt.vad = PJ_FALSE;
-    \endcode\n
- -# Note that if non-PCM format is configured on the audio stream, the
-    capture and/or playback functions (#pjmedia_aud_rec_cb and 
-    #pjmedia_aud_play_cb respectively) will report the audio frame as
-    #pjmedia_frame_ext structure instead of the #pjmedia_frame.
- -# Optionally configure other device's capabilities. The following snippet
-    shows how to enable echo cancellation on the device (note that this
-    snippet may not be necessary since the setting may have been enabled 
-    when calling #pjmedia_aud_dev_default_param() above):
-    \code
-    if (info.caps & PJMEDIA_AUD_DEV_CAP_EC) {
-	param.flags |= PJMEDIA_AUD_DEV_CAP_EC;
-	param.ec_enabled = PJ_TRUE;
-    }
-    \endcode
- -# Open the audio stream, specifying the capture and/or playback callback
-    functions:
-    \code
-       pjmedia_aud_stream *stream;
+    - 可选功能，下面代码显示如何在设备上启用回显取消（请注意，此代码段可能不是必需的，因为在调用上面的#pjmedia_audŧdev_default_param（）时，可能已启用该设置）：
+        if(info.caps & PJMEDIA_AUD_DEV_CAP_EC)
+        {
+            param.flags |= PJMEDIA_AUD_DEV_CAP_EC;
+            param.ec_enabled = PJ_TRUE;
+        }
 
-       status = pjmedia_aud_stream_create(&param, &rec_cb, &play_cb, 
-                                          user_data, &stream);
-    \endcode
+    - 打开音频流，指定捕获和播放回调函数
+        pjmedia_aud_stream *stream;
+        status = pjmedia_aud_stream_create(&param,&rec_cb,&play_cb,user_data,&stream);
 
-@subsection working_with_stream Working with audio streams
+@subsection 音频流运行
+    -   打开音频流
+        status = pjmedia_aud_stream_start(stream);
+    -   关闭音频流
+        status = pjmedia_aud_stream_stop(stream);
+    -   销毁音频流
+        status = pjmedia_aud_stream_destroy(stream);
 
- -# To start the audio stream:
-    \code
-	status = pjmedia_aud_stream_start(stream);
-    \endcode\n
-    To stop the stream:
-    \code
-	status = pjmedia_aud_stream_stop(stream);
-    \endcode\n
-    And to destroy the stream:
-    \code
-	status = pjmedia_aud_stream_destroy(stream);
-    \endcode\n
- -# Info: The following shows how to retrieve the capability value of the
-    stream (in this case, the current output volume setting).
-    \code
-    // Volume setting is an unsigned integer showing the level in percent.
-    unsigned vol;
-    status = pjmedia_aud_stream_get_cap(stream, 
-					PJMEDIA_AUD_DEV_CAP_OUTPUT_VOLUME_SETTING,
-					&vol);
-    \endcode
- -# Info: And following shows how to modify the capability value of the
-    stream (in this case, the current output volume setting).
-    \code
-    // Volume setting is an unsigned integer showing the level in percent.
-    unsigned vol = 50;
-    status = pjmedia_aud_stream_set_cap(stream, 
-					PJMEDIA_AUD_DEV_CAP_OUTPUT_VOLUME_SETTING,
-					&vol);
-    \endcode
+    - 信息：
+        检索音频的能力值
+        //音量，百分比
+        unsigned vol;
+        status = pjmedia_aud_stream_get_cap(stream,PJMEDIA_AUD_DEV_CAP_OUTPUT_VOLUME_SETTING,&vol);
 
+    - 信息：
+        设置音频的能力值
+        //音量，百分比
+        unsigned vol = 50;
+        status = pjmedia_aud_stream_set_cap(stream,PJMEDIA_AUD_DEV_CAP_OUTPUT_VOLUME_SETTING,&vol);
 
 */
 
