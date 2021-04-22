@@ -1,21 +1,122 @@
-/* $Id: sock.h 5833 2018-07-23 07:15:08Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/** 已完成
+ * 		协议族：
+ * 			AF_UNSPEC
+ * 			AF_UNIX
+ * 			AF_INET
+ * 			AF_INET6
+ * 			AF_PACKET
+ * 			AF_IRDA
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * 		socket 类型：
+ * 			SOCK_STREAM
+ * 			SOCK_DGRAM
+ * 			SOCK_RAW
+ * 			SOCK_RDM
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * 		socket option:
+ * 			级别：
+ * 				SOL_SOCKET
+ * 				SOL_IP
+ * 				SOL_TCP
+ * 				SOL_UDP
+ * 				SOL_IPv6
+ * 				IP_TOS
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ * 				IP_TOS 相关：
+ * 					IPTOS_LOWDELAY
+ * 					IPTOS_THROUGHPUT
+ * 					IPTOS_RELIABILITY
+ * 					IPTOS_MINCOST
+ *
+ * 				IPV6_TCLASS
+ *
+ * 				SO_PRIORITY
+ *
+ * 			options 名称：
+ * 				SO_TYPE
+ * 				SO_RCVBUF
+ * 				SO_SNDBUF
+ * 				TCP_NODELAY
+ * 				SO_REUSEADDR
+ * 				SO_NOSIGPIPE
+ *
+ *
+ * 			IP 多播:
+ * 				IP_MULTICAST_IF
+ * 				IP_MULTICAST_TTL
+ * 				IP_MULTICAST_LOOP
+ * 				IP_ADD_MEMBERSHIP
+ * 				IP_DROP_MEMBERSHIP
+ *
+ * 			sock_recv、sock_send 指定的标识：flags
+ * 				MSG_OOB
+ * 				MSG_PEEK
+ * 				MSG_DONTROUTE
+ *
+ *
+ * 			shutdown 标识：flags
+ * 				SHUT_RD(1)		不再接收
+ * 				SHUT_WR(2)		不再发送
+ * 				SHUT_RDWR(3)	不再接收和发送
+ *
+ * 			IPv4
+ * 				地址：
+ * 					length : 16
+ *
+ *
+ * 			IPv6:
+ * 				地址：
+ * 					length : 46
+ *
+ *
+ *
+ * 			socket地址操作：
+ * 				1. 网络字节顺序 <--> 主机字节顺序（16位，32位）
+ * 				2. 网络字节顺序 <--> 点分十进制字符串
+ * 				3. 数字地址 <--> 文本字符串
+ * 				4. 点分十进制 <--> IP地址
+ * 				5. IPv4 -> IPv6		合成IP地址
+ * 				6. parse addr:
+ * 					IPv4:
+ * 						10.0.0.1:80			10.0.0.1		80
+ * 						localhost:80		127.0.0.1		80
+ * 					IPv6:
+ * 						[fec0::01]:80		[fec0::01]		80
+ * 						"fec0::01:80":01	fec0::01:80		01
+ *
+ *
+ * 			属性：
+ * 				addr
+ * 				port
+ * 				length
+ * 				hostname
+ * 				hostaddr
+ *
+ *
+ * 			socket api:
+ * 				socket()
+ * 				close()
+ * 				bind()
+ * 					addr
+ * 					addr + port
+ * 					addr + random addr
+ * 				listen()
+ * 				accept()
+ * 				connect()
+ * 				getpeername()
+ * 				getsockname()
+ * 				getsockopt()
+ * 				setsockopt()
+ * 				setsockopt_params()
+ * 				setsockopt_sobuf()
+ * 				recv()
+ * 				recvfrom()
+ * 				send()
+ * 				sendto()
+ * 				shutdown()
+ *
+ *
+ *
  */
 #ifndef __PJ_SOCK_H__
 #define __PJ_SOCK_H__
@@ -136,13 +237,13 @@ extern const pj_uint16_t PJ_SOCK_DGRAM;
  *  @see pj_SOCK_RAW() */
 extern const pj_uint16_t PJ_SOCK_RAW;
 
-/** Reliably-delivered messages.  @see pj_SOCK_RDM() */
+/** 一种可靠的UDP形式
+ *  @see pj_SOCK_RDM() */
 extern const pj_uint16_t PJ_SOCK_RDM;
 
 
-/*
- * Accessor functions for various constants. These functions are provided
- * because Symbian doesn't allow exporting global variables from a DLL.
+/**
+ * 各种常量的访问器函数。提供这些函数是因为Symbian不允许从DLL导出全局变量。
  */
 
 #if defined(PJ_DLL)
@@ -155,36 +256,33 @@ extern const pj_uint16_t PJ_SOCK_RDM;
     /** Get #PJ_SOCK_RDM constant */
     PJ_DECL(int) pj_SOCK_RDM(void);
 #else
-    /** Get #PJ_SOCK_STREAM constant */
+    /** 得到 TCP 常量值 */
 #   define pj_SOCK_STREAM() PJ_SOCK_STREAM
-    /** Get #PJ_SOCK_DGRAM constant */
+    /** 得到 UDP 常量值 */
 #   define pj_SOCK_DGRAM()  PJ_SOCK_DGRAM
-    /** Get #PJ_SOCK_RAW constant */
+    /** 得到 RAW 常量值 */
 #   define pj_SOCK_RAW()    PJ_SOCK_RAW
-    /** Get #PJ_SOCK_RDM constant */
+    /** 得到 RDM 常量值 */
 #   define pj_SOCK_RDM()    PJ_SOCK_RDM
 #endif
 
 
 /**
- * Socket level specified in #pj_sock_setsockopt() or #pj_sock_getsockopt().
- * APPLICATION MUST USE THESE VALUES INSTEAD OF NORMAL SOL_*, BECAUSE
- * THE LIBRARY WILL TRANSLATE THE VALUE TO THE NATIVE VALUE.
+ * pj_sock_setsockopt() or #pj_sock_getsockopt() 指定 Socket 级别
  */
-/** Socket level. @see pj_SOL_SOCKET() */
+/** Socket 级别. @see pj_SOL_SOCKET() */
 extern const pj_uint16_t PJ_SOL_SOCKET;
-/** IP level. @see pj_SOL_IP() */
+/** IP 级别. @see pj_SOL_IP() */
 extern const pj_uint16_t PJ_SOL_IP;
-/** TCP level. @see pj_SOL_TCP() */
+/** TCP 级别. @see pj_SOL_TCP() */
 extern const pj_uint16_t PJ_SOL_TCP;
-/** UDP level. @see pj_SOL_UDP() */
+/** UDP 级别. @see pj_SOL_UDP() */
 extern const pj_uint16_t PJ_SOL_UDP;
-/** IP version 6. @see pj_SOL_IPV6() */
+/** IPv6. @see pj_SOL_IPV6() */
 extern const pj_uint16_t PJ_SOL_IPV6;
 
-/*
- * Accessor functions for various constants. These functions are provided
- * because Symbian doesn't allow exporting global variables from a DLL.
+/**
+ * 各种常量的访问器函数。提供这些函数是因为Symbian不允许从DLL导出全局变量。
  */
 
 #if defined(PJ_DLL)
@@ -215,29 +313,30 @@ extern const pj_uint16_t PJ_SOL_IPV6;
 /* IP_TOS 
  *
  * Note:
- *  TOS CURRENTLY DOES NOT WORK IN Windows 2000 and above!
+ *  TOS 不工作在 Windows 2000 和更高版本
  *  See http://support.microsoft.com/kb/248611
  */
-/** IP_TOS optname in setsockopt(). @see pj_IP_TOS() */
+/** IP_TOS 选项名称 in setsockopt()
+ *  @see pj_IP_TOS() */
 extern const pj_uint16_t PJ_IP_TOS;
 
 /*
- * IP TOS related constats.
+ * IP TOS 相关常量
  *
  * Note:
- *  TOS CURRENTLY DOES NOT WORK IN Windows 2000 and above!
+ *  TOS 不工作在 Windows 2000 和更高版本
  *  See http://support.microsoft.com/kb/248611
  */
-/** Minimize delays. @see pj_IPTOS_LOWDELAY() */
+/** 最小延时. @see pj_IPTOS_LOWDELAY() */
 extern const pj_uint16_t PJ_IPTOS_LOWDELAY;
 
-/** Optimize throughput. @see pj_IPTOS_THROUGHPUT() */
+/** 最优吞吐量 @see pj_IPTOS_THROUGHPUT() */
 extern const pj_uint16_t PJ_IPTOS_THROUGHPUT;
 
-/** Optimize for reliability. @see pj_IPTOS_RELIABILITY() */
+/** 最优可达. @see pj_IPTOS_RELIABILITY() */
 extern const pj_uint16_t PJ_IPTOS_RELIABILITY;
 
-/** "filler data" where slow transmission does't matter.
+/** “填充数据”传输速度慢并不重要
  *  @see pj_IPTOS_MINCOST() */
 extern const pj_uint16_t PJ_IPTOS_MINCOST;
 
@@ -258,19 +357,19 @@ extern const pj_uint16_t PJ_IPTOS_MINCOST;
     /** Get #PJ_IPTOS_MINCOST constant */
     PJ_DECL(int) pj_IPTOS_MINCOST(void);
 #else
-    /** Get #PJ_IP_TOS constant */
+    /** 获取 PJ_IP_TOS 常量 */
 #   define pj_IP_TOS()		PJ_IP_TOS
 
-    /** Get #PJ_IPTOS_LOWDELAY constant */
+    /** 获取 PJ_IPTOS_LOWDELAY 常量 */
 #   define pj_IPTOS_LOWDELAY()	PJ_IP_TOS_LOWDELAY
 
-    /** Get #PJ_IPTOS_THROUGHPUT constant */
+    /** 获取 PJ_IPTOS_THROUGHPUT 常量 */
 #   define pj_IPTOS_THROUGHPUT() PJ_IP_TOS_THROUGHPUT
 
-    /** Get #PJ_IPTOS_RELIABILITY constant */
+    /** 获取 PJ_IPTOS_RELIABILITY 常量 */
 #   define pj_IPTOS_RELIABILITY() PJ_IP_TOS_RELIABILITY
 
-    /** Get #PJ_IPTOS_MINCOST constant */
+    /** 获取 PJ_IPTOS_MINCOST 常量 */
 #   define pj_IPTOS_MINCOST()	PJ_IP_TOS_MINCOST
 #endif
 
@@ -289,46 +388,55 @@ extern const pj_uint16_t PJ_IPV6_TCLASS;
 
 
 /**
- * Values to be specified as \c optname when calling #pj_sock_setsockopt() 
- * or #pj_sock_getsockopt().
+ * pj_sock_setsockopt() pj_sock_getsockopt() 指定选项名称值
  */
 
 /** Socket type. @see pj_SO_TYPE() */
 extern const pj_uint16_t PJ_SO_TYPE;
 
-/** Buffer size for receive. @see pj_SO_RCVBUF() */
+/** 接收buf 大小
+ * @see pj_SO_RCVBUF() */
 extern const pj_uint16_t PJ_SO_RCVBUF;
 
-/** Buffer size for send. @see pj_SO_SNDBUF() */
+/** 发送端buf 大小
+ *  @see pj_SO_SNDBUF() */
 extern const pj_uint16_t PJ_SO_SNDBUF;
 
-/** Disables the Nagle algorithm for send coalescing. @see pj_TCP_NODELAY */
+/** 禁用发送聚结的Nagle算法
+ * @see pj_TCP_NODELAY */
 extern const pj_uint16_t PJ_TCP_NODELAY;
 
-/** Allows the socket to be bound to an address that is already in use.
+/** 允许socket绑定到已在使用的地址。
  *  @see pj_SO_REUSEADDR */
 extern const pj_uint16_t PJ_SO_REUSEADDR;
 
-/** Do not generate SIGPIPE. @see pj_SO_NOSIGPIPE */
+/** 不要生成SIGPIPE
+ *  @see pj_SO_NOSIGPIPE */
 extern const pj_uint16_t PJ_SO_NOSIGPIPE;
 
-/** Set the protocol-defined priority for all packets to be sent on socket.
+/**
+ * 为要在socket上发送的所有数据包设置协议定义的优先级。
  */
 extern const pj_uint16_t PJ_SO_PRIORITY;
 
-/** IP multicast interface. @see pj_IP_MULTICAST_IF() */
+/** IP多播接口
+ *  @see pj_IP_MULTICAST_IF() */
 extern const pj_uint16_t PJ_IP_MULTICAST_IF;
  
-/** IP multicast ttl. @see pj_IP_MULTICAST_TTL() */
+/** IP 多播ttl
+ *  @see pj_IP_MULTICAST_TTL() */
 extern const pj_uint16_t PJ_IP_MULTICAST_TTL;
 
-/** IP multicast loopback. @see pj_IP_MULTICAST_LOOP() */
+/** IP 多播回环
+ *  @see pj_IP_MULTICAST_LOOP() */
 extern const pj_uint16_t PJ_IP_MULTICAST_LOOP;
 
-/** Add an IP group membership. @see pj_IP_ADD_MEMBERSHIP() */
+/** 添加IP组成员身份
+ *  @see pj_IP_ADD_MEMBERSHIP() */
 extern const pj_uint16_t PJ_IP_ADD_MEMBERSHIP;
 
-/** Drop an IP group membership. @see pj_IP_DROP_MEMBERSHIP() */
+/** 删除IP组成员身份
+ *  @see pj_IP_DROP_MEMBERSHIP() */
 extern const pj_uint16_t PJ_IP_DROP_MEMBERSHIP;
 
 
@@ -369,13 +477,13 @@ extern const pj_uint16_t PJ_IP_DROP_MEMBERSHIP;
     /** Get #PJ_IP_DROP_MEMBERSHIP constant */
     PJ_DECL(pj_uint16_t) pj_IP_DROP_MEMBERSHIP(void);
 #else
-    /** Get #PJ_SO_TYPE constant */
+    /** 获取socket type常量 */
 #   define pj_SO_TYPE()	    PJ_SO_TYPE
 
-    /** Get #PJ_SO_RCVBUF constant */
+    /** 获取接收buf大小的常量 */
 #   define pj_SO_RCVBUF()   PJ_SO_RCVBUF
 
-    /** Get #PJ_SO_SNDBUF constant */
+    /** 获取发送端buf大小的常量*/
 #   define pj_SO_SNDBUF()   PJ_SO_SNDBUF
 
     /** Get #PJ_TCP_NODELAY constant */
@@ -408,16 +516,19 @@ extern const pj_uint16_t PJ_IP_DROP_MEMBERSHIP;
 
 
 /*
- * Flags to be specified in #pj_sock_recv, #pj_sock_send, etc.
+ * pj_sock_recv, pj_sock_send 指定的标识
  */
 
-/** Out-of-band messages. @see pj_MSG_OOB() */
+/** 带外信息
+ *  @see pj_MSG_OOB() */
 extern const int PJ_MSG_OOB;
 
-/** Peek, don't remove from buffer. @see pj_MSG_PEEK() */
+/** 获取，不要从缓冲器中取出
+ *  @see pj_MSG_PEEK() */
 extern const int PJ_MSG_PEEK;
 
-/** Don't route. @see pj_MSG_DONTROUTE() */
+/** 不路由
+ *  @see pj_MSG_DONTROUTE() */
 extern const int PJ_MSG_DONTROUTE;
 
 
@@ -443,34 +554,32 @@ extern const int PJ_MSG_DONTROUTE;
 
 
 /**
- * Flag to be specified in #pj_sock_shutdown().
+ * pj_sock_shutdown() 指定的标识
  */
 typedef enum pj_socket_sd_type
 {
-    PJ_SD_RECEIVE   = 0,    /**< No more receive.	    */
-    PJ_SHUT_RD	    = 0,    /**< Alias for SD_RECEIVE.	    */
-    PJ_SD_SEND	    = 1,    /**< No more sending.	    */
-    PJ_SHUT_WR	    = 1,    /**< Alias for SD_SEND.	    */
-    PJ_SD_BOTH	    = 2,    /**< No more send and receive.  */
-    PJ_SHUT_RDWR    = 2     /**< Alias for SD_BOTH.	    */
+    PJ_SD_RECEIVE   = 0,    /**< 不再接收	    */
+    PJ_SHUT_RD	    = 0,    /**< 不再接收别名	    */
+    PJ_SD_SEND	    = 1,    /**< 不再发送	    */
+    PJ_SHUT_WR	    = 1,    /**< 不再发送别名	    */
+    PJ_SD_BOTH	    = 2,    /**< 不再发送和接收  */
+    PJ_SHUT_RDWR    = 2     /**< 不再发送和接收别名	    */
 } pj_socket_sd_type;
 
 
 
-/** Address to accept any incoming messages. */
+/** 地址接收任何传入的消息*/
 #define PJ_INADDR_ANY	    ((pj_uint32_t)0)
 
-/** Address indicating an error return */
+/** 表示错误返回的地址 */
 #define PJ_INADDR_NONE	    ((pj_uint32_t)0xffffffff)
 
-/** Address to send to all hosts. */
+/** 发送到所有主机的地址 */
 #define PJ_INADDR_BROADCAST ((pj_uint32_t)0xffffffff)
 
 
-/** 
- * Maximum length specifiable by #pj_sock_listen().
- * If the build system doesn't override this value, then the lowest 
- * denominator (five, in Win32 systems) will be used.
+/**
+ * 由 pj_sock_listen（）指定的最大长度。如果生成系统不重写此值，则将使用最小分母（在Win32系统中为5）。
  */
 #if !defined(PJ_SOMAXCONN)
 #  define PJ_SOMAXCONN	5
@@ -478,48 +587,43 @@ typedef enum pj_socket_sd_type
 
 
 /**
- * Constant for invalid socket returned by #pj_sock_socket() and
- * #pj_sock_accept().
+ * 返回无效的 socket pj_sock_socket() and pj_sock_accept()
  */
 #define PJ_INVALID_SOCKET   (-1)
 
-/* Must undefine s_addr because of pj_in_addr below */
+/* 取消定义 s_addr 因为 pj_in_addr 在下面 */
 #undef s_addr
 
 /**
- * This structure describes Internet address.
+ * Internet address 描述
  */
 typedef struct pj_in_addr
 {
-    pj_uint32_t	s_addr;		/**< The 32bit IP address.	    */
+    pj_uint32_t	s_addr;		/**< 32位的IP address.	    */
 } pj_in_addr;
 
 
 /**
- * Maximum length of text representation of an IPv4 address.
+ * IPv4地址的最大文本表示长度
  */
 #define PJ_INET_ADDRSTRLEN	16
 
 /**
- * Maximum length of text representation of an IPv6 address.
+ * IPv6地址的最大文本表示长度
  */
 #define PJ_INET6_ADDRSTRLEN	46
 
 /**
- * The size of sin_zero field in pj_sockaddr_in structure. Most OSes
- * use 8, but others such as the BSD TCP/IP stack in eCos uses 24.
+ * pj_sockaddr_in 中的 sin_zero 字段的大小。大多数操作系统使用8，但其他操作系统（如eCos中的bsdtcp/IP堆栈）使用24。
  */
 #ifndef PJ_SOCKADDR_IN_SIN_ZERO_LEN
 #   define PJ_SOCKADDR_IN_SIN_ZERO_LEN	8
 #endif
 
 /**
- * This structure describes Internet socket address.
- * If PJ_SOCKADDR_HAS_LEN is not zero, then sin_zero_len member is added
- * to this struct. As far the application is concerned, the value of
- * this member will always be zero. Internally, PJLIB may modify the value
- * before calling OS socket API, and reset the value back to zero before
- * returning the struct to application.
+ *
+ * 此结构描述Internet套接字地址。如果 PJ_SOCKADDR_HAS_LEN 不是零，那么 sin_zero_len 成员将添加到此结构中。就应用程序而言，此成员的值将始终为零。
+ * 在内部，PJLIB可以在调用系统 socket API之前修改该值，并在将结构返回到应用程序之前将该值重置为零。
  */
 struct pj_sockaddr_in
 {
@@ -527,31 +631,29 @@ struct pj_sockaddr_in
     pj_uint8_t  sin_zero_len;	/**< Just ignore this.		    */
     pj_uint8_t  sin_family;	/**< Address family.		    */
 #else
-    pj_uint16_t	sin_family;	/**< Address family.		    */
+    pj_uint16_t	sin_family;	/**< 地址族		    */
 #endif
-    pj_uint16_t	sin_port;	/**< Transport layer port number.   */
-    pj_in_addr	sin_addr;	/**< IP address.		    */
-    char	sin_zero[PJ_SOCKADDR_IN_SIN_ZERO_LEN]; /**< Padding.*/
+    pj_uint16_t	sin_port;	/**< 传输层的端口号   */
+    pj_in_addr	sin_addr;	/**< IP 地址		    */
+    char	sin_zero[PJ_SOCKADDR_IN_SIN_ZERO_LEN]; /** 填充 */
 };
 
 
 #undef s6_addr
 
 /**
- * This structure describes IPv6 address.
+ * IPv6 地址结构描述
  */
 typedef union pj_in6_addr
 {
     /* This is the main entry */
     pj_uint8_t  s6_addr[16];   /**< 8-bit array */
 
-    /* While these are used for proper alignment */
+    /* 用来正确对齐的 */
     pj_uint32_t	u6_addr32[4];
 
-    /* Do not use this with Winsock2, as this will align pj_sockaddr_in6
-     * to 64-bit boundary and Winsock2 doesn't like it!
-     * Update 26/04/2010:
-     *  This is now disabled, see http://trac.pjsip.org/repos/ticket/1058
+    /*
+     * 不要与Winsock2一起使用，因为这会将 pj_sockaddr_in6 对齐到64位边界，Winsock2不像它
      */
 #if 0 && defined(PJ_HAS_INT64) && PJ_HAS_INT64!=0 && \
     (!defined(PJ_WIN32) || PJ_WIN32==0)
@@ -561,19 +663,16 @@ typedef union pj_in6_addr
 } pj_in6_addr;
 
 
-/** Initializer value for pj_in6_addr. */
+/** 初始 pj_in6_addr 的值 */
 #define PJ_IN6ADDR_ANY_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } }
 
-/** Initializer value for pj_in6_addr. */
+/** 初始化 pj_in6_addr 的值 */
 #define PJ_IN6ADDR_LOOPBACK_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 } } }
 
 /**
- * This structure describes IPv6 socket address.
- * If PJ_SOCKADDR_HAS_LEN is not zero, then sin_zero_len member is added
- * to this struct. As far the application is concerned, the value of
- * this member will always be zero. Internally, PJLIB may modify the value
- * before calling OS socket API, and reset the value back to zero before
- * returning the struct to application.
+ * 此结构描述IPv6套接字地址。
+ * 如果 PJ_SOCKADDR_HAS_LEN 不是零，那么 sin_zero_len 成员将添加到此结构中。就应用程序而言，此成员的值将始终为零。
+ * 在内部，PJLIB可以在调用系统 socket API之前修改该值，并在将结构返回到应用程序之前将该值重置为零。
  */
 typedef struct pj_sockaddr_in6
 {
@@ -581,22 +680,19 @@ typedef struct pj_sockaddr_in6
     pj_uint8_t  sin6_zero_len;	    /**< Just ignore this.	   */
     pj_uint8_t  sin6_family;	    /**< Address family.	   */
 #else
-    pj_uint16_t	sin6_family;	    /**< Address family		    */
+    pj_uint16_t	sin6_family;	    /**< 地址族	    */
 #endif
-    pj_uint16_t	sin6_port;	    /**< Transport layer port number. */
-    pj_uint32_t	sin6_flowinfo;	    /**< IPv6 flow information	    */
-    pj_in6_addr sin6_addr;	    /**< IPv6 address.		    */
-    pj_uint32_t sin6_scope_id;	    /**< Set of interfaces for a scope	*/
+    pj_uint16_t	sin6_port;	    /**< 传输层端口 */
+    pj_uint32_t	sin6_flowinfo;	    /**< IPv6 跟随信息	    */
+    pj_in6_addr sin6_addr;	    /**< IPv6 地址	    */
+    pj_uint32_t sin6_scope_id;	    /**< 作用域的接口	*/
 } pj_sockaddr_in6;
 
 
 /**
- * This structure describes common attributes found in transport addresses.
- * If PJ_SOCKADDR_HAS_LEN is not zero, then sa_zero_len member is added
- * to this struct. As far the application is concerned, the value of
- * this member will always be zero. Internally, PJLIB may modify the value
- * before calling OS socket API, and reset the value back to zero before
- * returning the struct to application.
+ * 此结构描述传输地址中的常见属性。
+ * 如果PJ_SOCKADDR_HAS_LEN 不为零，则将 sa_zero_len 成员添加到此结构中。就应用程序而言，此成员的值将始终为零。
+ * 在内部，PJLIB 可以在调用系统 socket API之前修改该值，并在将结构返回到应用程序之前将该值重置为零。
  */
 typedef struct pj_addr_hdr
 {
@@ -610,66 +706,65 @@ typedef struct pj_addr_hdr
 
 
 /**
- * This union describes a generic socket address.
+ * 此联合体描述通用socket地址
  */
 typedef union pj_sockaddr
 {
-    pj_addr_hdr	    addr;	/**< Generic transport address.	    */
-    pj_sockaddr_in  ipv4;	/**< IPv4 transport address.	    */
-    pj_sockaddr_in6 ipv6;	/**< IPv6 transport address.	    */
+    pj_addr_hdr	    addr;	/**< 通用传输地址	    */
+    pj_sockaddr_in  ipv4;	/**< IPv4传输地址    */
+    pj_sockaddr_in6 ipv6;	/**< IPv6传输地址    */
 } pj_sockaddr;
 
 
 /**
- * This structure provides multicast group information for IPv4 addresses.
+ * 此结构提供IPv4地址的多播组信息
  */
 typedef struct pj_ip_mreq {
-    pj_in_addr imr_multiaddr;	/**< IP multicast address of group. */
-    pj_in_addr imr_interface;	/**< local IP address of interface. */
+    pj_in_addr imr_multiaddr;	/**< IP多播地址组 */
+    pj_in_addr imr_interface;	/**< 接口的本地IP地址 */
 } pj_ip_mreq;
 
 
 /**
- * Options to be set for the socket. 
+ * socket 设置的选项
  */
 typedef struct pj_sockopt_params
 {
-    /* The number of options to be applied. */
+    /* 要应用的选项数量 */
     unsigned cnt;
 
-    /* Array of options to be applied. */
+    /* 应用的选项组 */
     struct {
-	/* The level at which the option is defined. */
+	/* 选项级别*/
 	int level;
 
-	/* Option name. */
+	/* 选项名称 */
 	int optname;
 
-	/* Pointer to the buffer in which the option is specified. */
+	/* 指向指定选项的缓冲区的指针 */
 	void *optval;
 
-	/* Buffer size of the buffer pointed by optval. */
+	/* optval 指向的缓冲区的缓冲区大小 */
 	int optlen;
     } options[PJ_MAX_SOCKOPT_PARAMS];
 } pj_sockopt_params;
 
 /*****************************************************************************
  *
- * SOCKET ADDRESS MANIPULATION.
+ * socket 地址操作
  *
  *****************************************************************************
  */
 
 /**
- * Convert 16-bit value from network byte order to host byte order.
- *
+ * 将16位值从网络字节顺序转换为主机字节顺序
  * @param netshort  16-bit network value.
  * @return	    16-bit host value.
  */
 PJ_DECL(pj_uint16_t) pj_ntohs(pj_uint16_t netshort);
 
 /**
- * Convert 16-bit value from host byte order to network byte order.
+ * 将16位值从主机字节顺序转换为网络字节顺序。
  *
  * @param hostshort 16-bit host value.
  * @return	    16-bit network value.
@@ -677,7 +772,7 @@ PJ_DECL(pj_uint16_t) pj_ntohs(pj_uint16_t netshort);
 PJ_DECL(pj_uint16_t) pj_htons(pj_uint16_t hostshort);
 
 /**
- * Convert 32-bit value from network byte order to host byte order.
+ * 将32位值从网络字节顺序转换为主机字节顺序
  *
  * @param netlong   32-bit network value.
  * @return	    32-bit host value.
@@ -685,7 +780,7 @@ PJ_DECL(pj_uint16_t) pj_htons(pj_uint16_t hostshort);
 PJ_DECL(pj_uint32_t) pj_ntohl(pj_uint32_t netlong);
 
 /**
- * Convert 32-bit value from host byte order to network byte order.
+ * 将32位值从主机字节顺序转换为网络字节顺序
  *
  * @param hostlong  32-bit host value.
  * @return	    32-bit network value.
@@ -693,8 +788,7 @@ PJ_DECL(pj_uint32_t) pj_ntohl(pj_uint32_t netlong);
 PJ_DECL(pj_uint32_t) pj_htonl(pj_uint32_t hostlong);
 
 /**
- * Convert an Internet host address given in network byte order
- * to string in standard numbers and dots notation.
+ * 将以网络字节顺序给出的Internet主机地址转换为点分十进制的字符串
  *
  * @param inaddr    The host address.
  * @return	    The string address.
@@ -702,9 +796,7 @@ PJ_DECL(pj_uint32_t) pj_htonl(pj_uint32_t hostlong);
 PJ_DECL(char*) pj_inet_ntoa(pj_in_addr inaddr);
 
 /**
- * This function converts the Internet host address cp from the standard
- * numbers-and-dots notation into binary data and stores it in the structure
- * that inp points to. 
+ * 此函数将Internet主机地址 cp 从点分十进制转换为网络字节顺序地址，并将其存储在 inp 指向的结构中
  *
  * @param cp	IP address in standard numbers-and-dots notation.
  * @param inp	Structure that holds the output of the conversion.
@@ -714,142 +806,108 @@ PJ_DECL(char*) pj_inet_ntoa(pj_in_addr inaddr);
 PJ_DECL(int) pj_inet_aton(const pj_str_t *cp, struct pj_in_addr *inp);
 
 /**
- * This function converts an address in its standard text presentation form
- * into its numeric binary form. It supports both IPv4 and IPv6 address
- * conversion.
+ * 此函数用于将标准文本表示形式的地址转换为数字二进制形式。它支持IPv4和IPv6地址转换
  *
- * @param af	Specify the family of the address.  The PJ_AF_INET and 
- *		PJ_AF_INET6 address families shall be supported.  
- * @param src	Points to the string being passed in. 
- * @param dst	Points to a buffer into which the function stores the 
- *		numeric address; this shall be large enough to hold the
- *		numeric address (32 bits for PJ_AF_INET, 128 bits for
- *		PJ_AF_INET6).  
+ * @param af	指定地址族.  PJ_AF_INET 或 PJ_AF_INET6
+ * @param src	传入的字符串
+ * @param dst	指向函数存储数字地址的缓冲区；该缓冲区应足够大，以容纳数字地址（PJ_AF_INET为32位，PJ_AF_INET6为128位）。
  *
- * @return	PJ_SUCCESS if conversion was successful.
+ * @return	PJ_SUCCESS 转化成功返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pj_inet_pton(int af, const pj_str_t *src, void *dst);
 
 /**
- * This function converts a numeric address into a text string suitable
- * for presentation. It supports both IPv4 and IPv6 address
- * conversion. 
+ * 此函数用于将数字地址转换为适合显示的文本字符串。它支持IPv4和IPv6地址转换
+ *
  * @see pj_sockaddr_print()
  *
- * @param af	Specify the family of the address. This can be PJ_AF_INET
- *		or PJ_AF_INET6.
- * @param src	Points to a buffer holding an IPv4 address if the af argument
- *		is PJ_AF_INET, or an IPv6 address if the af argument is
- *		PJ_AF_INET6; the address must be in network byte order.  
- * @param dst	Points to a buffer where the function stores the resulting
- *		text string; it shall not be NULL.  
- * @param size	Specifies the size of this buffer, which shall be large 
- *		enough to hold the text string (PJ_INET_ADDRSTRLEN characters
- *		for IPv4, PJ_INET6_ADDRSTRLEN characters for IPv6).
+ * @param af	指定地址的族. PJ_AF_INET 或 PJ_AF_INET6
+ * @param src	如果 af 参数是PJ_AF_INET，则指向保存IPv4地址的缓冲区；如果af参数是PJ_AF_INET6，则指向保存IPv6地址的缓冲区；地址必须按网络字节顺序排列
+ * @param dst	指向函数存储结果文本字符串的缓冲区；不能为空
+ * @param size	指定此缓冲区的大小，其大小应足以容纳文本字符串（IPv4的PJ_INET_ADDRSTRLEN 字符，IPv6的PJ_INET6_ADDRSTRLEN字符）
  *
- * @return	PJ_SUCCESS if conversion was successful.
+ * @return	转换成功返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pj_inet_ntop(int af, const void *src,
 				  char *dst, int size);
 
 /**
- * Converts numeric address into its text string representation.
+ * 将数字地址转换为其文本字符串表示形式
  * @see pj_sockaddr_print()
  *
- * @param af	Specify the family of the address. This can be PJ_AF_INET
- *		or PJ_AF_INET6.
- * @param src	Points to a buffer holding an IPv4 address if the af argument
- *		is PJ_AF_INET, or an IPv6 address if the af argument is
- *		PJ_AF_INET6; the address must be in network byte order.  
- * @param dst	Points to a buffer where the function stores the resulting
- *		text string; it shall not be NULL.  
- * @param size	Specifies the size of this buffer, which shall be large 
- *		enough to hold the text string (PJ_INET_ADDRSTRLEN characters
- *		for IPv4, PJ_INET6_ADDRSTRLEN characters for IPv6).
+ * @param af	指定地址的族. PJ_AF_INET 或 PJ_AF_INET6
+ * @param src	如果 af 参数是PJ_AF_INET，则指向保存IPv4地址的缓冲区；如果af参数是PJ_AF_INET6，则指向保存IPv6地址的缓冲区；地址必须按网络字节顺序排列
+ * @param dst	指向函数存储结果文本字符串的缓冲区；它不应为空
+ * @param size	指定此缓冲区的大小，其大小应足以容纳文本字符串（IPv4的PJ_INET_ADDRSTRLEN 字符，IPv6的PJ_INET6_ADDRSTRLEN字符）
  *
- * @return	The address string or NULL if failed.
+ * @return	成功返回地址字符串，失败返回 NULL
  */
 PJ_DECL(char*) pj_inet_ntop2(int af, const void *src,
 			     char *dst, int size);
 
 /**
- * Print socket address.
+ * 打印socket 地址
  *
- * @param addr	The socket address.
- * @param buf	Text buffer.
- * @param size	Size of buffer.
- * @param flags	Bitmask combination of these value:
- *		  - 1: port number is included.
- *		  - 2: square bracket is included for IPv6 address.
+ * @param addr	socket 地址
+ * @param buf	文本缓存
+ * @param size	缓存大小
+ * @param 标记这些值的位掩码组合：
+ *		  	1:包括端口号。
+ *		  	2:IPv6地址包含方括号
  *
- * @return	The address string.
+ * @return	地址字符
  */
 PJ_DECL(char*) pj_sockaddr_print(const pj_sockaddr_t *addr,
 				 char *buf, int size,
 				 unsigned flags);
 
 /**
- * Convert address string with numbers and dots to binary IP address.
+ * 将点分十进制字符串转换为二进制IP地址
  * 
- * @param cp	    The IP address in numbers and dots notation.
- * @return	    If success, the IP address is returned in network
- *		    byte order. If failed, PJ_INADDR_NONE will be
- *		    returned.
- * @remark
- * This is an obsolete interface to #pj_inet_aton(); it is obsolete
- * because -1 is a valid address (255.255.255.255), and #pj_inet_aton()
- * provides a cleaner way to indicate error return.
+ * @param cp	    点分十进制表示的地址
+ * @return	    如果成功，则按网络字节顺序返回IP地址。如果失败，将返回PJ_INADDR_NONE
+ * @remark 	这是 pj_inet_aton() 的过时接口；它是过时的，因为 -1是一个有效地址（255.255.255.255），而 pj_inet_aton()提供了一种更清晰的方法来指示错误返回
  */
 PJ_DECL(pj_in_addr) pj_inet_addr(const pj_str_t *cp);
 
 /**
- * Convert address string with numbers and dots to binary IP address.
+ * 将点分十进制字符串转换为二进制 IP地址
  * 
- * @param cp	    The IP address in numbers and dots notation.
- * @return	    If success, the IP address is returned in network
- *		    byte order. If failed, PJ_INADDR_NONE will be
- *		    returned.
+ * @param cp	    点分十进制字符串
+ * @return	    如果成功，则按网络字节顺序返回IP地址。如果失败，将返回PJ_INADDR_NONE
  * @remark
- * This is an obsolete interface to #pj_inet_aton(); it is obsolete
- * because -1 is a valid address (255.255.255.255), and #pj_inet_aton()
- * provides a cleaner way to indicate error return.
+ * 	这是 pj_inet_aton() 的过时接口；它是过时的，因为 -1是一个有效地址（255.255.255.255），而 pj_inet_aton() 提供了一种更清晰的方法来指示错误返回
  */
 PJ_DECL(pj_in_addr) pj_inet_addr2(const char *cp);
 
 /**
- * Initialize IPv4 socket address based on the address and port info.
- * The string address may be in a standard numbers and dots notation or 
- * may be a hostname. If hostname is specified, then the function will 
- * resolve the host into the IP address.
+ * 基于地址和端口信息初始化IPv4 socket地址
+ * 字符串地址可以是点分十进制，也可以是主机名。如果指定了 hostname，那么函数将把主机解析为IP地址。
  *
  * @see pj_sockaddr_init()
  *
- * @param addr	    The IP socket address to be set.
- * @param cp	    The address string, which can be in a standard 
- *		    dotted numbers or a hostname to be resolved.
- * @param port	    The port number, in host byte order.
+ * @param addr	    IP socket 地址
+ * @param cp	    地址字符串，可以是点分十进制或要解析的主机名
+ * @param port	    端口号，按主机字节顺序
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sockaddr_in_init( pj_sockaddr_in *addr,
 				          const pj_str_t *cp,
 					  pj_uint16_t port);
 
 /**
- * Initialize IP socket address based on the address and port info.
- * The string address may be in a standard numbers and dots notation or 
- * may be a hostname. If hostname is specified, then the function will 
- * resolve the host into the IP address.
+ * 根据address和port初始化IP socket 地址。
+ * 字符串地址可以是点分十进制表示法，也可以是主机名。如果指定了hostname，那么函数将把主机解析为IP地址。
  *
  * @see pj_sockaddr_in_init()
  *
- * @param af	    Internet address family.
- * @param addr	    The IP socket address to be set.
- * @param cp	    The address string, which can be in a standard 
- *		    dotted numbers or a hostname to be resolved.
- * @param port	    The port number, in host byte order.
+ * @param af	    地址族
+ * @param addr	    ip 地址
+ * @param cp	    地址字符串，可以是点分十进制或要解析的主机名
+ * @param port	    端口号，主机序列
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sockaddr_init(int af, 
 				      pj_sockaddr *addr,
@@ -857,127 +915,115 @@ PJ_DECL(pj_status_t) pj_sockaddr_init(int af,
 				      pj_uint16_t port);
 
 /**
- * Compare two socket addresses.
+ * 比较两 socket 地址
  *
- * @param addr1	    First address.
- * @param addr2	    Second address.
+ * @param addr1	    第一个地址
+ * @param addr2	    第二个地址
  *
- * @return	    Zero on equal, -1 if addr1 is less than addr2,
- *		    and +1 if addr1 is more than addr2.
+ * @return
+ * 		0 ： 相等
+ * 		-1： addr1 < addr2
+ * 		+1:  addr1 > addr2
  */
 PJ_DECL(int) pj_sockaddr_cmp(const pj_sockaddr_t *addr1,
 			     const pj_sockaddr_t *addr2);
 
 /**
- * Get pointer to the address part of a socket address.
+ * 获取指向socket地址的部分指针
  * 
- * @param addr	    Socket address.
+ * @param addr	    socket 地址
  *
- * @return	    Pointer to address part (sin_addr or sin6_addr,
- *		    depending on address family)
+ * @return	    指向地址部分的指针（sin_addr或sin6_addr，取决于地址族）
  */
 PJ_DECL(void*) pj_sockaddr_get_addr(const pj_sockaddr_t *addr);
 
 /**
- * Check that a socket address contains a non-zero address part.
+ * 检查套接字地址是否包含非零地址
  *
  * @param addr	    Socket address.
  *
- * @return	    Non-zero if address is set to non-zero.
+ * @return	    如果地址设置为非零，则为非零
  */
 PJ_DECL(pj_bool_t) pj_sockaddr_has_addr(const pj_sockaddr_t *addr);
 
 /**
- * Get the address part length of a socket address, based on its address
- * family. For PJ_AF_INET, the length will be sizeof(pj_in_addr), and
- * for PJ_AF_INET6, the length will be sizeof(pj_in6_addr).
+ * 根据地址族获取套接字地址的地址长度。对于PJ_AF_INET，长度将是sizeof(pj_in_addr)，对于PJ_AF_INET6，长度将是sizeof(pj_in6_addr)
  * 
- * @param addr	    Socket address.
+ * @param addr	    Socket 地址
  *
- * @return	    Length in bytes.
+ * @return	    字节数
  */
 PJ_DECL(unsigned) pj_sockaddr_get_addr_len(const pj_sockaddr_t *addr);
 
 /**
- * Get the socket address length, based on its address
- * family. For PJ_AF_INET, the length will be sizeof(pj_sockaddr_in), and
- * for PJ_AF_INET6, the length will be sizeof(pj_sockaddr_in6).
+ * 根据其地址族获取socket地址长度。对于PJ_AF_INET，长度将是sizeof（pj_sockaddr_in），对于PJ_AF_INET6，长度将是sizeof（pj_sockaddr_in6）。
  * 
  * @param addr	    Socket address.
  *
- * @return	    Length in bytes.
+ * @return	    字节长度
  */
 PJ_DECL(unsigned) pj_sockaddr_get_len(const pj_sockaddr_t *addr);
 
 /** 
- * Copy only the address part (sin_addr/sin6_addr) of a socket address.
+ * 只复制 socket 地址的地址部分 (sin_addr/sin6_addr)
  *
- * @param dst	    Destination socket address.
- * @param src	    Source socket address.
+ * @param dst	    socket 目的地址
+ * @param src	    socket 源地址
  *
  * @see @pj_sockaddr_cp()
  */
 PJ_DECL(void) pj_sockaddr_copy_addr(pj_sockaddr *dst,
 				    const pj_sockaddr *src);
 /**
- * Copy socket address. This will copy the whole structure depending
- * on the address family of the source socket address.
+ * 复制 socket 地址,这将根据 源socket地址的地址族复制整个结构
  *
- * @param dst	    Destination socket address.
- * @param src	    Source socket address.
+ * @param dst	    socket 目的地址
+ * @param src	    socket 源地址
  *
  * @see @pj_sockaddr_copy_addr()
  */
 PJ_DECL(void) pj_sockaddr_cp(pj_sockaddr_t *dst, const pj_sockaddr_t *src);
 
 /*
- * If the source's and desired address family matches, copy the address,
- * otherwise synthesize a new address with the desired address family,
- * from the source address. This can be useful to generate an IPv4-mapped
- * IPv6 address.
+ * 如果源地址和所需的地址族匹配，则复制该地址，否则从源地址合成一个具有所需地址族的新地址。
+ * 这对于生成IPv4映射的IPv6地址非常有用。
  *
- * @param dst_af    Desired address family.
- * @param dst	    Destination socket address, invalid if synthesis is
- *		    required and failed.
- * @param src	    Source socket address.
+ * @param dst_af    想要的地址族
+ * @param dst	    socket 目的地址，如果需要合成且失败，则无效
+ * @param src	    socket 源地址
  *
- * @return	    PJ_SUCCESS on success, or the error status
- *		    if synthesis is required and failed.
+ * @return	    合成成功则返回 PJ_SUCCESS；如果合成失败，则返回错误状态
  */
 PJ_DECL(pj_status_t) pj_sockaddr_synthesize(int dst_af,
 				            pj_sockaddr_t *dst,
 				            const pj_sockaddr_t *src);
 
 /**
- * Get the IP address of an IPv4 socket address.
- * The address is returned as 32bit value in host byte order.
+ * 获取IPv4 socket 地址的IP地址
+ * 地址以主机字节顺序的32位值返回
  *
- * @param addr	    The IP socket address.
- * @return	    32bit address, in host byte order.
+ * @param addr	    IP 地址
+ * @return	    32位地址，主机序列
  */
 PJ_DECL(pj_in_addr) pj_sockaddr_in_get_addr(const pj_sockaddr_in *addr);
 
 /**
- * Set the IP address of an IPv4 socket address.
+ * 设置IPv4 socket 地址的IP地址
  *
- * @param addr	    The IP socket address.
- * @param hostaddr  The host address, in host byte order.
+ * @param addr	    IP socket 地址
+ * @param hostaddr  主机地址，主机序列
  */
 PJ_DECL(void) pj_sockaddr_in_set_addr(pj_sockaddr_in *addr,
 				      pj_uint32_t hostaddr);
 
 /**
- * Set the IP address of an IP socket address from string address, 
- * with resolving the host if necessary. The string address may be in a
- * standard numbers and dots notation or may be a hostname. If hostname
- * is specified, then the function will resolve the host into the IP
- * address.
+ * 从字符串地址设置IP套接字地址的IP地址，必要时解析主机。字符串地址可以是点分十进制表示法，也可以是主机名。
+ * 如果指定了hostname，那么函数将把主机解析为IP地址。
  *
  * @see pj_sockaddr_set_str_addr()
  *
- * @param addr	    The IP socket address to be set.
- * @param cp	    The address string, which can be in a standard 
- *		    dotted numbers or a hostname to be resolved.
+ * @param addr	    设置的 IP socket address
+ * @param cp	    地址字符串，点分十进制或是 hostname
  *
  * @return	    PJ_SUCCESS on success.
  */
@@ -985,16 +1031,12 @@ PJ_DECL(pj_status_t) pj_sockaddr_in_set_str_addr( pj_sockaddr_in *addr,
 					          const pj_str_t *cp);
 
 /**
- * Set the IP address of an IPv4 or IPv6 socket address from string address,
- * with resolving the host if necessary. The string address may be in a
- * standard IPv6 or IPv6 address or may be a hostname. If hostname
- * is specified, then the function will resolve the host into the IP
- * address according to the address family.
+ * 从字符串地址设置 IPv4或IPv6套接字地址的IP地址，必要时解析主机。字符串地址可以是标准IPv6或IPv6地址，也可以是主机名。
+ * 如果指定了hostname，那么函数将根据地址族将主机解析为IP地址。
  *
- * @param af	    Address family.
- * @param addr	    The IP socket address to be set.
- * @param cp	    The address string, which can be in a standard 
- *		    IP numbers (IPv4 or IPv6) or a hostname to be resolved.
+ * @param af	    地址族
+ * @param addr	    设置 IP socket address
+ * @param cp	    地址字符串，可以是标准IP号码（IPv4或IPv6）或要解析的主机名
  *
  * @return	    PJ_SUCCESS on success.
  */
@@ -1003,91 +1045,84 @@ PJ_DECL(pj_status_t) pj_sockaddr_set_str_addr(int af,
 					      const pj_str_t *cp);
 
 /**
- * Get the port number of a socket address, in host byte order. 
- * This function can be used for both IPv4 and IPv6 socket address.
+ * 以主机字节顺序获取 socket地址的端口号
+ * 此函数可用于IPv4和IPv6套接字地址。
  * 
  * @param addr	    Socket address.
  *
- * @return	    Port number, in host byte order.
+ * @return	    端口号，主机序列
  */
 PJ_DECL(pj_uint16_t) pj_sockaddr_get_port(const pj_sockaddr_t *addr);
 
 /**
- * Get the transport layer port number of an Internet socket address.
- * The port is returned in host byte order.
+ * 根据socket 地址获取传输层的端口号，主机序列
  *
- * @param addr	    The IP socket address.
- * @return	    Port number, in host byte order.
+ * @param addr	    IP socket address.
+ * @return	    端口号，主机序列
  */
 PJ_DECL(pj_uint16_t) pj_sockaddr_in_get_port(const pj_sockaddr_in *addr);
 
 /**
- * Set the port number of an Internet socket address.
+ * 设置一个IP 地址的端口号，主机序列
  *
- * @param addr	    The socket address.
- * @param hostport  The port number, in host byte order.
+ * @param addr	    IP 地址
+ * @param hostport  端口号，主机序列
  */
 PJ_DECL(pj_status_t) pj_sockaddr_set_port(pj_sockaddr *addr, 
 					  pj_uint16_t hostport);
 
 /**
- * Set the port number of an IPv4 socket address.
+ * 设置一个 IPv4 socket 地址的端口号
  *
  * @see pj_sockaddr_set_port()
  *
- * @param addr	    The IP socket address.
- * @param hostport  The port number, in host byte order.
+ * @param addr	    IP socket 地址
+ * @param hostport  端口号，主机序列
  */
 PJ_DECL(void) pj_sockaddr_in_set_port(pj_sockaddr_in *addr, 
 				      pj_uint16_t hostport);
 
 /**
- * Parse string containing IP address and optional port into socket address,
- * possibly also with address family detection. This function supports both
- * IPv4 and IPv6 parsing, however IPv6 parsing may only be done if IPv6 is
- * enabled during compilation.
+ * 将包含IP地址和可选端口的字符串解析为套接字地址，可能还包含地址族检测。此函数同时支持IPv4和IPv6解析，
+ * 但是只有在编译期间启用IPv6时才能执行IPv6解析。
  *
- * This function supports parsing several formats. Sample IPv4 inputs and
- * their default results::
- *  - "10.0.0.1:80": address 10.0.0.1 and port 80.
- *  - "10.0.0.1": address 10.0.0.1 and port zero.
- *  - "10.0.0.1:": address 10.0.0.1 and port zero.
- *  - "10.0.0.1:0": address 10.0.0.1 and port zero.
- *  - ":80": address 0.0.0.0 and port 80.
- *  - ":": address 0.0.0.0 and port 0.
- *  - "localhost": address 127.0.0.1 and port 0.
- *  - "localhost:": address 127.0.0.1 and port 0.
- *  - "localhost:80": address 127.0.0.1 and port 80.
+ * 此函数支持解析多种格式。
+ * IPv4输入及其默认结果示例：
+ *  - "10.0.0.1:80": 地址 10.0.0.1  端口 80
+ *  - "10.0.0.1": 地址 10.0.0.1 端口 0
+ *  - "10.0.0.1:": 地址 10.0.0.1 端口 0
+ *  - "10.0.0.1:0": 地址 10.0.0.1 端口 0
+ *  - ":80": 地址 0.0.0.0 端口 80
+ *  - ":": 地址 0.0.0.0 端口 0
+ *  - "localhost": 地址 127.0.0.1 端口 0
+ *  - "localhost:": 地址 127.0.0.1 端口 0
+ *  - "localhost:80": 地址 127.0.0.1 端口 80
  *
- * Sample IPv6 inputs and their default results:
- *  - "[fec0::01]:80": address fec0::01 and port 80
- *  - "[fec0::01]": address fec0::01 and port 0
- *  - "[fec0::01]:": address fec0::01 and port 0
- *  - "[fec0::01]:0": address fec0::01 and port 0
- *  - "fec0::01": address fec0::01 and port 0
- *  - "fec0::01:80": address fec0::01:80 and port 0
- *  - "::": address zero (::) and port 0
- *  - "[::]": address zero (::) and port 0
- *  - "[::]:": address zero (::) and port 0
- *  - ":::": address zero (::) and port 0
- *  - "[::]:80": address zero (::) and port 0
- *  - ":::80": address zero (::) and port 80
+ * IPv6输入及其默认结果示例
+ *  - "[fec0::01]:80": 地址 fec0::01 端口 80
+ *  - "[fec0::01]": 地址 fec0::01 端口 0
+ *  - "[fec0::01]:": 地址 fec0::01 端口 0
+ *  - "[fec0::01]:0": 地址 fec0::01 端口 0
+ *  - "fec0::01": 地址 fec0::01 端口 0
+ *  - "fec0::01:80": 地址 fec0::01:80 端口 0
+ *  - "::": 地址 0 (::) 端口 0
+ *  - "[::]": 地址 0 (::) 端口 0
+ *  - "[::]:": 地址 0 (::) 端口 0
+ *  - ":::": 地址 0 (::) 端口 0
+ *  - "[::]:80": 地址 0 (::) 端口 0
+ *  - ":::80": 地址 0 (::) 端口 80
  *
- * Note: when the IPv6 socket address contains port number, the IP 
- * part of the socket address should be enclosed with square brackets, 
- * otherwise the port number will be included as part of the IP address
- * (see "fec0::01:80" example above).
+ * 注意：当IPv6套接字地址包含端口号时，套接字地址的IP部分应使用方括号括起来，
+ * 否则端口号将作为IP地址的一部分包含在内（请参见上面的“fec0:：01:80”示例）。
  *
- * @param af	    Optionally specify the address family to be used. If the
- *		    address family is to be deducted from the input, specify
- *		    pj_AF_UNSPEC() here. Other supported values are
- *		    #pj_AF_INET() and #pj_AF_INET6()
- * @param options   Additional options to assist the parsing, must be zero
- *		    for now.
- * @param str	    The input string to be parsed.
- * @param addr	    Pointer to store the result.
+ * @param af	    （可选）指定要使用的地址族。如果要从输入中扣除地址族，请在此处指定 pj_AF_UNSPEC()。
+ * 其他支持的值有pj_AF_INET()和pj_AF_INET6()
  *
- * @return	    PJ_SUCCESS if the parsing is successful.
+ * @param options   辅助解析的其他选项，现在必须为零。
+ * @param str	    输入字符串
+ * @param addr	    存储结果的指针
+ *
+ * @return	    解析成功返回 PJ_SUCCESS
  *
  * @see pj_sockaddr_parse2()
  */
@@ -1096,30 +1131,19 @@ PJ_DECL(pj_status_t) pj_sockaddr_parse(int af, unsigned options,
 				       pj_sockaddr *addr);
 
 /**
- * This function is similar to #pj_sockaddr_parse(), except that it will not
- * convert the hostpart into IP address (thus possibly resolving the hostname
- * into a #pj_sockaddr. 
+ * 此函数类似于 pj_sockaddr_parse()，只是它不会将 hostpart 转换为IP地址（因此可能会将主机名解析为 pj_sockaddr）
  *
- * Unlike #pj_sockaddr_parse(), this function has a limitation that if port 
- * number is specified in an IPv6 input string, the IP part of the IPv6 socket
- * address MUST be enclosed in square brackets, otherwise the port number will
- * be considered as part of the IPv6 IP address.
+ * 与 pj_sockaddr_parse()不同，此函数有一个限制，即如果在IPv6输入字符串中指定了端口号，则 IPv6套接字地址的IP部分必须括在方括号中，
+ * 否则端口号将被视为IPv6 IP地址的一部分。
  *
- * @param af	    Optionally specify the address family to be used. If the
- *		    address family is to be deducted from the input, specify
- *		    #pj_AF_UNSPEC() here. Other supported values are
- *		    #pj_AF_INET() and #pj_AF_INET6()
- * @param options   Additional options to assist the parsing, must be zero
- *		    for now.
- * @param str	    The input string to be parsed.
- * @param hostpart  Optional pointer to store the host part of the socket 
- *		    address, with any brackets removed.
- * @param port	    Optional pointer to store the port number. If port number
- *		    is not found, this will be set to zero upon return.
- * @param raf	    Optional pointer to store the detected address family of
- *		    the input address.
+ * @param af	（可选）指定要使用的地址族。不指定地址族，此处指定 pj_AF_UNSPEC()。其他支持的值有 pj_AF_INET()和 pj_AF_INET6()
+ * @param options   辅助解析的其他选项，现在必须为零。
+ * @param str	    要分析的输入字符串
+ * @param hostpart  用于存储套接字地址的主机部分的可选指针，在删除任何括号下
+ * @param port	    用于存储端口号的可选指针。如果找不到端口号，返回时将设置为零
+ * @param raf	    用于存储输入地址的地址族的可选指针
  *
- * @return	    PJ_SUCCESS if the parsing is successful.
+ * @return	    解析成功则返回 PJ_SUCCESS
  *
  * @see pj_sockaddr_parse()
  */
@@ -1131,25 +1155,22 @@ PJ_DECL(pj_status_t) pj_sockaddr_parse2(int af, unsigned options,
 
 /*****************************************************************************
  *
- * HOST NAME AND ADDRESS.
+ * 主机名和地址
  *
  *****************************************************************************
  */
 
 /**
- * Get system's host name.
+ * 获取系统的主机名
  *
- * @return	    The hostname, or empty string if the hostname can not
- *		    be identified.
+ * @return	    主机名，如果没有被定义则返回空字符串
  */
 PJ_DECL(const pj_str_t*) pj_gethostname(void);
 
 /**
- * Get host's IP address, which the the first IP address that is resolved
- * from the hostname.
+ * 获取主机的IP地址，它是从主机名解析的第一个IP地址
  *
- * @return	    The host's IP address, PJ_INADDR_NONE if the host
- *		    IP address can not be identified.
+ * @return	    主机的IP 地址，如果主机IP 地址没有被定义则返回 PJ_INADDR_NONE
  */
 PJ_DECL(pj_in_addr) pj_gethostaddr(void);
 
@@ -1162,19 +1183,14 @@ PJ_DECL(pj_in_addr) pj_gethostaddr(void);
  */
 
 /**
- * Create new socket/endpoint for communication.
+ * 创建一个新的通信 socket
  *
- * @param family    Specifies a communication domain; this selects the
- *		    protocol family which will be used for communication.
- * @param type	    The socket has the indicated type, which specifies the 
- *		    communication semantics.
- * @param protocol  Specifies  a  particular  protocol  to  be used with the
- *		    socket.  Normally only a single protocol exists to support 
- *		    a particular socket  type  within  a given protocol family, 
- *		    in which a case protocol can be specified as 0.
- * @param sock	    New socket descriptor, or PJ_INVALID_SOCKET on error.
+ * @param family    协议族
+ * @param type	    指定类型
+ * @param protocol  指定特定协议。通常只有一个协议支持给定协议族中的特定套接字类型，其中case协议可以指定为0
+ * @param sock	    新的套接字描述符，错误为 PJ_INVALID_SOCKET
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_socket(int family, 
 				    int type, 
@@ -1182,56 +1198,51 @@ PJ_DECL(pj_status_t) pj_sock_socket(int family,
 				    pj_sock_t *sock);
 
 /**
- * Close the socket descriptor.
+ * 关闭socket
  *
- * @param sockfd    The socket descriptor.
+ * @param sockfd    socket 句柄
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_close(pj_sock_t sockfd);
 
 
 /**
- * This function gives the socket sockfd the local address my_addr. my_addr is
- * addrlen bytes long.  Traditionally, this is called assigning a name to
- * a socket. When a socket is created with #pj_sock_socket(), it exists in a
- * name space (address family) but has no name assigned.
+ * 此函数为套接字 sockfd 提供本地地址 my_addr,my_addr是addrlen字节长。传统上，这称为为套接字指定名称。使用 pj_sock_socket() 创建套接字时，
+ * 它存在于名称空间（地址族）中，但没有指定名称。
  *
- * @param sockfd    The socket desriptor.
- * @param my_addr   The local address to bind the socket to.
- * @param addrlen   The length of the address.
+ * @param sockfd    socket 句柄
+ * @param my_addr   本地地址
+ * @param addrlen   地址长度
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_bind( pj_sock_t sockfd, 
 				   const pj_sockaddr_t *my_addr,
 				   int addrlen);
 
 /**
- * Bind the IP socket sockfd to the given address and port.
+ * 将IP套接字 sockfd 绑定到给定的地址和端口。
  *
- * @param sockfd    The socket descriptor.
- * @param addr	    Local address to bind the socket to, in host byte order.
- * @param port	    The local port to bind the socket to, in host byte order.
+ * @param sockfd    socket 句柄
+ * @param addr	    本地地址，主机序列
+ * @param port	    本地端口，主机序列
  *
- * @return	    Zero on success.
+ * @return	    成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_bind_in( pj_sock_t sockfd, 
 				      pj_uint32_t addr,
 				      pj_uint16_t port);
 
 /**
- * Bind the IP socket sockfd to the given address and a random port in the
- * specified range.
+ * 将IP套接字 sockfd 绑定到指定的地址和指定范围内的随机端口。
  *
- * @param sockfd    	The socket desriptor.
- * @param addr      	The local address and port to bind the socket to.
- * @param port_range	The port range, relative the to start port number
- * 			specified in port field in #addr. Note that if the
- * 			port is zero, this param will be ignored.
- * @param max_try   	Maximum retries.
+ * @param sockfd    	socket 句柄
+ * @param addr      	本地地址和端口
+ * @param port_range	端口范围，相对于在地址的端口字段中指定的起始端口号。请注意，如果端口为零，则将忽略此参数
+ * @param max_try   	最多尝试
  *
- * @return	    	Zero on success.
+ * @return	    	成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_bind_random( pj_sock_t sockfd,
 				          const pj_sockaddr_t *addr,
@@ -1240,30 +1251,25 @@ PJ_DECL(pj_status_t) pj_sock_bind_random( pj_sock_t sockfd,
 
 #if PJ_HAS_TCP
 /**
- * Listen for incoming connection. This function only applies to connection
- * oriented sockets (such as PJ_SOCK_STREAM or PJ_SOCK_SEQPACKET), and it
- * indicates the willingness to accept incoming connections.
+ * 监听连接，此函数仅适用于TCP(PJ_SOCK_STREAM 或 PJ_SOCK_SEQPACKET) 表示接受传入连接的意愿。
  *
- * @param sockfd	The socket descriptor.
- * @param backlog	Defines the maximum length the queue of pending
- *			connections may grow to.
+ * @param sockfd	socket 句柄
+ * @param backlog	定义挂起连接队列可能增长到的最大长度。
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_listen( pj_sock_t sockfd, 
 				     int backlog );
 
 /**
- * Accept new connection on the specified connection oriented server socket.
+ * 服务端，接受新连接
  *
- * @param serverfd  The server socket.
- * @param newsock   New socket on success, of PJ_INVALID_SOCKET if failed.
- * @param addr	    A pointer to sockaddr type. If the argument is not NULL,
- *		    it will be filled by the address of connecting entity.
- * @param addrlen   Initially specifies the length of the address, and upon
- *		    return will be filled with the exact address length.
+ * @param serverfd  服务器 socket
+ * @param newsock   成功时创建新套接字，失败时返回 PJ_INVALID_SOCKET
+ * @param addr	    指向 sockaddr 。如果参数不为空，则由连接实体的地址填充
+ * @param addrlen   最初指定地址的长度，返回时将填入确切的地址长度
  *
- * @return	    Zero on success, or the error number.
+ * @return	    成功返回 0，失败返回错误码
  */
 PJ_DECL(pj_status_t) pj_sock_accept( pj_sock_t serverfd,
 				     pj_sock_t *newsock,
@@ -1272,68 +1278,56 @@ PJ_DECL(pj_status_t) pj_sock_accept( pj_sock_t serverfd,
 #endif
 
 /**
- * The file descriptor sockfd must refer to a socket.  If the socket is of
- * type PJ_SOCK_DGRAM  then the serv_addr address is the address to which
- * datagrams are sent by default, and the only address from which datagrams
- * are received. If the socket is of type PJ_SOCK_STREAM or PJ_SOCK_SEQPACKET,
- * this call attempts to make a connection to another socket.  The
- * other socket is specified by serv_addr, which is an address (of length
- * addrlen) in the communications space of the  socket.  Each  communications
- * space interprets the serv_addr parameter in its own way.
+ * 文件描述符 sockfd 必须引用套接字。如果套接字是 PJ_SOCK_DGRAM 类型，那么 serv_addr 是默认情况下数据报发送到的地址，也是接收数据报的唯一地址。
+ * 如果套接字的类型为 PJ_SOCK_STREAM 或 PJ_SOCK_SEQPACKET，则此调用将尝试连接到另一个套接字。另一个套接字由 serv_addr 指定，它是套接字通信空
+ * 间中的地址（addrlen长度）。每个通信空间都以自己的方式解释 serv_addr 参数。
  *
- * @param sockfd	The socket descriptor.
- * @param serv_addr	Server address to connect to.
- * @param addrlen	The length of server address.
+ * @param sockfd	socket 句柄
+ * @param serv_addr	服务端地址
+ * @param addrlen	服务端地址长度
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_connect( pj_sock_t sockfd,
 				      const pj_sockaddr_t *serv_addr,
 				      int addrlen);
 
 /**
- * Return the address of peer which is connected to socket sockfd.
+ * 返回连接到 socket sockfd 的对等方的地址
  *
- * @param sockfd	The socket descriptor.
- * @param addr		Pointer to sockaddr structure to which the address
- *			will be returned.
- * @param namelen	Initially the length of the addr. Upon return the value
- *			will be set to the actual length of the address.
+ * @param sockfd	socket 句柄
+ * @param addr		指向将返回地址的 sockaddr 结构的指针
+ * @param namelen	最初是地址的长度。返回时，该值将设置为地址的实际长度。
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_getpeername(pj_sock_t sockfd,
 					  pj_sockaddr_t *addr,
 					  int *namelen);
 
 /**
- * Return the current name of the specified socket.
+ * 返回指定套接字的当前名称
  *
- * @param sockfd	The socket descriptor.
- * @param addr		Pointer to sockaddr structure to which the address
- *			will be returned.
- * @param namelen	Initially the length of the addr. Upon return the value
- *			will be set to the actual length of the address.
+ * @param sockfd	socket 句柄
+ * @param addr		指向将返回地址的 sockaddr 结构的指针
+ * @param namelen	最初是地址的长度，返回时，该值将设置为地址的实际长度
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_getsockname( pj_sock_t sockfd,
 					  pj_sockaddr_t *addr,
 					  int *namelen);
 
 /**
- * Get socket option associated with a socket. Options may exist at multiple
- * protocol levels; they are always present at the uppermost socket level.
+ * 获取套接字选项。选项可能存在于多个协议级别；它们始终存在于最上面的套接字级别。
  *
- * @param sockfd	The socket descriptor.
- * @param level		The level which to get the option from.
- * @param optname	The option name.
- * @param optval	Identifies the buffer which the value will be
- *			returned.
- * @param optlen	Initially contains the length of the buffer, upon
- *			return will be set to the actual size of the value.
+ * @param sockfd	socket 句柄
+ * @param level		选项的级别
+ * @param optname	选项名称
+ * @param optval	选项值
+ * @param optlen	最初包含缓冲区的长度，返回时将设置为实际大小的值
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_getsockopt( pj_sock_t sockfd,
 					 pj_uint16_t level,
@@ -1341,17 +1335,15 @@ PJ_DECL(pj_status_t) pj_sock_getsockopt( pj_sock_t sockfd,
 					 void *optval,
 					 int *optlen);
 /**
- * Manipulate the options associated with a socket. Options may exist at 
- * multiple protocol levels; they are always present at the uppermost socket 
- * level.
+ * 设置套接字选项。选项可能存在于多个协议级别；它们始终存在于最上面的套接字级别。
  *
- * @param sockfd	The socket descriptor.
- * @param level		The level which to get the option from.
- * @param optname	The option name.
- * @param optval	Identifies the buffer which contain the value.
- * @param optlen	The length of the value.
+ * @param sockfd	socket 句柄
+ * @param level		选项级别
+ * @param optname	选项名称
+ * @param optval	选项值
+ * @param optlen	值的长度
  *
- * @return		PJ_SUCCESS or the status code.
+ * @return		返回 PJ_SUCCESS 或状态值
  */
 PJ_DECL(pj_status_t) pj_sock_setsockopt( pj_sock_t sockfd,
 					 pj_uint16_t level,
@@ -1360,31 +1352,25 @@ PJ_DECL(pj_status_t) pj_sock_setsockopt( pj_sock_t sockfd,
 					 int optlen);
 
 /**
- * Set socket options associated with a socket. This method will apply all the 
- * options specified, and ignore any errors that might be raised.
+ * 设置套接字选项。此方法将应用所有指定的选项，并忽略可能引发的任何错误。
  *
- * @param sockfd	The socket descriptor.
- * @param params	The socket options.
+ * @param sockfd	socket 句柄
+ * @param params	socket 选项
  *
- * @return		PJ_SUCCESS or the last error code. 
+ * @return		成功返回 PJ_SUCCESS;失败返回最后一个错误码
  */
 PJ_DECL(pj_status_t) pj_sock_setsockopt_params( pj_sock_t sockfd,
 					       const pj_sockopt_params *params);					       
 
 /**
- * Helper function to set socket buffer size using #pj_sock_setsockopt()
- * with capability to auto retry with lower buffer setting value until
- * the highest possible value is successfully set.
+ * Helper函数，用于使用 pj_sock_setsockopt() 设置套接字缓冲区大小，该函数能够使用较低的缓冲区设置值自动重试，直到成功设置可能的最高值。
  *
- * @param sockfd	The socket descriptor.
- * @param optname	The option name, valid values are pj_SO_RCVBUF()
- *			and pj_SO_SNDBUF().
- * @param auto_retry	Option whether auto retry with lower value is
- *			enabled.
- * @param buf_size	On input, specify the prefered buffer size setting,
- *			on output, the buffer size setting applied.
+ * @param sockfd	socket 句柄
+ * @param optname	选项名称，有效值为 pj_SO_RCVBUF() 和 pj_SO_SNDBUF()
+ * @param auto_retry	具有更低值时是否自动重试
+ * @param buf_size	在输入时，指定首选的缓冲区大小设置；在输出时，指定应用的缓冲区大小设置
  *
- * @return		PJ_SUCCESS or the status code.
+ * @return		成功返回 PJ_SUCCESS；失败返回状态码
  */
 PJ_DECL(pj_status_t) pj_sock_setsockopt_sobuf( pj_sock_t sockfd,
 					       pj_uint16_t optname,
@@ -1393,15 +1379,14 @@ PJ_DECL(pj_status_t) pj_sock_setsockopt_sobuf( pj_sock_t sockfd,
 
 
 /**
- * Receives data stream or message coming to the specified socket.
+ * 接收指定套接字的数据流或消息
  *
- * @param sockfd	The socket descriptor.
- * @param buf		The buffer to receive the data or message.
- * @param len		On input, the length of the buffer. On return,
- *			contains the length of data received.
- * @param flags		Flags (such as pj_MSG_PEEK()).
+ * @param sockfd	socket 句柄
+ * @param buf		接收数据或消息的buffer
+ * @param len		输入，这个buffer 长度。返回，包含接收数据的长度
+ * @param flags		标识 (如 pj_MSG_PEEK()).
  *
- * @return		PJ_SUCCESS or the error code.
+ * @return		成功返回 PJ_SUCCESS；失败返回错误码
  */
 PJ_DECL(pj_status_t) pj_sock_recv(pj_sock_t sockfd,
 				  void *buf,
@@ -1409,20 +1394,16 @@ PJ_DECL(pj_status_t) pj_sock_recv(pj_sock_t sockfd,
 				  unsigned flags);
 
 /**
- * Receives data stream or message coming to the specified socket.
+ * 接收指定套接字的数据流或消息
  *
- * @param sockfd	The socket descriptor.
- * @param buf		The buffer to receive the data or message.
- * @param len		On input, the length of the buffer. On return,
- *			contains the length of data received.
- * @param flags		Flags (such as pj_MSG_PEEK()).
- * @param from		If not NULL, it will be filled with the source
- *			address of the connection.
- * @param fromlen	Initially contains the length of from address,
- *			and upon return will be filled with the actual
- *			length of the address.
+ * @param sockfd	socket 句柄
+ * @param buf		接收数据和消息的buffer
+ * @param len		输入，buffer 长度；返回，接收数据的长度
+ * @param flags		标识 (如 pj_MSG_PEEK()).
+ * @param from		如果不为空，它将用连接的源地址填充
+ * @param fromlen	最初包含发件人地址的长度，返回时将填写地址的实际长度
  *
- * @return		PJ_SUCCESS or the error code.
+ * @return		成功返回 PJ_SUCCESS；失败返回错误码
  */
 PJ_DECL(pj_status_t) pj_sock_recvfrom( pj_sock_t sockfd,
 				      void *buf,
@@ -1432,16 +1413,14 @@ PJ_DECL(pj_status_t) pj_sock_recvfrom( pj_sock_t sockfd,
 				      int *fromlen);
 
 /**
- * Transmit data to the socket.
+ * 传输数据到 socket
  *
- * @param sockfd	Socket descriptor.
- * @param buf		Buffer containing data to be sent.
- * @param len		On input, the length of the data in the buffer.
- *			Upon return, it will be filled with the length
- *			of data sent.
- * @param flags		Flags (such as pj_MSG_DONTROUTE()).
+ * @param sockfd	socket 句柄
+ * @param buf		发送数据的buffer
+ * @param len		输入，数据的长度；返回时，已发送数据的长度
+ * @param flags		标识 (如 pj_MSG_DONTROUTE()).
  *
- * @return		PJ_SUCCESS or the status code.
+ * @return		成功时返回 PJ_SUCCESS；失败返回状态码
  */
 PJ_DECL(pj_status_t) pj_sock_send(pj_sock_t sockfd,
 				  const void *buf,
@@ -1449,18 +1428,16 @@ PJ_DECL(pj_status_t) pj_sock_send(pj_sock_t sockfd,
 				  unsigned flags);
 
 /**
- * Transmit data to the socket to the specified address.
+ * 传输数据到指定的地址
  *
- * @param sockfd	Socket descriptor.
- * @param buf		Buffer containing data to be sent.
- * @param len		On input, the length of the data in the buffer.
- *			Upon return, it will be filled with the length
- *			of data sent.
- * @param flags		Flags (such as pj_MSG_DONTROUTE()).
- * @param to		The address to send.
- * @param tolen		The length of the address in bytes.
+ * @param sockfd	socket 句柄
+ * @param buf		发送数据的buffer
+ * @param len		输入时，buffer数据的长度；返回时，实际发送的数据长度
+ * @param flags		标识 (如 pj_MSG_DONTROUTE()).
+ * @param to		发送的地址
+ * @param tolen		地址长度
  *
- * @return		PJ_SUCCESS or the status code.
+ * @return		成功返回 PJ_SUCCESS；失败返回状态码
  */
 PJ_DECL(pj_status_t) pj_sock_sendto(pj_sock_t sockfd,
 				    const void *buf,
@@ -1471,16 +1448,14 @@ PJ_DECL(pj_status_t) pj_sock_sendto(pj_sock_t sockfd,
 
 #if PJ_HAS_TCP
 /**
- * The shutdown call causes all or part of a full-duplex connection on the
- * socket associated with sockfd to be shut down.
+ * shutdown 调用导致与 sockfd关联的套接字上的全双工连接的全部或部分关闭。
  *
- * @param sockfd	The socket descriptor.
- * @param how		If how is PJ_SHUT_RD, further receptions will be 
- *			disallowed. If how is PJ_SHUT_WR, further transmissions
- *			will be disallowed. If how is PJ_SHUT_RDWR, further 
- *			receptions andtransmissions will be disallowed.
+ * @param sockfd	socket 句柄
+ * @param how		PJ_SHUT_RD	不在接收
+ * 					PJ_SHUT_WR	不在发送
+ * 					PJ_SHUT_RDWR	不在接收和发送
  *
- * @return		Zero on success.
+ * @return		成功返回 0
  */
 PJ_DECL(pj_status_t) pj_sock_shutdown( pj_sock_t sockfd,
 				       int how);
@@ -1488,21 +1463,20 @@ PJ_DECL(pj_status_t) pj_sock_shutdown( pj_sock_t sockfd,
 
 /*****************************************************************************
  *
- * Utilities.
+ * 工具
  *
  *****************************************************************************
  */
 
 /**
- * Print socket address string. This method will enclose the address string 
- * with square bracket if it's IPv6 address.
+ * 打印套接字地址字符串。如果地址字符串是 IPv6地址，则此方法将用方括号括起来。
  *
- * @param host_str  The host address string.
- * @param port	    The port address.
- * @param buf	    Text buffer.
- * @param size	    Size of buffer.
- * @param flags	    Bitmask combination of these value:
- *		    - 1: port number is included. 
+ * @param host_str  主机地址字符串
+ * @param port	    端口
+ * @param buf	    文本buffer
+ * @param size	    buffer 大小
+ * @param flags	    这些值的位掩码组合：
+ * 						-1:包括端口号
  *
  * @return	The address string.
  */
