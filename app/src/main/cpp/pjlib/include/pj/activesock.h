@@ -1,28 +1,23 @@
-/* $Id: activesock.h 4461 2013-04-05 03:02:19Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * active socket:
+ * 		ioqueue 的作用及其关系，同步和异步执行
+ * 		回调函数：
+ * 			on_data_read
+ * 			on_data_recvfrom
+ * 			on_data_sent
+ * 			on_accept_complete
+ * 			on_accept_complete2
+ * 			on_connect_complete
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 #ifndef __PJ_ASYNCSOCK_H__
 #define __PJ_ASYNCSOCK_H__
 
 /**
  * @file activesock.h
- * @brief Active socket
+ * @brief 活动 socket
  */
 
 #include <pj/ioqueue.h>
@@ -32,54 +27,39 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_ACTIVESOCK Active socket I/O
+ * @defgroup PJ_ACTIVESOCK 活动 socket I/O
  * @brief Active socket performs active operations on socket.
  * @ingroup PJ_IO
  * @{
  *
- * Active socket is a higher level abstraction to the ioqueue. It provides
- * automation to socket operations which otherwise would have to be done
- * manually by the applications. For example with socket recv(), recvfrom(),
- * and accept() operations, application only needs to invoke these
- * operation once, and it will be notified whenever data or incoming TCP
- * connection (in the case of accept()) arrives.
+ * 活动套接字是ioqueue的更高级别抽象。它提供了套接字操作的自动化，否则这些操作必须由应用程序手动完成。
+ * 例如，对于socket recv()、recvfrom()和accept()操作，应用程序只需要调用这些操作一次，并且每当数
+ * 据或传入的TCP连接（在accept()的情况下）到达时，应用程序就会收到通知。
  */
 
 /**
- * This opaque structure describes the active socket.
+ * 描述 active socket 的结构体
  */
 typedef struct pj_activesock_t pj_activesock_t;
 
 /**
- * This structure contains the callbacks to be called by the active socket.
+ * 活动socket 的回调结构
  */
 typedef struct pj_activesock_cb
 {
     /**
-     * This callback is called when a data arrives as the result of
-     * pj_activesock_start_read().
+     * pj_activesock_start_read() 结果的回调
      *
-     * @param asock	The active socket.
-     * @param data	The buffer containing the new data, if any. If 
-     *			the status argument is non-PJ_SUCCESS, this 
-     *			argument may be NULL.
-     * @param size	The length of data in the buffer.
-     * @param status	The status of the read operation. This may contain
-     *			non-PJ_SUCCESS for example when the TCP connection
-     *			has been closed. In this case, the buffer may
-     *			contain left over data from previous callback which
-     *			the application may want to process.
-     * @param remainder	If application wishes to leave some data in the 
-     *			buffer (common for TCP applications), it should 
-     *			move the remainder data to the front part of the 
-     *			buffer and set the remainder length here. The value
-     *			of this parameter will be ignored for datagram
-     *			sockets.
+     * @param 活动的 socket
+     * @param data	包含新数据（如果有的话）的缓冲区。如果status参数为non-PJ_SUCCESS，则此参数可能为NULL
+     * @param size
+     * @param status	读取操作的状态。这可能包含 non-PJ_SUCCESS，例如当TCP连接已关闭时。在这种情况下，缓冲区可能
+     * 包含应用程序可能要处理的上一次回调的剩余数据。
+     * @param remainder		如果应用程序希望在缓冲区中保留一些数据（对于TCP应用程序来说很常见），它应该将剩余数据移到缓冲区的前面部分，
+     * 并在这里设置剩余长度。对于UDP socket，此参数的值将被忽略。
      *
-     * @return		PJ_TRUE if further read is desired, and PJ_FALSE 
-     *			when application no longer wants to receive data.
-     *			Application may destroy the active socket in the
-     *			callback and return PJ_FALSE here.
+     * @return		如果需要进一步读取，则为PJ_TRUE；如果应用程序不再需要接收，则为PJ_FALSE。应用程序可能在这次回调中销毁活动的 socket ,
+     * 则返回PJ_FALSE
      */
     pj_bool_t (*on_data_read)(pj_activesock_t *asock,
 			      void *data,
@@ -87,24 +67,16 @@ typedef struct pj_activesock_cb
 			      pj_status_t status,
 			      pj_size_t *remainder);
     /**
-     * This callback is called when a packet arrives as the result of
-     * pj_activesock_start_recvfrom().
+     * pj_activesock_start_recvfrom() 有数据包到达时回调
      *
-     * @param asock	The active socket.
-     * @param data	The buffer containing the packet, if any. If 
-     *			the status argument is non-PJ_SUCCESS, this 
-     *			argument will be set to NULL.
-     * @param size	The length of packet in the buffer. If 
-     *			the status argument is non-PJ_SUCCESS, this 
-     *			argument will be set to zero.
-     * @param src_addr	Source address of the packet.
-     * @param addr_len	Length of the source address.
-     * @param status	This contains
+     * @param asock	活动的 socket
+     * @param data	包含数据包的缓冲区（如果有的话）。如果status参数为non-PJ_SUCCESS，则此参数将设置为NULL
+     * @param size	数据包的缓冲区的长度，如果status 为 no-PJ_SUCCESS，则为 0
+     * @param src_addr	数据包的源地址
+     * @param addr_len	源地址的长度
+     * @param status	状态值
      *
-     * @return		PJ_TRUE if further read is desired, and PJ_FALSE 
-     *			when application no longer wants to receive data.
-     *			Application may destroy the active socket in the
-     *			callback and return PJ_FALSE here.
+     * @return		如果想进一步的读取数据，则返回 PJ_TRUE；否则返回 PJ_FALSE。本次回调中销毁活动的 socket 也返回 PJ_FALSE
      */
     pj_bool_t (*on_data_recvfrom)(pj_activesock_t *asock,
 				  void *data,
@@ -114,36 +86,29 @@ typedef struct pj_activesock_cb
 				  pj_status_t status);
 
     /**
-     * This callback is called when data has been sent.
+     * 数据已经发送时回调
      *
      * @param asock	The active socket.
-     * @param send_key	Key associated with the send operation.
-     * @param sent	If value is positive non-zero it indicates the
-     *			number of data sent. When the value is negative,
-     *			it contains the error code which can be retrieved
-     *			by negating the value (i.e. status=-sent).
+     * @param send_key	与发送相关的密钥
+     * @param sent	如果值非零，则表示发送的数据数。当值为负数时，它包含可通过对值求反来检索的错误代码（即status=-sent）。
      *
-     * @return		Application may destroy the active socket in the
-     *			callback and return PJ_FALSE here.
+     * @return		本次回调，应用可能销毁这个活动的 socket，则返回 PJ_FALSE
      */
     pj_bool_t (*on_data_sent)(pj_activesock_t *asock,
 			      pj_ioqueue_op_key_t *send_key,
 			      pj_ssize_t sent);
 
     /**
-     * This callback is called when new connection arrives as the result
-     * of pj_activesock_start_accept(). If the status of accept operation is
-     * needed use on_accept_complete2 instead of this callback.
+     * 当新连接作为 pj_activesock_start_accept() 的结果到达时调用此回调。如果需要 accept操作的状态，
+     * 请使用 on_accept_complete2 而不是此回调。
      *
-     * @param asock	The active socket.
-     * @param newsock	The new incoming socket.
-     * @param src_addr	The source address of the connection.
-     * @param addr_len	Length of the source address.
+     * @param asock	活动的socket
+     * @param newsock	新来的 socket
+     * @param src_addr  连接的源地址
+     * @param addr_len	源地址的长度
      *
-     * @return		PJ_TRUE if further accept() is desired, and PJ_FALSE
-     *			when application no longer wants to accept incoming
-     *			connection. Application may destroy the active socket
-     *			in the callback and return PJ_FALSE here.
+     * @return		如果需要进一步accept（），则为PJ_TRUE；如果应用程序不再希望接受传入连接，则为PJ_FALSE。
+     * 应用程序可能会破坏回调中的活动套接字，并在此处返回PJ_FALSE
      */
     pj_bool_t (*on_accept_complete)(pj_activesock_t *asock,
 				    pj_sock_t newsock,
@@ -151,19 +116,16 @@ typedef struct pj_activesock_cb
 				    int src_addr_len);
 
     /**
-     * This callback is called when new connection arrives as the result
-     * of pj_activesock_start_accept().
+     * 当新连接作为pj_activesock_start_accept()的结果到达时调用此回调。
      *
-     * @param asock	The active socket.
-     * @param newsock	The new incoming socket.
-     * @param src_addr	The source address of the connection.
-     * @param addr_len	Length of the source address.
-     * @param status	The status of the accept operation. This may contain
-     *			non-PJ_SUCCESS for example when the TCP listener is in
-     *			bad state for example on iOS platform after the
-     *			application waking up from background.
+     * @param asock	活动的socket
+     * @param newsock	新来的 socket
+     * @param src_addr  连接的源地址
+     * @param addr_len	源地址的长度
+     * @param status	接受操作的状态。这可能 non-PJ_SUCCESS，例如当TCP侦听器处于错误状态时，例如在iOS平台上，应用程序从后台唤醒后。
      *
-     * @return		PJ_TRUE if further accept() is desired, and PJ_FALSE
+     * @return		如果需要进一步accept()，则为PJ_TRUE；如果应用程序不再希望接受传入连接，则为PJ\u FALSE。应用程序可能会破坏回调中的活动套接字，并在此处返回PJ\u FALSE。
+     * PJ_TRUE if further accept() is desired, and PJ_FALSE
      *			when application no longer wants to accept incoming
      *			connection. Application may destroy the active socket
      *			in the callback and return PJ_FALSE here.
@@ -175,16 +137,12 @@ typedef struct pj_activesock_cb
 				     pj_status_t status);
 
     /**
-     * This callback is called when pending connect operation has been
-     * completed.
+     * 当连接操作完成时，将调用此回调。
      *
      * @param asock	The active  socket.
-     * @param status	The connection result. If connection has been
-     *			successfully established, the status will contain
-     *			PJ_SUCCESS.
+     * @param status	连接结果，成功建立连接，则状态将包含PJ_SUCCESS
      *
-     * @return		Application may destroy the active socket in the
-     *			callback and return PJ_FALSE here. 
+     * @return		应用程序可能在回调中销毁活动 socket，并在此返回PJ_FALSE
      */
     pj_bool_t (*on_connect_complete)(pj_activesock_t *asock,
 				     pj_status_t status);
@@ -193,57 +151,40 @@ typedef struct pj_activesock_cb
 
 
 /**
- * Settings that can be given during active socket creation. Application
- * must initialize this structure with #pj_activesock_cfg_default().
+ * 活动 socket 配置，此结构需通过 pj_activesock_cfg_default() 获取
  */
 typedef struct pj_activesock_cfg
 {
     /**
-     * Optional group lock to be assigned to the ioqueue key.
+     * ioqueue key的可选组锁
      */
     pj_grp_lock_t *grp_lock;
 
     /**
-     * Number of concurrent asynchronous operations that is to be supported
-     * by the active socket. This value only affects socket receive and
-     * accept operations -- the active socket will issue one or more 
-     * asynchronous read and accept operations based on the value of this
-     * field. Setting this field to more than one will allow more than one
-     * incoming data or incoming connections to be processed simultaneously
-     * on multiprocessor systems, when the ioqueue is polled by more than
-     * one threads.
+     * 活动套接字支持的并发异步操作数。此值仅影响套接字接收和接受操作--活动套接字将基于此字段的值确定发出一个或
+     * 多个异步读取和接受操作。当 ioqueue 被多个线程轮询时，将此字段设置为多个将允许在多处理器系统上同时
+     * 处理多个传入数据或传入连接。
      *
-     * The default value is 1.
+     * 默认值为 1
      */
     unsigned async_cnt;
 
     /**
-     * The ioqueue concurrency to be forced on the socket when it is 
-     * registered to the ioqueue. See #pj_ioqueue_set_concurrency() for more
-     * info about ioqueue concurrency.
+     * 当套接字注册到 ioqueue 时，要在其上强制执行的 ioqueue 并发。有关ioqueue并发的详细信息，请参见 pj_ioqueue_set_concurrency()。
+     * 当该值为-1时，不会强制此套接字的并发设置，并且套接字将继承 ioqueue 的并发设置。当该值为零时，活动套接字将禁用套接字的并发性。
+     * 当该值为 +1 时，活动套接字将为套接字启用并发性。
      *
-     * When this value is -1, the concurrency setting will not be forced for
-     * this socket, and the socket will inherit the concurrency setting of 
-     * the ioqueue. When this value is zero, the active socket will disable
-     * concurrency for the socket. When this value is +1, the active socket
-     * will enable concurrency for the socket.
-     *
-     * The default value is -1.
+     * 默认值为-1。
      */
     int concurrency;
 
     /**
-     * If this option is specified, the active socket will make sure that
-     * asynchronous send operation with stream oriented socket will only
-     * call the callback after all data has been sent. This means that the
-     * active socket will automatically resend the remaining data until
-     * all data has been sent.
+     * 如果指定了此选项，活动套接字将确保具有面向流的套接字的异步发送操作仅在发送所有数据后调用回调。这意味着活动套接字将
+     * 自动重新发送剩余的数据，直到发送完所有数据。
      *
-     * Please note that when this option is specified, it is possible that
-     * error is reported after partial data has been sent. Also setting
-     * this will disable the ioqueue concurrency for the socket.
+     * 请注意，指定此选项时，可能会在发送部分数据后报告错误。设置此选项还将禁用套接字的 ioqueue 并发性。
      *
-     * Default value is 1.
+     * 默认值为 1
      */
     pj_bool_t whole_data;
 
@@ -251,34 +192,26 @@ typedef struct pj_activesock_cfg
 
 
 /**
- * Initialize the active socket configuration with the default values.
+ * 使用默认值初始化活动套接字配置
  *
- * @param cfg		The configuration to be initialized.
+ * @param cfg		要初始化的配置
  */
 PJ_DECL(void) pj_activesock_cfg_default(pj_activesock_cfg *cfg);
 
 
 /**
- * Create the active socket for the specified socket. This will register
- * the socket to the specified ioqueue. 
+ * 为指定的套接字创建活动套接字。这将把套接字注册到指定的 ioqueue
  *
- * @param pool		Pool to allocate memory from.
- * @param sock		The socket handle.
- * @param sock_type	Specify socket type, either pj_SOCK_DGRAM() or
- *			pj_SOCK_STREAM(). The active socket needs this
- *			information to handle connection closure for
- *			connection oriented sockets.
- * @param ioqueue	The ioqueue to use.
- * @param opt		Optional settings. When this setting is not specifed,
- *			the default values will be used.
- * @param cb		Pointer to structure containing application
- *			callbacks.
- * @param user_data	Arbitrary user data to be associated with this
- *			active socket.
- * @param p_asock	Pointer to receive the active socket instance.
+ * @param pool		从中分配内存的池。
+ * @param sock		socket 句柄
+ * @param sock_type	指定套接字类型，可以是pj_SOCK_STREAM()或pj_SOCK_DGRAM()。活动套接字需要此信息来处理面向连接的套接字的连接关闭。
+ * @param ioqueue	使用的 ioqueue
+ * @param opt		可选设置。未指定此设置时，将使用默认值。
+ * @param cb		指向包含应用程序回调的结构的指针
+ * @param user_data	要与此活动套接字关联的任意用户数据
+ * @param p_asock	接收活动套接字实例的指针
  *
- * @return		PJ_SUCCESS if the operation has been successful,
- *			or the appropriate error code on failure.
+ * @return		操作成功返回 PJ_SUCCESS，操作失败返回错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_create(pj_pool_t *pool,
 					  pj_sock_t sock,
@@ -290,26 +223,18 @@ PJ_DECL(pj_status_t) pj_activesock_create(pj_pool_t *pool,
 					  pj_activesock_t **p_asock);
 
 /**
- * Create UDP socket descriptor, bind it to the specified address, and 
- * create the active socket for the socket descriptor.
+ * 创建UDP套接字描述符，将其绑定到指定的地址，并为套接字描述符创建活动套接字。
+ *
  *
  * @param pool		Pool to allocate memory from.
- * @param addr		Specifies the address family of the socket and the
- *			address where the socket should be bound to. If
- *			this argument is NULL, then AF_INET is assumed and
- *			the socket will be bound to any addresses and port.
- * @param opt		Optional settings. When this setting is not specifed,
- *			the default values will be used.
- * @param cb		Pointer to structure containing application
- *			callbacks.
- * @param user_data	Arbitrary user data to be associated with this
- *			active socket.
- * @param p_asock	Pointer to receive the active socket instance.
- * @param bound_addr	If this argument is specified, it will be filled with
- *			the bound address on return.
+ * @param addr		参数为 NULL,假定为 AF_INET 则会绑定到任意地址或任意端口上
+ * @param opt		选项设置，未指定会使用默认值
+ * @param cb		指向包含应用程序回调的结构的指针
+ * @param user_data	活动socket 的用户数据
+ * @param p_asock	接收活动套接字实例的指针
+ * @param bound_addr	如果指定了此参数，则返回时将用绑定地址填充
  *
- * @return		PJ_SUCCESS if the operation has been successful,
- *			or the appropriate error code on failure.
+ * @return		操作成功返回 PJ_SUCCESS，操作失败返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_create_udp(pj_pool_t *pool,
 					      const pj_sockaddr *addr,
@@ -321,13 +246,11 @@ PJ_DECL(pj_status_t) pj_activesock_create_udp(pj_pool_t *pool,
 					      pj_sockaddr *bound_addr);
 
 /**
- * Close the active socket. This will unregister the socket from the
- * ioqueue and ultimately close the socket.
+ * 关闭活动 socket。将从 ioqueue 中注销套接字并最终关闭套接字。
  *
- * @param asock	    The active socket.
+ * @param asock	    活动的 socket
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，操作失败返回响应的错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_close(pj_activesock_t *asock);
 
@@ -367,52 +290,39 @@ PJ_DECL(void) pj_activesock_enable_iphone_os_bg(pj_bool_t val);
 #endif
 
 /**
- * Associate arbitrary data with the active socket. Application may
- * inspect this data in the callbacks and associate it with higher
- * level processing.
+ * 设置用户数据，应用程序可以检查回调中的数据，并将其与更高级别的处理相关联。
  *
  * @param asock	    The active socket.
- * @param user_data The user data to be associated with the active
- *		    socket.
+ * @param user_data 活动 socket 的用户数据
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，操作失败返回相关的错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_set_user_data(pj_activesock_t *asock,
 						 void *user_data);
 
 /**
- * Retrieve the user data previously associated with this active
- * socket.
+ * 获取活动 socket 的用户数据
  *
- * @param asock	    The active socket.
+ * @param asock	    活动 socket
  *
- * @return	    The user data.
+ * @return	    用户数据
  */
 PJ_DECL(void*) pj_activesock_get_user_data(pj_activesock_t *asock);
 
 
 /**
- * Starts read operation on this active socket. This function will create
- * \a async_cnt number of buffers (the \a async_cnt parameter was given
- * in \a pj_activesock_create() function) where each buffer is \a buff_size
- * long. The buffers are allocated from the specified \a pool. Once the 
- * buffers are created, it then issues \a async_cnt number of asynchronous
- * \a recv() operations to the socket and returns back to caller. Incoming
- * data on the socket will be reported back to application via the 
- * \a on_data_read() callback.
+ * 在此活动套接字上启动读取操作。此函数将创建 async_cnt数量的缓冲区（pj_activesock_create() 函数中给出了
+ * async_cnt参数），其中每个缓冲区的长度为 buff_size。缓冲区是从指定的池中分配。一旦创建了缓冲区，它就会向套接
+ * 字发出 async_cnt 数量的异步 recv() 操作，并返回给调用者。套接字上的传入数据将通过 on_data_read()回调返回给应用程序。
  *
- * Application only needs to call this function once to initiate read
- * operations. Further read operations will be done automatically by the
- * active socket when \a on_data_read() callback returns non-zero. 
+ * 应用程序只需调用此函数一次即可启动读取操作。当 on_data_read() 回调返回非零时，活动套接字将自动执行进一步的读取操作。
  *
  * @param asock	    The active socket.
- * @param pool	    Pool used to allocate buffers for incoming data.
- * @param buff_size The size of each buffer, in bytes.
- * @param flags	    Flags to be given to pj_ioqueue_recv().
+ * @param pool	    接收数据分配存储的缓冲区
+ * @param buff_size 每个缓存的大小
+ * @param flags	    pj_ioqueue_recv() 的标识
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，否则返回相关的错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_start_read(pj_activesock_t *asock,
 					      pj_pool_t *pool,
@@ -420,18 +330,15 @@ PJ_DECL(pj_status_t) pj_activesock_start_read(pj_activesock_t *asock,
 					      pj_uint32_t flags);
 
 /**
- * Same as #pj_activesock_start_read(), except that the application
- * supplies the buffers for the read operation so that the acive socket
- * does not have to allocate the buffers.
+ * 与 pj_activesock_start_read() 相同，只是应用程序为读取操作提供缓冲区，以便活动套接字不必分配缓冲区。
  *
  * @param asock	    The active socket.
- * @param pool	    Pool used to allocate buffers for incoming data.
- * @param buff_size The size of each buffer, in bytes.
- * @param readbuf   Array of packet buffers, each has buff_size size.
- * @param flags	    Flags to be given to pj_ioqueue_recv().
+ * @param pool	    接收数据分配存储的缓冲区
+ * @param buff_size 每个缓存的大小
+ * @param readbuf   数据包缓存数组，每个缓存都是 buff_size 大小
+ * @param flags	    pj_ioqueue_recv() 的标识
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，操作失败返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_start_read2(pj_activesock_t *asock,
 					       pj_pool_t *pool,
@@ -440,17 +347,14 @@ PJ_DECL(pj_status_t) pj_activesock_start_read2(pj_activesock_t *asock,
 					       pj_uint32_t flags);
 
 /**
- * Same as pj_activesock_start_read(), except that this function is used
- * only for datagram sockets, and it will trigger \a on_data_recvfrom()
- * callback instead.
+ * 与 pj_activesock_start_read() 相同，只是此函数仅用于UDP，它将触发 on_data_recvfrom() 回调。
  *
  * @param asock	    The active socket.
- * @param pool	    Pool used to allocate buffers for incoming data.
- * @param buff_size The size of each buffer, in bytes.
- * @param flags	    Flags to be given to pj_ioqueue_recvfrom().
+ * @param pool	    接收数据分配存储的缓冲区
+ * @param buff_size 每个缓存的大小
+ * @param flags	    pj_ioqueue_recvfrom() 的标识
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，否则返回相关的错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_start_recvfrom(pj_activesock_t *asock,
 						  pj_pool_t *pool,
@@ -458,15 +362,13 @@ PJ_DECL(pj_status_t) pj_activesock_start_recvfrom(pj_activesock_t *asock,
 						  pj_uint32_t flags);
 
 /**
- * Same as #pj_activesock_start_recvfrom() except that the recvfrom() 
- * operation takes the buffer from the argument rather than creating
- * new ones.
+ * 与 pj_activesock_start_recvfrom() 相同，只是 recvfrom（）操作从参数中获取缓冲区，而不是创建新的缓冲区。
  *
  * @param asock	    The active socket.
- * @param pool	    Pool used to allocate buffers for incoming data.
- * @param buff_size The size of each buffer, in bytes.
- * @param readbuf   Array of packet buffers, each has buff_size size.
- * @param flags	    Flags to be given to pj_ioqueue_recvfrom().
+ * @param pool	    接收数据分配存储的缓冲区
+ * @param buff_size 每个缓存的大小
+ * @param readbuf   数据包缓存数组，每个缓存都是 buff_size 大小
+ * @param flags	    pj_ioqueue_recvfrom() 的标识
  *
  * @return	    PJ_SUCCESS if the operation has been successful,
  *		    or the appropriate error code on failure.
@@ -478,24 +380,17 @@ PJ_DECL(pj_status_t) pj_activesock_start_recvfrom2(pj_activesock_t *asock,
 						   pj_uint32_t flags);
 
 /**
- * Send data using the socket.
+ * 发送数据
  *
  * @param asock	    The active socket.
- * @param send_key  The operation key to send the data, which is useful
- *		    if application wants to submit multiple pending
- *		    send operations and want to track which exact data 
- *		    has been sent in the \a on_data_sent() callback.
- * @param data	    The data to be sent. This data must remain valid
- *		    until the data has been sent.
- * @param size	    The size of the data.
- * @param flags	    Flags to be given to pj_ioqueue_send().
+ * @param send_key  发送数据的 key，如果应用程序希望提交多个挂起的发送操作，并且希望跟踪在 on_data_sent()回调中发送的确切数据，则此操作键非常有用。
+ * @param data	    要发送的数据。在发送数据之前，此数据必须保持有效
+ * @param size	    发送数据的大小
+ * @param flags	    pj_ioqueue_send() 的标识
  *
  *
- * @return	    PJ_SUCCESS if data has been sent immediately, or
- *		    PJ_EPENDING if data cannot be sent immediately. In
- *		    this case the \a on_data_sent() callback will be
- *		    called when data is actually sent. Any other return
- *		    value indicates error condition.
+ * @return			如果数据已立即发送，则返回 PJ_SUCCESS；如果数据无法立即发送，则返回 PJ_EPENDING，在这种情况下，
+ * 将在实际发送数据时调用 on_data_sent() 回调。任何其他返回值都表示错误情况。
  */
 PJ_DECL(pj_status_t) pj_activesock_send(pj_activesock_t *asock,
 					pj_ioqueue_op_key_t *send_key,
@@ -504,25 +399,19 @@ PJ_DECL(pj_status_t) pj_activesock_send(pj_activesock_t *asock,
 					unsigned flags);
 
 /**
- * Send datagram using the socket.
+ * 发送 数据报数据
  *
  * @param asock	    The active socket.
- * @param send_key  The operation key to send the data, which is useful
- *		    if application wants to submit multiple pending
- *		    send operations and want to track which exact data 
- *		    has been sent in the \a on_data_sent() callback.
- * @param data	    The data to be sent. This data must remain valid
- *		    until the data has been sent.
- * @param size	    The size of the data.
- * @param flags	    Flags to be given to pj_ioqueue_send().
- * @param addr	    The destination address.
- * @param addr_len  The length of the address.
+ * @param send_key  发送数据的 key，如果应用程序希望提交多个挂起的发送操作，并且希望跟踪在 on_data_sent()回调中发送的确切数据，
+ * 					则此 key 非常有用
+ * @param data	    要发送的数据。在发送数据之前，此数据必须保持有效
+ * @param size	    发送数据的大小
+ * @param flags	    pj_ioqueue_send() 的标识
+ * @param addr	    目的地址
+ * @param addr_len  地址的长度
  *
- * @return	    PJ_SUCCESS if data has been sent immediately, or
- *		    PJ_EPENDING if data cannot be sent immediately. In
- *		    this case the \a on_data_sent() callback will be
- *		    called when data is actually sent. Any other return
- *		    value indicates error condition.
+ * @return			如果数据已立即发送，则返回 PJ_SUCCESS；如果数据无法立即发送，则返回PJ_EPENDING。在这种情况下，将在实际发送
+ * 数据时调用 on_data_sent() 回调。任何其他返回值都表示错误情况。
  */
 PJ_DECL(pj_status_t) pj_activesock_sendto(pj_activesock_t *asock,
 					  pj_ioqueue_op_key_t *send_key,
@@ -534,43 +423,30 @@ PJ_DECL(pj_status_t) pj_activesock_sendto(pj_activesock_t *asock,
 
 #if PJ_HAS_TCP
 /**
- * Starts asynchronous socket accept() operations on this active socket. 
- * Application must bind the socket before calling this function. This 
- * function will issue \a async_cnt number of asynchronous \a accept() 
- * operations to the socket and returns back to caller. Incoming
- * connection on the socket will be reported back to application via the
- * \a on_accept_complete() callback.
+ * 在此活动套接字上启动异步socket accept（）操作。应用程序必须在调用此函数之前绑定套接字。此函数将向套接字发出
+ * async_cnt 个异步 accept() 操作，并返回给调用者。套接字上的传入连接将通过 on_accept_complete() 回调返回给应用程序。
  *
- * Application only needs to call this function once to initiate accept()
- * operations. Further accept() operations will be done automatically by 
- * the active socket when \a on_accept_complete() callback returns non-zero.
+ * 应用程序只需调用此函数一次即可启动accept（）操作。当 on_accept_complete() 回调返回非零时，活动套接字将自动执行进一步
+ * 的 accept() 操作。
  *
- * @param asock	    The active socket.
- * @param pool	    Pool used to allocate some internal data for the
- *		    operation.
+ * @param asock	    活动的 socket
+ * @param pool	    分配内部数据的缓存池
  *
- * @return	    PJ_SUCCESS if the operation has been successful,
- *		    or the appropriate error code on failure.
+ * @return	    操作成功返回 PJ_SUCCESS，操作失败返回错误码
  */
 PJ_DECL(pj_status_t) pj_activesock_start_accept(pj_activesock_t *asock,
 						pj_pool_t *pool);
 
 /**
- * Starts asynchronous socket connect() operation for this socket. Once
- * the connection is done (either successfully or not), the 
- * \a on_connect_complete() callback will be called.
+ * 为此套接字启动异步socket connect（）操作。一旦连接完成（无论是否成功），将调用 on_connect_complete() 回调。
  *
  * @param asock	    The active socket.
- * @param pool	    The pool to allocate some internal data for the
- *		    operation.
- * @param remaddr   Remote address.
- * @param addr_len  Length of the remote address.
+ * @param pool	    分配内部数据的缓存池
+ * @param remaddr   远端地址
+ * @param addr_len  远端地址的长度
  *
- * @return	    PJ_SUCCESS if connection can be established immediately,
- *		    or PJ_EPENDING if connection cannot be established 
- *		    immediately. In this case the \a on_connect_complete()
- *		    callback will be called when connection is complete. 
- *		    Any other return value indicates error condition.
+ * @return		如果可以立即建立连接，则返回PJ_SUCCESS；如果无法立即建立连接，则返回PJ_EPENDING。在这种情况下，
+ * 连接完成时将调用 on_connect_complete() 回调。任何其他返回值都表示错误情况。
  */
 PJ_DECL(pj_status_t) pj_activesock_start_connect(pj_activesock_t *asock,
 						 pj_pool_t *pool,

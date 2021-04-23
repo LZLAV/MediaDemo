@@ -1,5 +1,14 @@
 /**
  * 已看完
+ *      qos:
+ *          默认设定值
+ *              见 qos_map
+ *          函数：
+ *              根据 type 获取参数
+ *              根据参数获取 type
+ *              应用 qos:
+ *                  先设置 type，再设置参数  （利用平台函数）
+ *
  */
 #include <pj/sock_qos.h>
 #include <pj/assert.h>

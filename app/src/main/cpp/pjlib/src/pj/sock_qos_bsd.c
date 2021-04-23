@@ -1,5 +1,22 @@
 /**
  * 已看完
+ *      bsd qos:
+ *          设置：
+ *              IPv4：
+ *                  pj_sock_setsockopt(sock, pj_SOL_IP(), pj_IP_TOS(),&val, sizeof(val))
+ *              IPv6:
+ *                  pj_sock_setsockopt(sock, pj_SOL_IPV6(),pj_IPV6_TCLASS(),&val, sizeof(val))
+ *
+ *              pj_sock_setsockopt(sock, pj_SOL_SOCKET(), pj_SO_PRIORITY(),&val, sizeof(val))
+ *          获取：
+ *              IPv4:
+ *                  pj_sock_getsockopt(sock, pj_SOL_IP(), pj_IP_TOS(),&val, &optlen)
+ *              IPv6:
+ *                  pj_sock_getsockopt(sock, pj_SOL_IPV6(),pj_IPV6_TCLASS(),&val, &optlen)
+ *
+ *              pj_sock_getsockopt(sock, pj_SOL_SOCKET(), pj_SO_PRIORITY(),&val, &optlen)
+ *
+ *
  */
 #include <pj/sock_qos.h>
 #include <pj/assert.h>

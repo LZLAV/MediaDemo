@@ -49,9 +49,9 @@
  * 				IP_DROP_MEMBERSHIP
  *
  * 			sock_recv、sock_send 指定的标识：flags
- * 				MSG_OOB
- * 				MSG_PEEK
- * 				MSG_DONTROUTE
+ * 				MSG_OOB             带外信息
+ * 				MSG_PEEK            获取，不从缓冲区中取出
+ * 				MSG_DONTROUTE       不路由
  *
  *
  * 			shutdown 标识：flags

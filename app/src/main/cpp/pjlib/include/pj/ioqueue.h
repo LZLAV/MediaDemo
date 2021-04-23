@@ -23,7 +23,7 @@
 
 /**
  * @file ioqueue.h
- * @brief I/O Dispatching Mechanism
+ * @brief I/O 调度机制
  */
 
 #include <pj/types.h>
@@ -35,106 +35,69 @@ PJ_BEGIN_DECL
  * @brief Input/Output
  * @ingroup PJ_OS
  *
- * This section contains API building blocks to perform network I/O and 
- * communications. If provides:
+ * 本节包含用于执行网络I/O和通信的API构建块。如果提供：
  *  - @ref PJ_SOCK
  *\n
- *    A highly portable socket abstraction, runs on all kind of
- *    network APIs such as standard BSD socket, Windows socket, Linux
- *    \b kernel socket, PalmOS networking API, etc.
+ * 一个高度可移植的socket抽象，运行在各种网络API上，
+ * 如标准 bsd socket、Windows socket、Linux kernel socket、PalmOS网络API等。
  *
  *  - @ref pj_addr_resolve
  *\n
- *    Portable address resolution, which implements #pj_gethostbyname().
+ * 	可移植地址解析，实现 pj_gethostbyname()
  *
  *  - @ref PJ_SOCK_SELECT
  *\n
- *    A portable \a select() like API (#pj_sock_select()) which can be
- *    implemented with various back-ends.
+ *    一个可移植的、类似 select() 的API（ pj_sock_select()），可以用各种后端实现。
  *
  *  - @ref PJ_IOQUEUE
  *\n
- *    Framework for dispatching network events.
+ *  调度网络事件的框架
  *
- * For more information see the modules below.
+ * 有关更多信息，请参阅下面的模块:
  */
 
 /**
- * @defgroup PJ_IOQUEUE IOQueue: I/O Event Dispatching with Proactor Pattern
+ * @defgroup PJ_IOQUEUE IOQueue: 基于 Proactor 模式的 I/O 事件调度
  * @ingroup PJ_IO
  * @{
  *
- * I/O Queue provides API for performing asynchronous I/O operations. It
- * conforms to proactor pattern, which allows application to submit an
- * asynchronous operation and to be notified later when the operation has
- * completed.
+ * I/O 队列提供用于执行异步 I/O操作的API。它符合 proactor 模式，允许应用程序提交一个异步操作，并在操作完成后得到通知。
  *
- * The I/O Queue can work on both socket and file descriptors. For 
- * asynchronous file operations however, one must make sure that the correct
- * file I/O back-end is used, because not all file I/O back-end can be
- * used with the ioqueue. Please see \ref PJ_FILE_IO for more details.
+ * I/O队列可以在套接字和文件描述符上工作。但是，对于异步文件操作，必须确保使用正确的文件I/O后端，因为并非所有文件I/O后端都可以与 ioqueue 一起使用。
+ * 有关详细信息，请参阅 PJ_FILE_IO
  *
- * The framework works natively in platforms where asynchronous operation API
- * exists, such as in Windows NT with IoCompletionPort/IOCP. In other 
- * platforms, the I/O queue abstracts the operating system's event poll API
- * to provide semantics similar to IoCompletionPort with minimal penalties
- * (i.e. per ioqueue and per handle mutex protection).
+ * 该框架在异步操作API存在的平台上本机工作，例如windows NT的 IoCompletionPort/IOCP。在其他平台中，I/O 队列抽象了操作系统的事件轮询API，
+ * 以提供类似于IoCompletionPort的语义，并且惩罚最小（即每个ioqueue和每个句柄互斥保护）。
  *
- * The I/O queue provides more than just unified abstraction. It also:
- *  - makes sure that the operation uses the most effective way to utilize
- *    the underlying mechanism, to achieve the maximum theoritical
- *    throughput possible on a given platform.
- *  - choose the most efficient mechanism for event polling on a given
- *    platform.
- *
- * Currently, the I/O Queue is implemented using:
- *  - <tt><b>select()</b></tt>, as the common denominator, but the least 
- *    efficient. Also the number of descriptor is limited to 
- *    \c PJ_IOQUEUE_MAX_HANDLES (which by default is 64).
- *  - <tt><b>/dev/epoll</b></tt> on Linux (user mode and kernel mode), 
- *    a much faster replacement for select() on Linux (and more importantly
- *    doesn't have limitation on number of descriptors).
- *  - <b>I/O Completion ports</b> on Windows NT/2000/XP, which is the most 
- *    efficient way to dispatch events in Windows NT based OSes, and most 
- *    importantly, it doesn't have the limit on how many handles to monitor.
- *    And it works with files (not only sockets) as well.
+ * I/O队列提供的不仅仅是统一的抽象。它还包括：
+ * 	-确保操作使用最有效的方法来利用底层机制，以在给定平台上实现最大的理论吞吐量。
+ * 	-在给定平台上选择最有效的事件轮询机制。
  *
  *
- * \section pj_ioqueue_concurrency_sec Concurrency Rules
+ * 目前，I/O队列是通过以下方式实现的：
+ * 	- select() 作为公分母，但效率最低。另外，描述符的数量限制为 PJ_IOQUEUE_MAX_HANDLES（缺省情况下为64）。
+ * 	- Linux（用户模式和内核模式）上的 dev/epoll，它是Linux上 select（）的一个更快的替代品（更重要的是没有对描述符数量的限制）。
+ * 	- Windows NT/2000/XP上的I/O完成端口，这是在基于 Windows NT的操作系统中调度事件的最有效方法，而且最重要的是，它没有要监视多少句柄的限制。
+ * 	而且它也适用于文件（不仅仅是套接字）。
  *
- * The ioqueue has been fine tuned to allow multiple threads to poll the
- * handles simultaneously, to maximize scalability when the application is
- * running on multiprocessor systems. When more than one threads are polling
- * the ioqueue and there are more than one handles are signaled, more than
- * one threads will execute the callback simultaneously to serve the events.
- * These parallel executions are completely safe when the events happen for
- * two different handles.
+ * \section pj_ioqueue_concurrency_sec 并发规则
  *
- * However, with multithreading, care must be taken when multiple events 
- * happen on the same handle, or when event is happening on a handle (and 
- * the callback is being executed) and application is performing 
- * unregistration to the handle at the same time.
+ * ioqueue 经过了微调，允许多个线程同时轮询句柄，以便在多处理器系统上运行应用程序时最大限度地提高可伸缩性。当有多个线程轮询 ioqueue 并且有多个句柄
+ * 发出信号时，多个线程将同时执行回调以服务于事件。当事件发生在两个不同的句柄上时，这些并行执行是完全安全的。
  *
- * The treatments of above scenario differ according to the concurrency
- * setting that are applied to the handle.
+ * 但是，使用多线程时，当多个事件发生在同一个句柄上，或者当事件发生在一个句柄上（并且正在执行回调）并且应用程序同时对句柄执行注销时，必须小心。
  *
- * \subsection pj_ioq_concur_set Concurrency Settings for Handles
+ * 根据应用于句柄的并发设置，上述场景的处理方式有所不同。
  *
- * Concurrency can be set on per handle (key) basis, by using
- * #pj_ioqueue_set_concurrency() function. The default key concurrency value 
- * for the handle is inherited from the key concurrency setting of the ioqueue, 
- * and the key concurrency setting for the ioqueue can be changed by using
- * #pj_ioqueue_set_default_concurrency(). The default key concurrency setting 
- * for ioqueue itself is controlled by compile time setting
- * PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY.
+ * \subsection pj_ioq_concur_set 句柄的并发设置
  *
- * Note that this key concurrency setting only controls whether multiple
- * threads are allowed to operate <b>on the same key</b> at the same time. 
- * The ioqueue itself always allows multiple threads to enter the ioqeuue at 
- * the same time, and also simultaneous callback calls to <b>differrent 
- * keys</b> is always allowed regardless to the key concurrency setting.
+ * 通过使用 pj_ioqueue_set_concurrency() 函数，可以在每个句柄（键）的基础上设置并发性。句柄的默认密钥并发值继承自 ioqueue 的密钥并发设置，
+ * 可以使用 pj_ioqueue_set_default_concurrency() 更改 ioqueue 的密钥并发设置。ioqueue 本身的默认密钥并发设置由编译时设置 PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY控制。
  *
- * \subsection pj_ioq_parallel Parallel Callback Executions for the Same Handle
+ * 请注意，此密钥并发设置仅控制是否允许多线程同时对同一密钥进行操作。ioqueue 本身始终允许多个线程同时进入ioqeue，
+ * 并且始终允许同时回调不同的键，而不管键的并发设置如何。
+ *
+ * \subsection pj_ioq_parallel 同一句柄的并行回调执行
  *
  * Note that when key concurrency is enabled (i.e. parallel callback calls on
  * the same key is allowed; this is the default setting), the ioqueue will only

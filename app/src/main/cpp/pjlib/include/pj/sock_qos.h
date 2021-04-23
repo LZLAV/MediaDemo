@@ -1,5 +1,14 @@
 /**
  * 已看完
+ * 		Qos:
+ * 			TOS
+ * 			DSCP
+ * 			WMM
+ * 			IEEE 802.1p
+ *
+ * 		type
+ * 		params
+ *
  */
 #ifndef __PJ_SOCK_QOS_H__
 #define __PJ_SOCK_QOS_H__
@@ -52,7 +61,7 @@ PJ_BEGIN_DECL
     DSCP通过IP TOS选项提供
 
  	以太网 802.1p 标记是通过设置套接字的 setsockopt（SO_PRIORITY）选项来完成的，
- 	然后使用vconfig 程序的set_egress_map 选项将其转换为数据包中设置 vlan_qos字段。
+ 	然后使用 vconfig 程序的 set_egress_map  选项将其转换为数据包中设置 vlan_qos字段。
 
     尚不清楚 WMM 是否可用
 
@@ -162,9 +171,8 @@ PJ_BEGIN_DECL
     第二组API对参数进行更详细的设置，包括：
 
     \code
-     // 检索指定流量类型的QoS参数
-     PJ_DECL(pj_status_t) pj_qos_get_params(pj_qos_type type, 
-					    pj_qos_params *p);
+     // 检索指定流量类型的QoS参数，获取默认设定值
+     PJ_DECL(pj_status_t) pj_qos_get_params(pj_qos_type type,pj_qos_params *p);
 
      // 设置Socket 的 Qos 参数
      PJ_DECL(pj_status_t) pj_sock_set_qos_params(pj_sock_t sock,
