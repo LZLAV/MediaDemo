@@ -1,27 +1,16 @@
-/* $Id: ioqueue_epoll.c 5692 2017-11-13 06:06:25Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
+ *      1. 创建 ioqueue  /销毁 ioqueue
+ *      2. 注册 socket 句柄到 ioqueue    / socket句柄从 ioqueue 中注销
+ *      3. 从队列中移除指定 key,type 的事件      （一般poll dispatch 分发后）
+ *      4. 添加指定 key,type 的事件到 ioqueue
+ *      5. ioqueue_poll() 轮询事件  （epoll_wait()）
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ *      epoll_create()
+ *      epoll_ctl()
+ *      epoll_wait()
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
- */
-/*
- * ioqueue_epoll.c
- *
- * This is the implementation of IOQueue framework using /dev/epoll
- * API in _both_ Linux user-mode and kernel-mode.
+ * 这是在Linux用户模式和内核模式下使用/dev/epoll API实现IO Queue框架
  */
 
 #include <pj/ioqueue.h>
@@ -59,12 +48,12 @@
 #define TRACE_(expr)
 
 /*
- * Include common ioqueue abstraction.
+ * 包含通用 ioqueue 抽象
  */
 #include "ioqueue_common_abs.h"
 
 /*
- * This describes each key.
+ * 键的描述
  */
 struct pj_ioqueue_key_t
 {
@@ -78,7 +67,7 @@ struct queue
 };
 
 /*
- * This describes the I/O queue.
+ *  I/O 队列的描述
  */
 struct pj_ioqueue_t
 {
@@ -86,7 +75,7 @@ struct pj_ioqueue_t
 
     unsigned		max, count;
     //pj_ioqueue_key_t	hlist;
-    pj_ioqueue_key_t	active_list;    
+    pj_ioqueue_key_t	active_list;
     int			epfd;
     //struct epoll_event *events;
     //struct queue       *queue;
@@ -98,13 +87,12 @@ struct pj_ioqueue_t
 #endif
 };
 
-/* Include implementation for common abstraction after we declare
- * pj_ioqueue_key_t and pj_ioqueue_t.
+/* 在声明pj_ioqueue_key_t和pj_ioqueue_t之后，包含公共抽象的实现。
  */
 #include "ioqueue_common_abs.c"
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-/* Scan closing keys to be put to free list again */
+/* 再次扫描要放入空闲列表的关闭键 */
 static void scan_closing_keys(pj_ioqueue_t *ioqueue);
 #endif
 
@@ -119,9 +107,9 @@ PJ_DEF(const char*) pj_ioqueue_name(void)
 /*
  * pj_ioqueue_create()
  *
- * Create select ioqueue.
+ * 创建 select 队列
  */
-PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool, 
+PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool,
                                        pj_size_t max_fd,
                                        pj_ioqueue_t **p_ioqueue)
 {
@@ -130,11 +118,11 @@ PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool,
     pj_lock_t *lock;
     int i;
 
-    /* Check that arguments are valid. */
-    PJ_ASSERT_RETURN(pool != NULL && p_ioqueue != NULL && 
+    /* 检查参数是否有效 */
+    PJ_ASSERT_RETURN(pool != NULL && p_ioqueue != NULL &&
                      max_fd > 0, PJ_EINVAL);
 
-    /* Check that size of pj_ioqueue_op_key_t is sufficient */
+    /* 检查 pj_ioqueue_op_key_t 的大小是否足够 */
     PJ_ASSERT_RETURN(sizeof(pj_ioqueue_op_key_t)-sizeof(void*) >=
                      sizeof(union operation_key), PJ_EBUG);
 
@@ -147,25 +135,22 @@ PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool,
     pj_list_init(&ioqueue->active_list);
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-    /* When safe unregistration is used (the default), we pre-create
-     * all keys and put them in the free list.
+    /* 当使用安全注销（默认设置）时，我们预先创建所有密钥并将它们放入空闲列表中
      */
 
-    /* Mutex to protect key's reference counter 
-     * We don't want to use key's mutex or ioqueue's mutex because
-     * that would create deadlock situation in some cases.
+    /* 互斥量为了保护key的引用计数器，我们不想使用 key 的 Mutex或ioqueue的Mutex，因为这在某些情况下会造成死锁。
      */
     rc = pj_mutex_create_simple(pool, NULL, &ioqueue->ref_cnt_mutex);
     if (rc != PJ_SUCCESS)
 	return rc;
 
 
-    /* Init key list */
+    /* 初始化 key列表*/
     pj_list_init(&ioqueue->free_list);
     pj_list_init(&ioqueue->closing_list);
 
 
-    /* Pre-create all keys according to max_fd */
+    /* 根据 max_fd 预先创建所有密钥 */
     for ( i=0; i<max_fd; ++i) {
 	pj_ioqueue_key_t *key;
 
@@ -199,7 +184,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool,
 	ioqueue_destroy(ioqueue);
 	return PJ_RETURN_OS_ERROR(pj_get_native_os_error());
     }
-    
+
     /*ioqueue->events = pj_pool_calloc(pool, max_fd, sizeof(struct epoll_event));
     PJ_ASSERT_RETURN(ioqueue->events != NULL, PJ_ENOMEM);
 
@@ -215,7 +200,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_create( pj_pool_t *pool,
 /*
  * pj_ioqueue_destroy()
  *
- * Destroy ioqueue.
+ * 销毁 ioqueue.
  */
 PJ_DEF(pj_status_t) pj_ioqueue_destroy(pj_ioqueue_t *ioqueue)
 {
@@ -256,7 +241,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_destroy(pj_ioqueue_t *ioqueue)
 /*
  * pj_ioqueue_register_sock()
  *
- * Register a socket to ioqueue.
+ * 注册一个 socket 到队列
  */
 PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
 					      pj_ioqueue_t *ioqueue,
@@ -271,7 +256,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
     struct epoll_event ev;
     int status;
     pj_status_t rc = PJ_SUCCESS;
-    
+
     PJ_ASSERT_RETURN(pool && ioqueue && sock != PJ_INVALID_SOCKET &&
                      cb && p_key, PJ_EINVAL);
 
@@ -283,21 +268,20 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
 	goto on_return;
     }
 
-    /* Set socket to nonblocking. */
+    /* Set socket 为非阻塞 */
     value = 1;
     if ((rc=os_ioctl(sock, FIONBIO, (ioctl_val_type)&value))) {
-	TRACE_((THIS_FILE, "pj_ioqueue_register_sock error: ioctl rc=%d", 
+	TRACE_((THIS_FILE, "pj_ioqueue_register_sock error: ioctl rc=%d",
                 rc));
         rc = pj_get_netos_error();
 	goto on_return;
     }
 
-    /* If safe unregistration (PJ_IOQUEUE_HAS_SAFE_UNREG) is used, get
-     * the key from the free list. Otherwise allocate a new one. 
+    /* 如果使用了安全注销（PJ_IOQUEUE_HAS_SAFE_UNREG），则从空闲列表中获取密钥。否则，分配一个新的。
      */
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
 
-    /* Scan closing_keys first to let them come back to free_list */
+    /* 先扫描closing_keys，让它们返回到free_list */
     scan_closing_keys(ioqueue);
 
     pj_assert(!pj_list_empty(&ioqueue->free_list));
@@ -309,7 +293,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
     key = ioqueue->free_list.next;
     pj_list_erase(key);
 #else
-    /* Create key. */
+    /* 创建 key */
     key = (pj_ioqueue_key_t*)pj_pool_zalloc(pool, sizeof(pj_ioqueue_key_t));
 #endif
 
@@ -319,7 +303,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
 	goto on_return;
     }
 
-    /* Create key's mutex */
+    /* 创建 key 的互斥量 */
  /*   rc = pj_mutex_create_recursive(pool, NULL, &key->mutex);
     if (rc != PJ_SUCCESS) {
 	key = NULL;
@@ -334,12 +318,12 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
 	rc = pj_get_os_error();
 	pj_lock_destroy(key->lock);
 	key = NULL;
-	TRACE_((THIS_FILE, 
-                "pj_ioqueue_register_sock error: os_epoll_ctl rc=%d", 
+	TRACE_((THIS_FILE,
+                "pj_ioqueue_register_sock error: os_epoll_ctl rc=%d",
                 status));
 	goto on_return;
     }
-    
+
     /* Register */
     pj_list_insert_before(&ioqueue->active_list, key);
     ++ioqueue->count;
@@ -353,7 +337,7 @@ on_return:
     }
     *p_key = key;
     pj_lock_release(ioqueue->lock);
-    
+
     return rc;
 }
 
@@ -369,7 +353,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock( pj_pool_t *pool,
 }
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-/* Increment key's reference counter */
+/* 递增键的参考计数器 */
 static void increment_counter(pj_ioqueue_key_t *key)
 {
     pj_mutex_lock(key->ioqueue->ref_cnt_mutex);
@@ -377,10 +361,10 @@ static void increment_counter(pj_ioqueue_key_t *key)
     pj_mutex_unlock(key->ioqueue->ref_cnt_mutex);
 }
 
-/* Decrement the key's reference counter, and when the counter reach zero,
- * destroy the key.
+/*
+ * 减少键的参考计数器，当计数器达到零时，销毁键
  *
- * Note: MUST NOT CALL THIS FUNCTION WHILE HOLDING ioqueue's LOCK.
+ * 注意：持有ioqueue的锁时不能调用此函数
  */
 static void decrement_counter(pj_ioqueue_key_t *key)
 {
@@ -406,39 +390,36 @@ static void decrement_counter(pj_ioqueue_key_t *key)
 /*
  * pj_ioqueue_unregister()
  *
- * Unregister handle from ioqueue.
+ * 从ioqueue注销句柄。
  */
 PJ_DEF(pj_status_t) pj_ioqueue_unregister( pj_ioqueue_key_t *key)
 {
     pj_ioqueue_t *ioqueue;
     struct epoll_event ev;
     int status;
-    
+
     PJ_ASSERT_RETURN(key != NULL, PJ_EINVAL);
 
     ioqueue = key->ioqueue;
 
-    /* Lock the key to make sure no callback is simultaneously modifying
-     * the key. We need to lock the key before ioqueue here to prevent
-     * deadlock.
+    /* 锁定密钥以确保没有回调同时修改密钥。我们需要在 ioqueue 之前锁定密钥以防止死锁
      */
     pj_ioqueue_lock_key(key);
 
-    /* Best effort to avoid double key-unregistration */
+    /* 尽最大努力避免双键注销 */
     if (IS_CLOSING(key)) {
 	pj_ioqueue_unlock_key(key);
 	return PJ_SUCCESS;
     }
 
-    /* Also lock ioqueue */
+    /* 同时锁定ioqueue */
     pj_lock_acquire(ioqueue->lock);
 
-    /* Avoid "negative" ioqueue count */
+    /* 避免“负的”ioqueue计数 */
     if (ioqueue->count > 0) {
 	--ioqueue->count;
     } else {
-	/* If this happens, very likely there is double unregistration
-	 * of a key.
+	/* 如果发生这种情况，很可能会出现密钥的双重注销
 	 */
 	pj_assert(!"Bad ioqueue count in key unregistration!");
 	PJ_LOG(1,(THIS_FILE, "Bad ioqueue count in key unregistration!"));
@@ -458,27 +439,24 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister( pj_ioqueue_key_t *key)
 	return rc;
     }
 
-    /* Destroy the key. */
+    /* 销毁 key */
     pj_sock_close(key->fd);
 
     pj_lock_release(ioqueue->lock);
 
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-    /* Mark key is closing. */
+    /* 标记键正在关闭。 */
     key->closing = 1;
 
-    /* Decrement counter. */
+    /* 减量计数器。 */
     decrement_counter(key);
 
-    /* Done. */
+    /* 完成 */
     if (key->grp_lock) {
-	/* just dec_ref and unlock. we will set grp_lock to NULL
-	 * elsewhere */
+	/* 只需dec_ref 并解锁。我们将在别处将grp_lock设置为NULL */
 	pj_grp_lock_t *grp_lock = key->grp_lock;
-	// Don't set grp_lock to NULL otherwise the other thread
-	// will crash. Just leave it as dangling pointer, but this
-	// should be safe
+	//不要将 grp_lock 设置为NULL，否则另一个线程将崩溃。把它当作悬挂的指针，但这应该是安全的
 	//key->grp_lock = NULL;
 	pj_grp_lock_dec_ref_dbg(grp_lock, "ioqueue", 0);
 	pj_grp_lock_release(grp_lock);
@@ -487,11 +465,9 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister( pj_ioqueue_key_t *key)
     }
 #else
     if (key->grp_lock) {
-	/* set grp_lock to NULL and unlock */
+	/* 将grp_lock设置为NULL并解锁*/
 	pj_grp_lock_t *grp_lock = key->grp_lock;
-	// Don't set grp_lock to NULL otherwise the other thread
-	// will crash. Just leave it as dangling pointer, but this
-	// should be safe
+	// 不要将 grp_lock 设置为NULL，否则另一个线程将崩溃。把它当作悬挂的指针，但这应该是安全的
 	//key->grp_lock = NULL;
 	pj_grp_lock_dec_ref_dbg(grp_lock, "ioqueue", 0);
 	pj_grp_lock_release(grp_lock);
@@ -506,12 +482,10 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister( pj_ioqueue_key_t *key)
 }
 
 /* ioqueue_remove_from_set()
- * This function is called from ioqueue_dispatch_event() to instruct
- * the ioqueue to remove the specified descriptor from ioqueue's descriptor
- * set for the specified event.
+ * 从 ioqueue_dispatch_event() 调用此函数，以指示 ioqueue 从 ioqueue 为指定事件设置的描述符集中删除指定的描述符。
  */
 static void ioqueue_remove_from_set( pj_ioqueue_t *ioqueue,
-                                     pj_ioqueue_key_t *key, 
+                                     pj_ioqueue_key_t *key,
                                      enum ioqueue_event_type event_type)
 {
     if (event_type == WRITEABLE_EVENT) {
@@ -520,14 +494,12 @@ static void ioqueue_remove_from_set( pj_ioqueue_t *ioqueue,
 	ev.events = EPOLLIN | EPOLLERR;
 	ev.epoll_data = (epoll_data_type)key;
 	os_epoll_ctl( ioqueue->epfd, EPOLL_CTL_MOD, key->fd, &ev);
-    }	
+    }
 }
 
 /*
  * ioqueue_add_to_set()
- * This function is called from pj_ioqueue_recv(), pj_ioqueue_send() etc
- * to instruct the ioqueue to add the specified handle to ioqueue's descriptor
- * set for the specified event.
+ * 从pj_ioqueue_recv()、pj_ioqueue_send()等调用此函数，以指示 ioqueue 将指定的句柄添加到 ioqueue 为指定事件设置的描述符中。
  */
 static void ioqueue_add_to_set( pj_ioqueue_t *ioqueue,
                                 pj_ioqueue_key_t *key,
@@ -539,7 +511,7 @@ static void ioqueue_add_to_set( pj_ioqueue_t *ioqueue,
 	ev.events = EPOLLIN | EPOLLOUT | EPOLLERR;
 	ev.epoll_data = (epoll_data_type)key;
 	os_epoll_ctl( ioqueue->epfd, EPOLL_CTL_MOD, key->fd, &ev);
-    }	
+    }
 }
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
@@ -583,14 +555,14 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
     struct epoll_event events[MAX_EVENTS];
     struct queue queue[MAX_EVENTS];
     pj_timestamp t1, t2;
-    
+
     PJ_CHECK_STACK();
 
     msec = timeout ? PJ_TIME_VAL_MSEC(*timeout) : 9000;
 
     TRACE_((THIS_FILE, "start os_epoll_wait, msec=%d", msec));
     pj_get_timestamp(&t1);
- 
+
     //count = os_epoll_wait( ioqueue->epfd, events, ioqueue->max, msec);
     count = os_epoll_wait( ioqueue->epfd, events, MAX_EVENTS, msec);
     if (count == 0) {
@@ -616,7 +588,7 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
     TRACE_((THIS_FILE, "os_epoll_wait returns %d, time=%d usec",
 		       count, pj_elapsed_usec(&t1, &t2)));
 
-    /* Lock ioqueue. */
+    /* 锁 ioqueue. */
     pj_lock_acquire(ioqueue->lock);
 
     for (event_cnt=0, i=0; i<count; ++i) {
@@ -626,9 +598,9 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 	TRACE_((THIS_FILE, "event %d: events=%d", i, events[i].events));
 
 	/*
-	 * Check readability.
+	 * 检查可读性
 	 */
-	if ((events[i].events & EPOLLIN) && 
+	if ((events[i].events & EPOLLIN) &&
 	    (key_has_pending_read(h) || key_has_pending_accept(h)) && !IS_CLOSING(h) ) {
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
@@ -641,7 +613,7 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 	}
 
 	/*
-	 * Check for writeability.
+	 * 检查可写性
 	 */
 	if ((events[i].events & EPOLLOUT) && key_has_pending_write(h) && !IS_CLOSING(h)) {
 
@@ -656,7 +628,7 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 
 #if PJ_HAS_TCP
 	/*
-	 * Check for completion of connect() operation.
+	 * 检查 connect() 操作是否完成
 	 */
 	if ((events[i].events & EPOLLOUT) && (h->connecting) && !IS_CLOSING(h)) {
 
@@ -671,13 +643,11 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 #endif /* PJ_HAS_TCP */
 
 	/*
-	 * Check for error condition.
+	 * 检查错误情况
 	 */
 	if ((events[i].events & EPOLLERR) && !IS_CLOSING(h)) {
 	    /*
-	     * We need to handle this exception event.  If it's related to us
-	     * connecting, report it as such.  If not, just report it as a
-	     * read event and the higher layers will handle it.
+	     * 我们需要处理这个异常事件。如果与我们的连接有关，请如实报告。如果不是，只需将其报告为读取事件，更高的层将处理它。
 	     */
 	    if (h->connecting) {
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
@@ -710,10 +680,10 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 
     processed_cnt = 0;
 
-    /* Now process the events. */
+    /* 现在处理事件 */
     for (i=0; i<event_cnt; ++i) {
 
-	/* Just do not exceed PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL */
+	/* 只需在单个轮询中不超过PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL即可 */
 	if (processed_cnt < PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL) {
 	    switch (queue[i].event_type) {
 	    case READABLE_EVENT:
@@ -743,8 +713,9 @@ PJ_DEF(int) pj_ioqueue_poll( pj_ioqueue_t *ioqueue, const pj_time_val *timeout)
 	                            "ioqueue", 0);
     }
 
-    /* Special case:
-     * When epoll returns > 0 but no descriptors are actually set!
+    /*
+     * 特殊情况：
+     *      当epoll返回 >0 但没有实际设置描述符时
      */
     if (count > 0 && !event_cnt && msec > 0) {
 	pj_thread_sleep(msec);

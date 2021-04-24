@@ -28,7 +28,7 @@
  * 					IPTOS_RELIABILITY
  * 					IPTOS_MINCOST
  *
- * 				IPV6_TCLASS
+ * 				IPV6_TCLASS		//IPv6 的TOS
  *
  * 				SO_PRIORITY
  *

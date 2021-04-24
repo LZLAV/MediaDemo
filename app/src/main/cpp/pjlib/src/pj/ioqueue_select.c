@@ -1,29 +1,17 @@
-/* $Id: ioqueue_select.c 5849 2018-08-01 08:05:16Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成:
+ *      1. 创建 ioqueue   / 销毁 ioqueue
+ *      2. 注册 socket 句柄到 ioqueue    / socket 句柄从 ioqueue 中注销
+ *      3. 从队列中移除指定key,type 的事件
+ *      4. 添加指定 key,type 的事件到 ioqueue
+ *      5. ioqueue_poll() 轮询事件  （pj_sock_select()）
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 
 /*
  * sock_select.c
  *
- * This is the implementation of IOQueue using pj_sock_select().
- * It runs anywhere where pj_sock_select() is available (currently
- * Win32, Linux, Linux kernel, etc.).
+ * 这是使用 pj_sock_select() 实现的IOQueue。它运行在 pj_sock_select() 可用的任何地方（当前为Win32、Linux、Linux内核等）。
  */
 
 #include <pj/ioqueue.h>
@@ -41,8 +29,8 @@
 #include <pj/errno.h>
 #include <pj/rand.h>
 
-/* Now that we have access to OS'es <sys/select>, lets check again that
- * PJ_IOQUEUE_MAX_HANDLES is not greater than FD_SETSIZE
+/*
+ * 现在我们可以访问OS'es<sys/select>，让我们再次检查PJ_IOQUEUE_MAX_HANDLES是否大于FD_SETSIZE
  */
 #if PJ_IOQUEUE_MAX_HANDLES > FD_SETSIZE
 #   error "PJ_IOQUEUE_MAX_HANDLES cannot be greater than FD_SETSIZE"
@@ -50,34 +38,29 @@
 
 
 /*
- * Include declaration from common abstraction.
+ * 包含来自公共抽象的声明
  */
 #include "ioqueue_common_abs.h"
 
 /*
- * ISSUES with ioqueue_select()
+ * 与 ioqueue_select() 有关的问题
  *
- * EAGAIN/EWOULDBLOCK error in recv():
- *  - when multiple threads are working with the ioqueue, application
- *    may receive EAGAIN or EWOULDBLOCK in the receive callback.
- *    This error happens because more than one thread is watching for
- *    the same descriptor set, so when all of them call recv() or recvfrom()
- *    simultaneously, only one will succeed and the rest will get the error.
+ * recv()中的 EAGAIN/EWOULDBLOCK错误：
+ *  -当多个线程使用 ioqueue 时，应用程序可能会在接收回调中接收EAGAIN或EWOULDBLOCK
+ *  发生此错误的原因是有多个线程正在监视同一描述符集，因此当所有线程同时调用 recv()或recvfrom()时，只有一个线程成功，其余线程将获得错误
  *
  */
 #define THIS_FILE   "ioq_select"
 
 /*
- * The select ioqueue relies on socket functions (pj_sock_xxx()) to return
- * the correct error code.
+ * select ioqueue 依赖socket函数（pj_sock_xxx()）返回正确的错误代码。
  */
 #if PJ_RETURN_OS_ERROR(100) != PJ_STATUS_FROM_OS(100)
 #   error "Error reporting must be enabled for this function to work!"
 #endif
 
 /*
- * During debugging build, VALIDATE_FD_SET is set.
- * This will check the validity of the fd_sets.
+ * 在调试生成期间,VALIDATE_FD_SET是否已设置。这将检查 fd_sets 的有效性。
  */
 /*
 #if defined(PJ_DEBUG) && PJ_DEBUG != 0
@@ -95,21 +78,21 @@
 #endif
 
 /*
- * This describes each key.
+ * 键的描述
  */
 struct pj_ioqueue_key_t {
     DECLARE_COMMON_KEY
 };
 
 /*
- * This describes the I/O queue itself.
+ * I/O队列的描述
  */
 struct pj_ioqueue_t {
     DECLARE_COMMON_IOQUEUE
 
-    unsigned max, count;    /* Max and current key count	    */
-    int nfds;        /* The largest fd value (for select)*/
-    pj_ioqueue_key_t active_list;    /* List of active keys.		    */
+    unsigned max, count;    /* 最大和当前密钥计数	    */
+    int nfds;        /* 最大fd值（对于select） */
+    pj_ioqueue_key_t active_list;    /* 活动键列表		    */
     pj_fd_set_t rfdset;
     pj_fd_set_t wfdset;
 #if PJ_HAS_TCP
@@ -129,14 +112,14 @@ struct pj_ioqueue_t {
 static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h);
 #endif
 
-/* Include implementation for common abstraction after we declare
- * pj_ioqueue_key_t and pj_ioqueue_t.
+/*
+ * 在声明pj_ioqueue_key_t和pj_ioqueue_t之后，包含公共抽象的实现
  */
 #include "ioqueue_common_abs.c"
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
 
-/* Scan closing keys to be put to free list again */
+/* 再次扫描要放入空闲列表的关闭键 */
 static void scan_closing_keys(pj_ioqueue_t *ioqueue);
 
 #endif
@@ -149,8 +132,7 @@ PJ_DEF(const char*)pj_ioqueue_name(void) {
 }
 
 /* 
- * Scan the socket descriptor sets for the largest descriptor.
- * This value is needed by select().
+ * 扫描 socket 描述符集以查找最大的 descriptor.This select() 需要值
  */
 #if defined(PJ_SELECT_NEEDS_NFDS) && PJ_SELECT_NEEDS_NFDS != 0
 static void rescan_fdset(pj_ioqueue_t *ioqueue)
@@ -178,7 +160,7 @@ static void rescan_fdset(pj_ioqueue_t *ioqueue) {
 /*
  * pj_ioqueue_create()
  *
- * Create select ioqueue.
+ * 创建 select 队列
  */
 PJ_DEF(pj_status_t) pj_ioqueue_create(pj_pool_t *pool,
                                       pj_size_t max_fd,
@@ -188,16 +170,16 @@ PJ_DEF(pj_status_t) pj_ioqueue_create(pj_pool_t *pool,
     unsigned i;
     pj_status_t rc;
 
-    /* Check that arguments are valid. */
+    /* 检查参数是否有效。 */
     PJ_ASSERT_RETURN(pool != NULL && p_ioqueue != NULL &&
                      max_fd > 0 && max_fd <= PJ_IOQUEUE_MAX_HANDLES,
                      PJ_EINVAL);
 
-    /* Check that size of pj_ioqueue_op_key_t is sufficient */
+    /* 检查 pj_ioqueue_op_key_t 的大小是否足够 */
     PJ_ASSERT_RETURN(sizeof(pj_ioqueue_op_key_t) - sizeof(void *) >=
                      sizeof(union operation_key), PJ_EBUG);
 
-    /* Create and init common ioqueue stuffs */
+    /* 创建和初始化公共ioqueue  */
     ioqueue = PJ_POOL_ALLOC_T(pool, pj_ioqueue_t);
     ioqueue_init(ioqueue);
 
@@ -252,7 +234,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_create(pj_pool_t *pool,
     }
 #endif
 
-    /* Create and init ioqueue mutex */
+    /* 创建和初始化队列 mutex */
     rc = pj_lock_create_simple_mutex(pool, "ioq%p", &lock);
     if (rc != PJ_SUCCESS)
         return rc;
@@ -270,7 +252,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_create(pj_pool_t *pool,
 /*
  * pj_ioqueue_destroy()
  *
- * Destroy ioqueue.
+ * 销毁 ioqueue.
  */
 PJ_DEF(pj_status_t) pj_ioqueue_destroy(pj_ioqueue_t *ioqueue) {
     pj_ioqueue_key_t *key;
@@ -280,7 +262,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_destroy(pj_ioqueue_t *ioqueue) {
     pj_lock_acquire(ioqueue->lock);
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-    /* Destroy reference counters */
+    /* 销毁引用计数器 */
     key = ioqueue->active_list.next;
     while (key != &ioqueue->active_list) {
         pj_lock_destroy(key->lock);
@@ -309,7 +291,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_destroy(pj_ioqueue_t *ioqueue) {
 /*
  * pj_ioqueue_register_sock()
  *
- * Register socket handle to ioqueue.
+ * 注册 socket 句柄到队列
  */
 PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
                                               pj_ioqueue_t *ioqueue,
@@ -331,9 +313,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
     PJ_ASSERT_RETURN(pool && ioqueue && sock != PJ_INVALID_SOCKET &&
                      cb && p_key, PJ_EINVAL);
 
-    /* On platforms with fd_set containing fd bitmap such as *nix family,
-     * avoid potential memory corruption caused by select() when given
-     * an fd that is higher than FD_SETSIZE.
+    /* 在具有包含fd bitmap的fd_set的平台上，如*nix family，当给定的fd大于FD_SETSIZE时，请避免select()导致的潜在内存损坏。
      */
     if (sizeof(fd_set) < FD_SETSIZE && sock >= FD_SETSIZE) {
         PJ_LOG(4, ("pjlib", "Failed to register socket to ioqueue because "
@@ -349,12 +329,11 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
         goto on_return;
     }
 
-    /* If safe unregistration (PJ_IOQUEUE_HAS_SAFE_UNREG) is used, get
-     * the key from the free list. Otherwise allocate a new one. 
+    /* 如果使用了安全注销（PJ_IOQUEUE_HAS_SAFE_UNREG），则从空闲列表中获取密钥。否则，分配一个新的
      */
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
 
-    /* Scan closing_keys first to let them come back to free_list */
+    /* 先扫描closing_keys，让它们返回到free_list */
     scan_closing_keys(ioqueue);
 
     pj_assert(!pj_list_empty(&ioqueue->free_list));
@@ -375,7 +354,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
         goto on_return;
     }
 
-    /* Set socket to nonblocking. */
+    /* 将套接字设置为非阻塞。 */
     value = 1;
 #if defined(PJ_WIN32) && PJ_WIN32 != 0 || \
     defined(PJ_WIN64) && PJ_WIN64 != 0 || \
@@ -389,15 +368,15 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock2(pj_pool_t *pool,
     }
 
 
-    /* Put in active list. */
+    /* 放入活动列表 */
     pj_list_insert_before(&ioqueue->active_list, key);
     ++ioqueue->count;
 
-    /* Rescan fdset to get max descriptor */
+    /* 重新扫描fdset以获取最大描述符 */
     rescan_fdset(ioqueue);
 
     on_return:
-    /* On error, socket may be left in non-blocking mode. */
+    /* 出错时，套接字可能处于非阻塞模式 */
     if (rc != PJ_SUCCESS) {
         if (key && key->grp_lock)
             pj_grp_lock_dec_ref_dbg(key->grp_lock, "ioqueue", 0);
@@ -420,17 +399,16 @@ PJ_DEF(pj_status_t) pj_ioqueue_register_sock(pj_pool_t *pool,
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
 
-/* Increment key's reference counter */
+/* 递增key 的参考计数器 */
 static void increment_counter(pj_ioqueue_key_t *key) {
     pj_mutex_lock(key->ioqueue->ref_cnt_mutex);
     ++key->ref_count;
     pj_mutex_unlock(key->ioqueue->ref_cnt_mutex);
 }
 
-/* Decrement the key's reference counter, and when the counter reach zero,
- * destroy the key.
- *
- * Note: MUST NOT CALL THIS FUNCTION WHILE HOLDING ioqueue's LOCK.
+/*
+ * 减少 key 的参考计数器，当计数器达到零时，销毁key
+ * 注意：持有 ioqueue 的锁时不能调用此函数
  */
 static void decrement_counter(pj_ioqueue_key_t *key) {
     pj_lock_acquire(key->ioqueue->lock);
@@ -458,7 +436,7 @@ static void decrement_counter(pj_ioqueue_key_t *key) {
 /*
  * pj_ioqueue_unregister()
  *
- * Unregister handle from ioqueue.
+ * 从 ioqueue 注销句柄。
  */
 PJ_DEF(pj_status_t) pj_ioqueue_unregister(pj_ioqueue_key_t *key) {
     pj_ioqueue_t *ioqueue;
@@ -467,34 +445,32 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister(pj_ioqueue_key_t *key) {
 
     ioqueue = key->ioqueue;
 
-    /* Lock the key to make sure no callback is simultaneously modifying
-     * the key. We need to lock the key before ioqueue here to prevent
-     * deadlock.
+    /* 锁定密钥以确保没有回调同时修改密钥。我们需要在 ioqueue 之前锁定密钥以防止死锁。
      */
     pj_ioqueue_lock_key(key);
 
-    /* Best effort to avoid double key-unregistration */
+    /* 尽最大努力避免多次键注销 */
     if (IS_CLOSING(key)) {
         pj_ioqueue_unlock_key(key);
         return PJ_SUCCESS;
     }
 
-    /* Also lock ioqueue */
+    /* 同时锁定ioqueue */
     pj_lock_acquire(ioqueue->lock);
 
-    /* Avoid "negative" ioqueue count */
+    /* 避免负数 ioqueue 数量 */
     if (ioqueue->count > 0) {
         --ioqueue->count;
     } else {
-        /* If this happens, very likely there is double unregistration
-         * of a key.
+        /*
+         * 如果发生这种情况，很可能会出现密钥的多次注销
          */
         pj_assert(!"Bad ioqueue count in key unregistration!");
         PJ_LOG(1, (THIS_FILE, "Bad ioqueue count in key unregistration!"));
     }
 
 #if !PJ_IOQUEUE_HAS_SAFE_UNREG
-    /* Ticket #520, key will be erased more than once */
+    /* #520, key 多次删除 */
     pj_list_erase(key);
 #endif
     PJ_FD_CLR(key->fd, &ioqueue->rfdset);
@@ -503,38 +479,34 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister(pj_ioqueue_key_t *key) {
     PJ_FD_CLR(key->fd, &ioqueue->xfdset);
 #endif
 
-    /* Close socket. */
+    /* 关闭 socket. */
     if (key->fd != PJ_INVALID_SOCKET) {
         pj_sock_close(key->fd);
         key->fd = PJ_INVALID_SOCKET;
     }
 
-    /* Clear callback */
+    /* 清除回调 */
     key->cb.on_accept_complete = NULL;
     key->cb.on_connect_complete = NULL;
     key->cb.on_read_complete = NULL;
     key->cb.on_write_complete = NULL;
 
-    /* Must release ioqueue lock first before decrementing counter, to
-     * prevent deadlock.
+    /* 必须先释放ioqueue锁，然后再递减计数器，以防止死锁。
      */
     pj_lock_release(ioqueue->lock);
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
-    /* Mark key is closing. */
+    /* 标记键正在关闭 */
     key->closing = 1;
 
-    /* Decrement counter. */
+    /* 减量计数器 */
     decrement_counter(key);
 
-    /* Done. */
+    /* 完成 */
     if (key->grp_lock) {
-        /* just dec_ref and unlock. we will set grp_lock to NULL
-         * elsewhere */
+        /* 只需松开并解锁。我们将在别处将grp_lock设置为NULL*/
         pj_grp_lock_t *grp_lock = key->grp_lock;
-        // Don't set grp_lock to NULL otherwise the other thread
-        // will crash. Just leave it as dangling pointer, but this
-        // should be safe
+        //不要将grp_lock设置为NULL，否则另一个线程将崩溃。把它当作悬挂的指针，但这应该是安全的
         //key->grp_lock = NULL;
         pj_grp_lock_dec_ref_dbg(grp_lock, "ioqueue", 0);
         pj_grp_lock_release(grp_lock);
@@ -543,11 +515,9 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister(pj_ioqueue_key_t *key) {
     }
 #else
     if (key->grp_lock) {
-    /* set grp_lock to NULL and unlock */
+    /* 设置 grp_lock为 NULL 并解锁 */
     pj_grp_lock_t *grp_lock = key->grp_lock;
-    // Don't set grp_lock to NULL otherwise the other thread
-    // will crash. Just leave it as dangling pointer, but this
-    // should be safe
+    //不要将 grp_lock 设置为NULL，否则另一个线程将崩溃。把它当作悬挂的指针，但这应该是安全的
     //key->grp_lock = NULL;
     pj_grp_lock_dec_ref_dbg(grp_lock, "ioqueue", 0);
     pj_grp_lock_release(grp_lock);
@@ -562,8 +532,8 @@ PJ_DEF(pj_status_t) pj_ioqueue_unregister(pj_ioqueue_key_t *key) {
 }
 
 
-/* This supposed to check whether the fd_set values are consistent
- * with the operation currently set in each key.
+/*
+ * 这是为了检查fd_set值是否与每个键中当前设置的操作一致。
  */
 #if VALIDATE_FD_SET
 static void validate_sets(const pj_ioqueue_t *ioqueue,
@@ -574,10 +544,8 @@ static void validate_sets(const pj_ioqueue_t *ioqueue,
     pj_ioqueue_key_t *key;
 
     /*
-     * This basicly would not work anymore.
-     * We need to lock key before performing the check, but we can't do
-     * so because we're holding ioqueue mutex. If we acquire key's mutex
-     * now, the will cause deadlock.
+     * 这基本上不起作用了。
+     * 我们需要在执行检查之前锁定密钥，但不能这样做，因为我们持有ioqueue mutex。如果我们现在获取密钥的互斥，将导致死锁。
      */
     pj_assert(0);
 
@@ -622,9 +590,7 @@ static void validate_sets(const pj_ioqueue_t *ioqueue,
 
 
 /* ioqueue_remove_from_set()
- * This function is called from ioqueue_dispatch_event() to instruct
- * the ioqueue to remove the specified descriptor from ioqueue's descriptor
- * set for the specified event.
+ * 从 ioqueue_dispatch_event() 调用此函数，以指示ioqueue从ioqueue为指定事件设置的描述符集中删除指定的描述符
  */
 static void ioqueue_remove_from_set(pj_ioqueue_t *ioqueue,
                                     pj_ioqueue_key_t *key,
@@ -647,9 +613,7 @@ static void ioqueue_remove_from_set(pj_ioqueue_t *ioqueue,
 
 /*
  * ioqueue_add_to_set()
- * This function is called from pj_ioqueue_recv(), pj_ioqueue_send() etc
- * to instruct the ioqueue to add the specified handle to ioqueue's descriptor
- * set for the specified event.
+ * 从pj_ioqueue_recv()、pj_ioqueue_send()等调用此函数，以指示ioqueue将指定的句柄添加到ioqueue为指定事件设置的描述符中
  */
 static void ioqueue_add_to_set(pj_ioqueue_t *ioqueue,
                                pj_ioqueue_key_t *key,
@@ -672,7 +636,7 @@ static void ioqueue_add_to_set(pj_ioqueue_t *ioqueue,
 
 #if PJ_IOQUEUE_HAS_SAFE_UNREG
 
-/* Scan closing keys to be put to free list again */
+/* 再次扫描要放入空闲列表的关闭键 */
 static void scan_closing_keys(pj_ioqueue_t *ioqueue) {
     pj_time_val now;
     pj_ioqueue_key_t *h;
@@ -686,9 +650,7 @@ static void scan_closing_keys(pj_ioqueue_t *ioqueue) {
 
         if (PJ_TIME_VAL_GTE(now, h->free_time)) {
             pj_list_erase(h);
-            // Don't set grp_lock to NULL otherwise the other thread
-            // will crash. Just leave it as dangling pointer, but this
-            // should be safe
+            //不要将 grp_lock 设置为NULL，否则另一个线程将崩溃。把它当作悬挂的指针，但这应该是安全的
             //h->grp_lock = NULL;
             pj_list_push_back(&ioqueue->free_list, h);
         }
@@ -726,7 +688,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
     fds[fds_cnt++] = &h->ioqueue->xfdset;
 #endif
 
-    /* Can only replace UDP socket */
+    /* 只能替换UDP套接字 */
     pj_assert(h->fd_type == pj_SOCK_DGRAM());
 
     PJ_LOG(4,(THIS_FILE, "Attempting to replace UDP socket %d", old_sock));
@@ -740,7 +702,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
         }
 
         if (old_sock != PJ_INVALID_SOCKET) {
-            /* Investigate the old socket */
+            /* 检查老 socket */
             addr_len = sizeof(local_addr);
             status = pj_sock_getsockname(old_sock, &local_addr, &addr_len);
             if (status != PJ_SUCCESS) {
@@ -770,8 +732,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
                 flags |= HAS_QOS;
             }
 
-            /* We're done with the old socket, close it otherwise we'll get
-             * error in bind()
+            /* 我们已经处理完旧的套接字，请关闭它，否则将在bind()中出错
              */
             status = pj_sock_close(old_sock);
                if (status != PJ_SUCCESS) {
@@ -781,7 +742,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
             old_sock = PJ_INVALID_SOCKET;
         }
 
-        /* Prepare the new socket */
+        /* 准备新 socket */
         status = pj_sock_socket(local_addr.addr.sa_family, PJ_SOCK_DGRAM, 0,
                                 &new_sock);
         if (status != PJ_SUCCESS) {
@@ -789,8 +750,8 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
             continue;
         }
 
-        /* Even after the socket is closed, we'll still get "Address in use"
-         * errors, so force it with SO_REUSEADDR
+        /*
+         * 即使在套接字关闭之后，我们仍然会得到“Address in use”错误，因此请使用SO_REUSEADDR强制它
          */
         val = 1;
         status = pj_sock_setsockopt(new_sock, SOL_SOCKET, SO_REUSEADDR,
@@ -803,7 +764,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
             continue;
         }
 
-        /* The loop is silly, but what else can we do? */
+        /* 循环是愚蠢的，但我们还能做什么呢？ */
         addr_len = pj_sockaddr_get_len(&local_addr);
         for (msec=20; msec<1000 ; msec<1000? msec=msec*2 : 1000) {
             status = pj_sock_bind(new_sock, &local_addr, addr_len);
@@ -836,7 +797,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
     if (status != PJ_SUCCESS)
         goto on_error;
 
-    /* Set socket to nonblocking. */
+    /* 将套接字设置为非阻塞 */
     val = 1;
 #if defined(PJ_WIN32) && PJ_WIN32!=0 || \
     defined(PJ_WIN64) && PJ_WIN64 != 0 || \
@@ -849,8 +810,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
     goto on_error;
     }
 
-    /* Replace the occurrence of old socket with new socket in the
-     * fd sets.
+    /* 将fd集合中出现的旧套接字替换为新套接字
      */
     for (i=0; i<fds_cnt; ++i) {
     if (PJ_FD_ISSET(h->fd, fds[i])) {
@@ -859,7 +819,7 @@ static pj_status_t replace_udp_sock(pj_ioqueue_key_t *h)
     }
     }
 
-    /* And finally replace the fd in the key */
+    /* 最后替换键中的fd */
     h->fd = new_sock;
 
     PJ_LOG(4,(THIS_FILE, "UDP has been replaced successfully!"));
@@ -874,7 +834,7 @@ on_error:
     if (old_sock != PJ_INVALID_SOCKET)
         pj_sock_close(old_sock);
 
-    /* Clear the occurrence of old socket in the fd sets. */
+    /* 清除fd集合中出现的旧套接字 */
     for (i=0; i<fds_cnt; ++i) {
     if (PJ_FD_ISSET(h->fd, fds[i])) {
         PJ_FD_CLR(h->fd, fds[i]);
@@ -892,19 +852,13 @@ on_error:
 /*
  * pj_ioqueue_poll()
  *
- * Few things worth written:
+ * 有几件事值得写：
+ *      -我们过去每次轮询只调用一次回调，但效果不太好。原因是在某些情况下，写回调总是被调用，因此不给读回调以被调用。
+ *      例如，当用户在write回调中提交write操作时，就会发生这种情况。
  *
- *  - we used to do only one callback called per poll, but it didn't go
- *    very well. The reason is because on some situation, the write 
- *    callback gets called all the time, thus doesn't give the read
- *    callback to get called. This happens, for example, when user
- *    submit write operation inside the write callback.
- *    As the result, we changed the behaviour so that now multiple
- *    callbacks are called in a single poll. It should be fast too,
- *    just that we need to be carefull with the ioqueue data structs.
+ *      结果，我们改变了行为，使得现在在一次轮询中调用多个回调。它应该也很快，只是我们需要小心ioqueue数据结构。
  *
- *  - to guarantee preemptiveness etc, the poll function must strictly
- *    work on fd_set copy of the ioqueue (not the original one).
+ *      -为了保证抢占性等，poll函数必须严格作用于ioqueue的fd_set副本（而不是原始副本）。
  */
 PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
     pj_fd_set_t rfdset, wfdset, xfdset;
@@ -921,11 +875,11 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
 
     PJ_ASSERT_RETURN(ioqueue, -PJ_EINVAL);
 
-    /* Lock ioqueue before making fd_set copies */
+    /* 在拷贝fd_set之前锁定ioqueue */
     pj_lock_acquire(ioqueue->lock);
 
-    /* We will only do select() when there are sockets to be polled.
-     * Otherwise select() will return error.
+    /* 我们将只在有要轮询的套接字时执行select()
+     * 否则select()将返回错误
      */
     if (PJ_FD_COUNT(&ioqueue->rfdset) == 0 &&
         PJ_FD_COUNT(&ioqueue->wfdset) == 0
@@ -943,7 +897,7 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
         return 0;
     }
 
-    /* Copy ioqueue's pj_fd_set_t to local variables. */
+    /* 将ioqueue的pj_fd_set_t复制到局部变量 */
     pj_memcpy(&rfdset, &ioqueue->rfdset, sizeof(pj_fd_set_t));
     pj_memcpy(&wfdset, &ioqueue->wfdset, sizeof(pj_fd_set_t));
 #if PJ_HAS_TCP
@@ -958,7 +912,7 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
 
     nfds = ioqueue->nfds;
 
-    /* Unlock ioqueue before select(). */
+    /* 在select（）之前解锁ioqueue */
     pj_lock_release(ioqueue->lock);
 
 #if defined(PJ_WIN32_WINPHONE8) && PJ_WIN32_WINPHONE8
@@ -970,7 +924,7 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
                            timeout);
 
 #if defined(PJ_WIN32_WINPHONE8) && PJ_WIN32_WINPHONE8
-    /* Ignore Invalid Handle Exception raised by select().*/
+    /* 忽略select()引发的无效句柄异常 */
     }
     __except (GetExceptionCode() == STATUS_INVALID_HANDLE ?
           EXCEPTION_CONTINUE_EXECUTION : EXCEPTION_CONTINUE_SEARCH) {
@@ -982,16 +936,13 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
     else if (count < 0)
         return -pj_get_netos_error();
 
-    /* Scan descriptor sets for event and add the events in the event
-     * array to be processed later in this function. We do this so that
-     * events can be processed in parallel without holding ioqueue lock.
+    /* 扫描事件的描述符集，并将事件添加到事件数组中，以便稍后在此函数中处理。我们这样做是为了在不持有ioqueue锁的情况下并行处理事件。
      */
     pj_lock_acquire(ioqueue->lock);
 
     event_cnt = 0;
 
-    /* Scan for writable sockets first to handle piggy-back data
-     * coming with accept().
+    /* 首先扫描可写套接字以处理accept()附带的piggy-back 数据。
      */
     for (h = ioqueue->active_list.next;
          h != &ioqueue->active_list && event_cnt < MAX_EVENTS;
@@ -1009,7 +960,7 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
             ++event_cnt;
         }
 
-        /* Scan for readable socket. */
+        /* 扫描可读的套接字 */
         if ((key_has_pending_read(h) || key_has_pending_accept(h))
             && PJ_FD_ISSET(h->fd, &rfdset) && !IS_CLOSING(h) &&
             event_cnt < MAX_EVENTS) {
@@ -1047,12 +998,11 @@ PJ_DEF(int) pj_ioqueue_poll(pj_ioqueue_t *ioqueue, const pj_time_val *timeout) {
 
     processed_cnt = 0;
 
-    /* Now process all events. The dispatch functions will take care
-     * of locking in each of the key
+    /* 现在处理所有事件。调度功能将负责锁定每个钥匙
      */
     for (i = 0; i < event_cnt; ++i) {
 
-        /* Just do not exceed PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL */
+        /* 只需在单个轮询中不超过PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL即可 */
         if (processed_cnt < PJ_IOQUEUE_MAX_EVENTS_IN_SINGLE_POLL) {
             switch (event[i].event_type) {
                 case READABLE_EVENT:

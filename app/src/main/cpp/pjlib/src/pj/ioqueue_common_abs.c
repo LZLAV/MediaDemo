@@ -1,31 +1,13 @@
-/* $Id: ioqueue_common_abs.c 5737 2018-02-15 13:57:11Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/** 已完成，ioqueue 对 socket 的封装
  */
 
 /*
  * ioqueue_common_abs.c
  *
- * This contains common functionalities to emulate proactor pattern with
- * various event dispatching mechanisms (e.g. select, epoll).
+ * 它包含用各种事件调度机制（例如select、epoll）模拟 proactor 模式的常见功能。
  *
- * This file will be included by the appropriate ioqueue implementation.
- * This file is NOT supposed to be compiled as stand-alone source.
+ * 此文件将包含在相应的ioqueue实现中。
+ * 此文件不应编译为独立源。
  */
 
 #define PENDING_RETRY    2
@@ -100,8 +82,7 @@ static pj_status_t ioqueue_init_key(pj_pool_t *pool,
     if (rc != PJ_SUCCESS)
         return rc;
 
-    /* Get socket type. When socket type is datagram, some optimization
-     * will be performed during send to allow parallel send operations.
+    /* 获取套接字类型。当socket类型为 datagram 时，发送期间将执行一些优化以允许并行发送操作。
      */
     optlen = sizeof(key->fd_type);
     rc = pj_sock_getsockopt(sock, pj_SOL_SOCKET(), pj_SO_TYPE(),
@@ -109,14 +90,14 @@ static pj_status_t ioqueue_init_key(pj_pool_t *pool,
     if (rc != PJ_SUCCESS)
         key->fd_type = pj_SOCK_STREAM();
 
-    /* Create mutex for the key. */
+    /* 创建互斥锁 */
 #if !PJ_IOQUEUE_HAS_SAFE_UNREG
     rc = pj_lock_create_simple_mutex(pool, NULL, &key->lock);
     if (rc != PJ_SUCCESS)
     return rc;
 #endif
 
-    /* Group lock */
+    /* 组锁 */
     key->grp_lock = grp_lock;
     if (key->grp_lock) {
         pj_grp_lock_add_ref_dbg(key->grp_lock, "ioqueue", 0);
@@ -182,14 +163,13 @@ PJ_INLINE(int) key_has_pending_connect(pj_ioqueue_key_t *key) {
 /*
  * ioqueue_dispatch_event()
  *
- * Report occurence of an event in the key to be processed by the
- * framework.
+ * 报告框架要处理的密钥中发生的事件。
  */
 pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
                                        pj_ioqueue_key_t *h) {
     pj_status_t rc;
 
-    /* Try lock the key. */
+    /* 尝试加锁 */
     rc = pj_ioqueue_trylock_key(h);
     if (rc != PJ_SUCCESS) {
         return PJ_FALSE;
@@ -202,7 +182,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
 
 #if defined(PJ_HAS_TCP) && PJ_HAS_TCP != 0
     if (h->connecting) {
-        /* Completion of connect() operation */
+        /*完成 connect() 操作 */
         pj_status_t status;
         pj_bool_t has_lock;
 
@@ -214,10 +194,8 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
 
 
 #if (defined(PJ_HAS_SO_ERROR) && PJ_HAS_SO_ERROR != 0)
-        /* from connect(2):
-         * On Linux, use getsockopt to read the SO_ERROR option at
-         * level SOL_SOCKET to determine whether connect() completed
-         * successfully (if SO_ERROR is zero).
+        /* 从连接（2）：
+         *  在Linux上，使用getsockopt读取SOL_SOCKET级别的SO_ERROR选项，以确定connect（）是否成功完成（如果SO_ERROR为零）。
          */
         {
             int value;
@@ -225,10 +203,9 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
             int gs_rc = pj_sock_getsockopt(h->fd, SOL_SOCKET, SO_ERROR,
                                            &value, &vallen);
             if (gs_rc != 0) {
-                /* Argh!! What to do now???
-                 * Just indicate that the socket is connected. The
-                 * application will get error as soon as it tries to use
-                 * the socket to send/receive.
+                /*
+                 * 啊！！现在该怎么办？？？
+                 * 只需指出 socket 已连接。一旦应用程序尝试使用套接字发送/接收，它就会出错。
                  */
                 status = PJ_SUCCESS;
             } else {
@@ -241,12 +218,8 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
         /* Excellent information in D.J. Bernstein page:
          * http://cr.yp.to/docs/connect.html
          *
-         * Seems like the most portable way of detecting connect()
-         * failure is to call getpeername(). If socket is connected,
-         * getpeername() will return 0. If the socket is not connected,
-         * it will return ENOTCONN, and read(fd, &ch, 1) will produce
-         * the right errno through error slippage. This is a combination
-         * of suggestions from Douglas C. Schmidt and Ken Keys.
+         * 似乎检测 connect() 失败的最便捷的方法是调用getpeername()。如果连接了套接字，getpeername()将返回0。
+         * 如果套接字没有连接，它将返回ENOTCONN，read(fd, &ch, 1) 将通过错误滑动产生正确的 errno。这是来自 Douglas C. Schmidt and Ken Keys
          */
         {
             struct sockaddr_in addr;
@@ -257,12 +230,9 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
         }
 #endif
 
-        /* Unlock; from this point we don't need to hold key's mutex
-	 * (unless concurrency is disabled, which in this case we should
-	 * hold the mutex while calling the callback) */
+        /* 解锁；从这一点来说，我们不需要保持键的互斥（除非禁用了并发，在这种情况下，我们应该在调用回调时保持互斥）*/
         if (h->allow_concurrent) {
-            /* concurrency may be changed while we're in the callback, so
-             * save it to a flag.
+            /* 当我们在回调中时，并发性可能会改变，所以将它保存到一个标志中
              */
             has_lock = PJ_FALSE;
             pj_ioqueue_unlock_key(h);
@@ -274,7 +244,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
         if (h->cb.on_connect_complete && !IS_CLOSING(h))
             (*h->cb.on_connect_complete)(h, status);
 
-        /* Unlock if we still hold the lock */
+        /* 持有锁 */
         if (has_lock) {
             pj_ioqueue_unlock_key(h);
         }
@@ -284,16 +254,15 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
     } else
 #endif /* PJ_HAS_TCP */
     if (key_has_pending_write(h)) {
-        /* Socket is writable. */
+        /* Socket可写 */
         struct write_operation *write_op;
         pj_ssize_t sent;
         pj_status_t send_rc = PJ_SUCCESS;
 
-        /* Get the first in the queue. */
+        /* 获取队列的第一个 */
         write_op = h->write_list.next;
 
-        /* For datagrams, we can remove the write_op from the list
-         * so that send() can work in parallel.
+        /* 对于数据报，我们可以从列表中删除 write_op，以便 send() 可以并行工作
          */
         if (h->fd_type == pj_SOCK_DGRAM()) {
             pj_list_erase(write_op);
@@ -303,16 +272,14 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
 
         }
 
-        /* Send the data. 
-         * Unfortunately we must do this while holding key's mutex, thus
-         * preventing parallel write on a single key.. :-((
+        /*
+         * 发送数据。不幸的是，我们必须在保持键的互斥时执行此操作，从而防止在单个键上并行写入
          */
         sent = write_op->size - write_op->written;
         if (write_op->op == PJ_IOQUEUE_OP_SEND) {
             send_rc = pj_sock_send(h->fd, write_op->buf + write_op->written,
                                    &sent, write_op->flags);
-            /* Can't do this. We only clear "op" after we're finished sending
-             * the whole buffer.
+            /* 不能这么做。我们只有在发送完整个缓冲区后才能清除“op”
              */
             //write_op->op = 0;
         } else if (write_op->op == PJ_IOQUEUE_OP_SEND_TO) {
@@ -325,7 +292,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
                                          write_op->rmt_addrlen);
 #if defined(PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT) && \
         PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT != 0
-                /* Special treatment for dead UDP sockets here, see ticket #1107 */
+                /* 这里对销毁 UDP socket 的特殊处理，见#1107 */
                 if (send_rc==PJ_STATUS_FROM_OS(EPIPE) && !IS_CLOSING(h) &&
                     h->fd_type==pj_SOCK_DGRAM())
                 {
@@ -339,8 +306,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
                 break;
             }
 
-            /* Can't do this. We only clear "op" after we're finished sending
-             * the whole buffer.
+            /* 不能这么做。我们只有在发送完整个缓冲区后才能清除“op”
              */
             //write_op->op = 0;
         } else {
@@ -356,7 +322,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
             write_op->written = -send_rc;
         }
 
-        /* Are we finished with this buffer? */
+        /* 缓冲区用完了吗？ */
         if (send_rc != PJ_SUCCESS ||
             write_op->written == (pj_ssize_t) write_op->size ||
             h->fd_type == pj_SOCK_DGRAM()) {
@@ -365,21 +331,18 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
             write_op->op = PJ_IOQUEUE_OP_NONE;
 
             if (h->fd_type != pj_SOCK_DGRAM()) {
-                /* Write completion of the whole stream. */
+                /* 整个流的写入完成 */
                 pj_list_erase(write_op);
 
-                /* Clear operation if there's no more data to send. */
+                /* 如果没有更多数据要发送，请清除操作 */
                 if (pj_list_empty(&h->write_list))
                     ioqueue_remove_from_set(ioqueue, h, WRITEABLE_EVENT);
 
             }
 
-            /* Unlock; from this point we don't need to hold key's mutex
-             * (unless concurrency is disabled, which in this case we should
-             * hold the mutex while calling the callback) */
+            /* 解锁；从这一点来说，我们不需要保持键的互斥（除非禁用了并发，在这种情况下，我们应该在调用回调时保持互斥）*/
             if (h->allow_concurrent) {
-                /* concurrency may be changed while we're in the callback, so
-                 * save it to a flag.
+                /* 当我们在回调中时，并发性可能会改变，所以将它保存到一个标志中
                  */
                 has_lock = PJ_FALSE;
                 pj_ioqueue_unlock_key(h);
@@ -406,9 +369,7 @@ pj_bool_t ioqueue_dispatch_write_event(pj_ioqueue_t *ioqueue,
         /* Done. */
     } else {
         /*
-         * This is normal; execution may fall here when multiple threads
-         * are signalled for the same event, but only one thread eventually
-         * able to process the event.
+         * 这是正常的；当为同一事件向多个线程发出信号，但最终只有一个线程能够处理该事件时，执行可能会落在这里。
          */
         pj_ioqueue_unlock_key(h);
 
@@ -422,7 +383,7 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
                                       pj_ioqueue_key_t *h) {
     pj_status_t rc;
 
-    /* Try lock the key. */
+    /* 尝试获取锁 */
     rc = pj_ioqueue_trylock_key(h);
     if (rc != PJ_SUCCESS) {
         return PJ_FALSE;
@@ -439,12 +400,12 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
         struct accept_operation *accept_op;
         pj_bool_t has_lock;
 
-        /* Get one accept operation from the list. */
+        /* 从列表中获取一个accept操作 */
         accept_op = h->accept_list.next;
         pj_list_erase(accept_op);
         accept_op->op = PJ_IOQUEUE_OP_NONE;
 
-        /* Clear bit in fdset if there is no more pending accept */
+        /* 如果没有更多挂起的接受，则清除fdset中的位 */
         if (pj_list_empty(&h->accept_list))
             ioqueue_remove_from_set(ioqueue, h, READABLE_EVENT);
 
@@ -456,12 +417,9 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
                                      accept_op->addrlen);
         }
 
-        /* Unlock; from this point we don't need to hold key's mutex
-         * (unless concurrency is disabled, which in this case we should
-         * hold the mutex while calling the callback) */
+        /* 解锁；从这一点来说，我们不需要保持键的互斥（除非禁用了并发，在这种情况下，我们应该在调用回调时保持互斥）*/
         if (h->allow_concurrent) {
-            /* concurrency may be changed while we're in the callback, so
-             * save it to a flag.
+            /* 当我们在回调中时，并发性可能会改变，所以将它保存到一个标志中
              */
             has_lock = PJ_FALSE;
             pj_ioqueue_unlock_key(h);
@@ -487,11 +445,11 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
         pj_ssize_t bytes_read;
         pj_bool_t has_lock;
 
-        /* Get one pending read operation from the list. */
+        /* 从列表中获取一个挂起的读取操作。 */
         read_op = h->read_list.next;
         pj_list_erase(read_op);
 
-        /* Clear fdset if there is no pending read. */
+        /* 如果没有挂起的读取，则清除 fdset。 */
         if (pj_list_empty(&h->read_list))
             ioqueue_remove_from_set(ioqueue, h, READABLE_EVENT);
 
@@ -511,16 +469,12 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
             pj_assert(read_op->op == PJ_IOQUEUE_OP_READ);
             read_op->op = PJ_IOQUEUE_OP_NONE;
             /*
-             * User has specified pj_ioqueue_read().
-             * On Win32, we should do ReadFile(). But because we got
-             * here because of select() anyway, user must have put a
-             * socket descriptor on h->fd, which in this case we can
-             * just call pj_sock_recv() instead of ReadFile().
-             * On Unix, user may put a file in h->fd, so we'll have
-             * to call read() here.
-             * This may not compile on systems which doesn't have 
-             * read(). That's why we only specify PJ_LINUX here so
-             * that error is easier to catch.
+             * 用户指定了pj_ioqueue_read()
+             * 在Win32上，我们应该执行 ReadFile()。但由于我们是因为 select() 而来到这里的，所以用户必须在h->fd上放置一个套接字描述符，
+             * 在这种情况下，我们可以调用pj_sock_recv() 而不是ReadFile（）。
+             *
+             * 在Unix上，用户可能会将一个文件放在 h->fd中，所以我们必须在这里调用read()。
+             * 这可能无法在没有read()的系统上编译。这就是为什么我们在这里只指定PJ_LINUX，以便更容易捕捉错误。
              */
 #	    if defined(PJ_WIN32) && PJ_WIN32 != 0 || \
            defined(PJ_WIN64) && PJ_WIN64 != 0 || \
@@ -555,12 +509,12 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
             }
 #	    endif
 
-            /* In any case we would report this to caller. */
+            /* 无论如何，我们都会向调用者报告 */
             bytes_read = -rc;
 
 #if defined(PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT) && \
     PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT != 0
-            /* Special treatment for dead UDP sockets here, see ticket #1107 */
+            /* 这里对销毁UDP socket 的特殊处理，见 #1107 */
             if (rc == PJ_STATUS_FROM_OS(ENOTCONN) && !IS_CLOSING(h) &&
             h->fd_type==pj_SOCK_DGRAM())
             {
@@ -572,12 +526,9 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
 #endif
         }
 
-        /* Unlock; from this point we don't need to hold key's mutex
-         * (unless concurrency is disabled, which in this case we should
-         * hold the mutex while calling the callback) */
+        /* 解锁；从这一点来说，我们不需要保持键的互斥（除非禁用了并发，在这种情况下，我们应该在调用回调时保持互斥）*/
         if (h->allow_concurrent) {
-            /* concurrency may be changed while we're in the callback, so
-             * save it to a flag.
+            /* 当我们在回调中时，并发性可能会被更改，所以请将其保存到一个标志中
              */
             has_lock = PJ_FALSE;
             pj_ioqueue_unlock_key(h);
@@ -599,9 +550,7 @@ pj_bool_t ioqueue_dispatch_read_event(pj_ioqueue_t *ioqueue,
 
     } else {
         /*
-         * This is normal; execution may fall here when multiple threads
-         * are signalled for the same event, but only one thread eventually
-         * able to process the event.
+         * 这是正常的；当为同一事件向多个线程发出信号，但最终只有一个线程能够处理该事件时，执行可能会落在这里。
          */
         pj_ioqueue_unlock_key(h);
 
@@ -617,16 +566,14 @@ pj_bool_t ioqueue_dispatch_exception_event(pj_ioqueue_t *ioqueue,
     pj_bool_t has_lock;
     pj_status_t rc;
 
-    /* Try lock the key. */
+    /* 尝试加锁 */
     rc = pj_ioqueue_trylock_key(h);
     if (rc != PJ_SUCCESS) {
         return PJ_FALSE;
     }
 
     if (!h->connecting) {
-        /* It is possible that more than one thread was woken up, thus
-         * the remaining thread will see h->connecting as zero because
-         * it has been processed by other thread.
+        /* 可能有多个线程被唤醒，因此剩余的线程将看到 h->connecting 为零，因为它已被其他线程处理。
          */
         pj_ioqueue_unlock_key(h);
         return PJ_TRUE;
@@ -637,18 +584,16 @@ pj_bool_t ioqueue_dispatch_exception_event(pj_ioqueue_t *ioqueue,
         return PJ_TRUE;
     }
 
-    /* Clear operation. */
+    /* 清除操作 */
     h->connecting = 0;
 
     ioqueue_remove_from_set(ioqueue, h, WRITEABLE_EVENT);
     ioqueue_remove_from_set(ioqueue, h, EXCEPTION_EVENT);
 
-    /* Unlock; from this point we don't need to hold key's mutex
-     * (unless concurrency is disabled, which in this case we should
-     * hold the mutex while calling the callback) */
+    /* 解锁；从这一点来说，我们不需要保持键的互斥（除非禁用了并发，在这种情况下，我们应该在调用回调时保持互斥）
+     */
     if (h->allow_concurrent) {
-        /* concurrency may be changed while we're in the callback, so
-         * save it to a flag.
+        /* 当我们在回调中时，并发性可能会改变，所以将它保存到一个标志中
          */
         has_lock = PJ_FALSE;
         pj_ioqueue_unlock_key(h);
@@ -683,7 +628,7 @@ pj_bool_t ioqueue_dispatch_exception_event(pj_ioqueue_t *ioqueue,
 /*
  * pj_ioqueue_recv()
  *
- * Start asynchronous recv() from the socket.
+ * 从socket启动异步recv()
  */
 PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
                                     pj_ioqueue_op_key_t *op_key,
@@ -695,9 +640,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
     PJ_ASSERT_RETURN(key && op_key && buffer && length, PJ_EINVAL);
     PJ_CHECK_STACK();
 
-    /* Check if key is closing (need to do this first before accessing
-     * other variables, since they might have been destroyed. See ticket
-     * #469).
+    /* 检查键是否正在关闭（在访问其他变量之前需要先执行此操作，因为它们可能已被销毁。见#469
      */
     if (IS_CLOSING(key))
         return PJ_ECANCELLED;
@@ -706,7 +649,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
     PJ_ASSERT_RETURN(read_op->op == PJ_IOQUEUE_OP_NONE, PJ_EPENDING);
     read_op->op = PJ_IOQUEUE_OP_NONE;
 
-    /* Try to see if there's data immediately available. 
+    /* 试着看看是否有立即可用的数据
      */
     if ((flags & PJ_IOQUEUE_ALWAYS_ASYNC) == 0) {
         pj_status_t status;
@@ -715,12 +658,11 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
         size = *length;
         status = pj_sock_recv(key->fd, buffer, &size, flags);
         if (status == PJ_SUCCESS) {
-            /* Yes! Data is available! */
+            /* 数据可用 */
             *length = size;
             return PJ_SUCCESS;
         } else {
-            /* If error is not EWOULDBLOCK (or EAGAIN on Linux), report
-             * the error to caller.
+            /* 如果error不是 EWOULDBLOCK（或Linux上的EAGAIN），则向调用者报告错误
              */
             if (status != PJ_STATUS_FROM_OS(PJ_BLOCKING_ERROR_VAL))
                 return status;
@@ -730,8 +672,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
     flags &= ~(PJ_IOQUEUE_ALWAYS_ASYNC);
 
     /*
-     * No data is immediately available.
-     * Must schedule asynchronous operation to the ioqueue.
+     * 没有立即可用的数据。必须将异步操作安排到 ioqueue
      */
     read_op->op = PJ_IOQUEUE_OP_RECV;
     read_op->buf = buffer;
@@ -739,9 +680,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
     read_op->flags = flags;
 
     pj_ioqueue_lock_key(key);
-    /* Check again. Handle may have been closed after the previous check
-     * in multithreaded app. If we add bad handle to the set it will
-     * corrupt the ioqueue set. See #913
+    /* 再检查一遍。在多线程应用程序上一次签入后，句柄可能已关闭。如果我们将坏句柄添加到集合中，它将损坏 ioqueue 集合。见#913
      */
     if (IS_CLOSING(key)) {
         pj_ioqueue_unlock_key(key);
@@ -757,7 +696,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recv(pj_ioqueue_key_t *key,
 /*
  * pj_ioqueue_recvfrom()
  *
- * Start asynchronous recvfrom() from the socket.
+ * 从套接字启动异步recvfrom()
  */
 PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
                                         pj_ioqueue_op_key_t *op_key,
@@ -771,7 +710,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
     PJ_ASSERT_RETURN(key && op_key && buffer && length, PJ_EINVAL);
     PJ_CHECK_STACK();
 
-    /* Check if key is closing. */
+    /* 检查key是否已关闭 */
     if (IS_CLOSING(key))
         return PJ_ECANCELLED;
 
@@ -781,7 +720,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
     }
     read_op->op = PJ_IOQUEUE_OP_NONE;
 
-    /* Try to see if there's data immediately available. 
+    /* 试着看看是否有立即可用的数据
      */
     if ((flags & PJ_IOQUEUE_ALWAYS_ASYNC) == 0) {
         pj_status_t status;
@@ -791,12 +730,11 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
         status = pj_sock_recvfrom(key->fd, buffer, &size, flags,
                                   addr, addrlen);
         if (status == PJ_SUCCESS) {
-            /* Yes! Data is available! */
+            /* 数据可用 */
             *length = size;
             return PJ_SUCCESS;
         } else {
-            /* If error is not EWOULDBLOCK (or EAGAIN on Linux), report
-             * the error to caller.
+            /* 如果error不是EWOULDBLOCK（或Linux上的EAGAIN），则向调用者报告错误。
              */
             if (status != PJ_STATUS_FROM_OS(PJ_BLOCKING_ERROR_VAL))
                 return status;
@@ -806,8 +744,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
     flags &= ~(PJ_IOQUEUE_ALWAYS_ASYNC);
 
     /*
-     * No data is immediately available.
-     * Must schedule asynchronous operation to the ioqueue.
+     * 没有立即可用的数据。必须将异步操作安排到 ioqueue
      */
     read_op->op = PJ_IOQUEUE_OP_RECV_FROM;
     read_op->buf = buffer;
@@ -817,9 +754,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
     read_op->rmt_addrlen = addrlen;
 
     pj_ioqueue_lock_key(key);
-    /* Check again. Handle may have been closed after the previous check
-     * in multithreaded app. If we add bad handle to the set it will
-     * corrupt the ioqueue set. See #913
+    /* 再检查一遍。在多线程应用程序上一次签入后，句柄可能已关闭。如果我们将坏句柄添加到集合中，它将损坏 ioqueue 集合。见#913
      */
     if (IS_CLOSING(key)) {
         pj_ioqueue_unlock_key(key);
@@ -835,7 +770,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_recvfrom(pj_ioqueue_key_t *key,
 /*
  * pj_ioqueue_send()
  *
- * Start asynchronous send() to the descriptor.
+ * 启动描述符的异步send()
  */
 PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
                                     pj_ioqueue_op_key_t *op_key,
@@ -850,30 +785,24 @@ PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
     PJ_ASSERT_RETURN(key && op_key && data && length, PJ_EINVAL);
     PJ_CHECK_STACK();
 
-    /* Check if key is closing. */
+    /* 检查 key 是否关闭 */
     if (IS_CLOSING(key))
         return PJ_ECANCELLED;
 
-    /* We can not use PJ_IOQUEUE_ALWAYS_ASYNC for socket write. */
+    /* 我们不能使用 PJ_IOQUEUE_ALWAYS_ASYNC 进行套接字写入 */
     flags &= ~(PJ_IOQUEUE_ALWAYS_ASYNC);
 
-    /* Fast track:
-     *   Try to send data immediately, only if there's no pending write!
-     * Note:
-     *  We are speculating that the list is empty here without properly
-     *  acquiring ioqueue's mutex first. This is intentional, to maximize
-     *  performance via parallelism.
-     *
-     *  This should be safe, because:
-     *      - by convention, we require caller to make sure that the
-     *        key is not unregistered while other threads are invoking
-     *        an operation on the same key.
-     *      - pj_list_empty() is safe to be invoked by multiple threads,
-     *        even when other threads are modifying the list.
+    /* 快速通道：
+     *  尝试立即发送数据，只要没有挂起的写入！
+     * 注：
+     *  我们推测在没有正确获取ioqueue的互斥量的情况下，这里的列表是空的。这是有意的，通过并行性来最大化性能。
+     *  这应该是安全的，因为：
+     *      -按照约定，我们要求调用者确保在其他线程调用同一密钥上的操作时，该密钥没有被注销。
+     *      -pj_list_empty() 可以由多个线程安全地调用，即使其他线程正在修改列表。
      */
     if (pj_list_empty(&key->write_list)) {
         /*
-         * See if data can be sent immediately.
+         * 看看是否可以立即发送数据。
          */
         sent = *length;
         status = pj_sock_send(key->fd, data, &sent, flags);
@@ -882,8 +811,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
             *length = sent;
             return PJ_SUCCESS;
         } else {
-            /* If error is not EWOULDBLOCK (or EAGAIN on Linux), report
-             * the error to caller.
+            /* 如果error不是EWOULDBLOCK（或Linux上的EAGAIN），则向调用者报告错误
              */
             if (status != PJ_STATUS_FROM_OS(PJ_BLOCKING_ERROR_VAL)) {
                 return status;
@@ -892,32 +820,26 @@ PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
     }
 
     /*
-     * Schedule asynchronous send.
+     * 安排异步发送
      */
     write_op = (struct write_operation *) op_key;
 
-    /* Spin if write_op has pending operation */
+    /* 如果写入操作有挂起操作，则自旋 */
     for (retry = 0; write_op->op != 0 && retry < PENDING_RETRY; ++retry)
         pj_thread_sleep(0);
 
-    /* Last chance */
+    /* 最后的机会 */
     if (write_op->op) {
-        /* Unable to send packet because there is already pending write in the
-         * write_op. We could not put the operation into the write_op
-         * because write_op already contains a pending operation! And
-         * we could not send the packet directly with send() either,
-         * because that will break the order of the packet. So we can
-         * only return error here.
+        /*
+         * 无法发送数据包，因为写入操作中已存在挂起的写入操作。我们无法将操作放入写入操作中，
+         * 因为写入操作已包含挂起的操作！我们也不能用send()直接发送数据包，因为这会破坏数据
+         * 包的顺序。所以我们只能在这里返回错误。
          *
-         * This could happen for example in multithreads program,
-         * where polling is done by one thread, while other threads are doing
-         * the sending only. If the polling thread runs on lower priority
-         * than the sending thread, then it's possible that the pending
-         * write flag is not cleared in-time because clearing is only done
-         * during polling.
+         * 这可能发生在多线程程序中，其中轮询由一个线程完成，而其他线程只执行发送。如果轮询线程
+         * 运行的优先级低于发送线程，则可能未及时清除挂起写入标志，因为清除仅在轮询期间完成
          *
-         * Aplication should specify multiple write operation keys on
-         * situation like this.
+         * 应用程序应该在这种情况下指定多个写操作键。
+         *
          */
         //pj_assert(!"ioqueue: there is pending operation on this key!");
         return PJ_EBUSY;
@@ -930,9 +852,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
     write_op->flags = flags;
 
     pj_ioqueue_lock_key(key);
-    /* Check again. Handle may have been closed after the previous check
-     * in multithreaded app. If we add bad handle to the set it will
-     * corrupt the ioqueue set. See #913
+    /* 再检查一遍。在多线程应用程序上一次签入后，句柄可能已关闭。如果我们将坏句柄添加到集合中，它将损坏ioqueue集合。见#913
      */
     if (IS_CLOSING(key)) {
         pj_ioqueue_unlock_key(key);
@@ -949,7 +869,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_send(pj_ioqueue_key_t *key,
 /*
  * pj_ioqueue_sendto()
  *
- * Start asynchronous write() to the descriptor.
+ * 启动描述符的异步write()
  */
 PJ_DEF(pj_status_t) pj_ioqueue_sendto(pj_ioqueue_key_t *key,
                                       pj_ioqueue_op_key_t *op_key,
@@ -973,45 +893,38 @@ PJ_DEF(pj_status_t) pj_ioqueue_sendto(pj_ioqueue_key_t *key,
 #else
     PJ_UNUSED_ARG(restart_retry);
 #endif
-    /* Check if key is closing. */
+    /* 检查 key 是否关闭 */
     if (IS_CLOSING(key))
         return PJ_ECANCELLED;
 
-    /* We can not use PJ_IOQUEUE_ALWAYS_ASYNC for socket write */
+    /* 我们不能使用PJ_IOQUEUE_ALWAYS_ASYNC进行套接字写入 */
     flags &= ~(PJ_IOQUEUE_ALWAYS_ASYNC);
 
-    /* Fast track:
-     *   Try to send data immediately, only if there's no pending write!
-     * Note:
-     *  We are speculating that the list is empty here without properly
-     *  acquiring ioqueue's mutex first. This is intentional, to maximize
-     *  performance via parallelism.
-     *
-     *  This should be safe, because:
-     *      - by convention, we require caller to make sure that the
-     *        key is not unregistered while other threads are invoking
-     *        an operation on the same key.
-     *      - pj_list_empty() is safe to be invoked by multiple threads,
-     *        even when other threads are modifying the list.
+    /* 快速通道：
+     *      尝试立即发送数据，除非没有挂起的写入！
+     *  注：
+     *      我们推测在没有正确获取 ioqueue 的互斥量的情况下，这里的列表是空的。这是有意的，通过并行性来最大化性能
+     *      这应该是安全的，因为：
+     *          -按照约定，我们要求调用者确保在其他线程调用同一密钥上的操作时，该密钥没有被注销
+     *          -pj_list_empty() 可以由多个线程安全地调用，即使其他线程正在修改列表
      */
     if (pj_list_empty(&key->write_list)) {
         /*
-         * See if data can be sent immediately.
+         * 看看是否可以立即发送数据。
          */
         sent = *length;
         status = pj_sock_sendto(key->fd, data, &sent, flags, addr, addrlen);
         if (status == PJ_SUCCESS) {
-            /* Success! */
+            /* 成功 */
             *length = sent;
             return PJ_SUCCESS;
         } else {
-            /* If error is not EWOULDBLOCK (or EAGAIN on Linux), report
-             * the error to caller.
+            /* 如果error不是EWOULDBLOCK（或Linux上的EAGAIN），则向调用者报告错误
              */
             if (status != PJ_STATUS_FROM_OS(PJ_BLOCKING_ERROR_VAL)) {
 #if defined(PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT) && \
         PJ_IPHONE_OS_HAS_MULTITASKING_SUPPORT != 0
-                /* Special treatment for dead UDP sockets here, see ticket #1107 */
+                /* 这里对销毁 UDP socket 的特殊处理，见票#1107 */
                 if (status==PJ_STATUS_FROM_OS(EPIPE) && !IS_CLOSING(key) &&
                     key->fd_type==pj_SOCK_DGRAM() && !restart_retry)
                 {
@@ -1030,37 +943,29 @@ PJ_DEF(pj_status_t) pj_ioqueue_sendto(pj_ioqueue_key_t *key,
     }
 
     /*
-     * Check that address storage can hold the address parameter.
+     * 检查地址存储器是否可以保存address参数
      */
     PJ_ASSERT_RETURN(addrlen <= (int) sizeof(pj_sockaddr_in), PJ_EBUG);
 
     /*
-     * Schedule asynchronous send.
+     * 安排异步发送
      */
     write_op = (struct write_operation *) op_key;
 
-    /* Spin if write_op has pending operation */
+    /* 如果写入操作有挂起操作，则自旋 */
     for (retry = 0; write_op->op != 0 && retry < PENDING_RETRY; ++retry)
         pj_thread_sleep(0);
 
-    /* Last chance */
+    /* 最后的机会 */
     if (write_op->op) {
-        /* Unable to send packet because there is already pending write on the
-         * write_op. We could not put the operation into the write_op
-         * because write_op already contains a pending operation! And
-         * we could not send the packet directly with sendto() either,
-         * because that will break the order of the packet. So we can
-         * only return error here.
+        /* 无法发送数据包，因为写入操作上已存在挂起的写入操作。我们无法将操作放入写入操作，
+         * 因为写入操作已包含挂起的操作！我们也不能用 sendto() 直接发送数据包，因为这会破
+         * 坏数据包的顺序。所以我们只能在这里返回错误。
          *
-         * This could happen for example in multithreads program,
-         * where polling is done by one thread, while other threads are doing
-         * the sending only. If the polling thread runs on lower priority
-         * than the sending thread, then it's possible that the pending
-         * write flag is not cleared in-time because clearing is only done
-         * during polling.
+         * 这可能发生在多线程程序中，其中轮询由一个线程完成，而其他线程只执行发送。如果轮询线程
+         * 运行的优先级低于发送线程，则可能未及时清除挂起写入标志，因为清除仅在轮询期间完成。
          *
-         * Aplication should specify multiple write operation keys on
-         * situation like this.
+         * 应用程序应该在这种情况下指定多个写操作键。
          */
         //pj_assert(!"ioqueue: there is pending operation on this key!");
         return PJ_EBUSY;
@@ -1075,9 +980,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_sendto(pj_ioqueue_key_t *key,
     write_op->rmt_addrlen = addrlen;
 
     pj_ioqueue_lock_key(key);
-    /* Check again. Handle may have been closed after the previous check
-     * in multithreaded app. If we add bad handle to the set it will
-     * corrupt the ioqueue set. See #913
+    /* 再检查一遍。在多线程应用程序上一次签入后，句柄可能已关闭。如果我们将坏句柄添加到集合中，它将损坏ioqueue集合。见#913
      */
     if (IS_CLOSING(key)) {
         pj_ioqueue_unlock_key(key);
@@ -1246,12 +1149,11 @@ PJ_DEF(pj_status_t) pj_ioqueue_post_completion(pj_ioqueue_key_t *key,
     struct generic_operation *op_rec;
 
     /*
-     * Find the operation key in all pending operation list to
-     * really make sure that it's still there; then call the callback.
+     * 在所有挂起的操作列表中找到操作键，以确保它仍然存在；然后调用回调
      */
     pj_ioqueue_lock_key(key);
 
-    /* Find the operation in the pending read list. */
+    /* 在挂起的读取列表中查找操作 */
     op_rec = (struct generic_operation *) key->read_list.next;
     while (op_rec != (void *) &key->read_list) {
         if (op_rec == (void *) op_key) {
@@ -1266,7 +1168,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_post_completion(pj_ioqueue_key_t *key,
         op_rec = op_rec->next;
     }
 
-    /* Find the operation in the pending write list. */
+    /* 在挂起的写入列表中查找操作 */
     op_rec = (struct generic_operation *) key->write_list.next;
     while (op_rec != (void *) &key->write_list) {
         if (op_rec == (void *) op_key) {
@@ -1281,7 +1183,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_post_completion(pj_ioqueue_key_t *key,
         op_rec = op_rec->next;
     }
 
-    /* Find the operation in the pending accept list. */
+    /* 在挂起接受列表中查找操作 */
     op_rec = (struct generic_operation *) key->accept_list.next;
     while (op_rec != (void *) &key->accept_list) {
         if (op_rec == (void *) op_key) {
@@ -1316,8 +1218,7 @@ PJ_DEF(pj_status_t) pj_ioqueue_set_concurrency(pj_ioqueue_key_t *key,
                                                pj_bool_t allow) {
     PJ_ASSERT_RETURN(key, PJ_EINVAL);
 
-    /* PJ_IOQUEUE_HAS_SAFE_UNREG must be enabled if concurrency is
-     * disabled.
+    /* 如果禁用并发，则必须启用PJ_IOQUEUE_HAS_SAFE_UNREG
      */
     PJ_ASSERT_RETURN(allow || PJ_IOQUEUE_HAS_SAFE_UNREG, PJ_EINVAL);
 
