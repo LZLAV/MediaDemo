@@ -30,44 +30,36 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup pj_ip_helper IP Interface and Routing Helper
+ * @defgroup pj_ip_helper IP 接口和路由的帮助类
  * @ingroup PJ_IO
  * @{
  *
- * This module provides functions to query local host's IP interface and 
- * routing table.
+ * 本模块提供查询本地主机IP接口和路由表的功能。
  */
 
 /**
- * This structure describes IP routing entry.
+ * 此结构描述IP路由条目
  */
 typedef union pj_ip_route_entry
 {
-    /** IP routing entry for IP version 4 routing */
+    /** IPv4 路由 */
     struct
     {
-	pj_in_addr	if_addr;    /**< Local interface IP address.	*/
-	pj_in_addr	dst_addr;   /**< Destination IP address.	*/
-	pj_in_addr	mask;	    /**< Destination mask.		*/
+	pj_in_addr	if_addr;    /**< 本地接口IP 地址	*/
+	pj_in_addr	dst_addr;   /**< 目的IP 地址	*/
+	pj_in_addr	mask;	    /**< 目的掩码		*/
     } ipv4;
 } pj_ip_route_entry;
 
 
 /**
- * Enumerate the local IP interfaces currently active in the host.
+ * 枚举主机中当前活动的本地IP接口
  *
- * @param af	    Family of the address to be retrieved. Application
- *		    may specify pj_AF_UNSPEC() to retrieve all addresses,
- *		    or pj_AF_INET() or pj_AF_INET6() to retrieve interfaces
- *		    with specific address family.
- * @param count	    On input, specify the number of entries. On output,
- *		    it will be filled with the actual number of entries.
- * @param ifs	    Array of socket addresses, which address part will
- *		    be filled with the interface address. The address
- *		    family part will be initialized with the address
- *		    family of the IP address.
+ * @param af	要检索的地址的族。应用程序可以指定pj_AF_UNSPEC()来检索所有地址，或者指定pj_AF_INET()或pj_AF_INET6()来检索具有特定地址族的接口
+ * @param count	    输入时，指定条目数。在输出时，它将填充实际的条目数
+ * @param ifs	    套接字地址数组，地址部分将填充接口地址。地址族部分将用 IP地址的地址族初始化
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCES，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_enum_ip_interface(int af,
 					  unsigned *count,
@@ -75,13 +67,12 @@ PJ_DECL(pj_status_t) pj_enum_ip_interface(int af,
 
 
 /**
- * Enumerate the IP routing table for this host.
+ * 枚举此主机的IP路由表
  *
- * @param count	    On input, specify the number of routes entries. On output,
- *		    it will be filled with the actual number of route entries.
- * @param routes    Array of IP routing entries.
+ * @param count	    输入时，指定路由条目数。在输出时，它将填充路由条目的实际数量
+ * @param routes    IP路由条目数组
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCES，否则返回相关错误码
  */
 PJ_DECL(pj_status_t) pj_enum_ip_route(unsigned *count,
 				      pj_ip_route_entry routes[]);

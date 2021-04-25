@@ -32,7 +32,7 @@ PJ_BEGIN_DECL
  * @ingroup PJ_IO
  * @{
  *
- * 活动套接字是ioqueue的更高级别抽象。它提供了套接字操作的自动化，否则这些操作必须由应用程序手动完成。
+ * 活动套接字是 ioqueue 的更高级别抽象。它提供了套接字操作的自动化，否则这些操作必须由应用程序手动完成。
  * 例如，对于socket recv()、recvfrom()和accept()操作，应用程序只需要调用这些操作一次，并且每当数
  * 据或传入的TCP连接（在accept()的情况下）到达时，应用程序就会收到通知。
  */
@@ -58,7 +58,7 @@ typedef struct pj_activesock_cb
      * @param remainder		如果应用程序希望在缓冲区中保留一些数据（对于TCP应用程序来说很常见），它应该将剩余数据移到缓冲区的前面部分，
      * 并在这里设置剩余长度。对于UDP socket，此参数的值将被忽略。
      *
-     * @return		如果需要进一步读取，则为PJ_TRUE；如果应用程序不再需要接收，则为PJ_FALSE。应用程序可能在这次回调中销毁活动的 socket ,
+     * @return		如果需要进一步读取，则为 PJ_TRUE；如果应用程序不再需要接收，则为 PJ_FALSE。应用程序可能在这次回调中销毁活动的 socket ,
      * 则返回PJ_FALSE
      */
     pj_bool_t (*on_data_read)(pj_activesock_t *asock,

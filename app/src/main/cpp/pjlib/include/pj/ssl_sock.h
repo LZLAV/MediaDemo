@@ -21,7 +21,7 @@
 
 /**
  * @file ssl_sock.h
- * @brief Secure socket
+ * @brief 安全 socket
  */
 
 #include <pj/ioqueue.h>
@@ -32,30 +32,25 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_SSL_SOCK Secure socket I/O
- * @brief Secure socket provides security on socket operation using standard
- * security protocols such as SSL and TLS.
+ * @defgroup PJ_SSL_SOCK 安全 socket I/O
+ * @brief 安全套接字使用标准安全协议（如SSL和TLS）提供套接字操作的安全性
  * @ingroup PJ_IO
  * @{
  *
- * Secure socket wraps normal socket and applies security features, i.e: 
- * privacy and data integrity, on the socket traffic, using standard security
- * protocols such as SSL and TLS.
- *
- * Secure socket employs active socket operations, which is similar to (and
- * described more detail) in \ref PJ_ACTIVESOCK.
+ * 安全socket包装了普通的socket，并使用SSL和TLS等标准安全协议对socket通信应用安全特性，即：
+ * 		隐私和数据完整性。
+ * 	Secure socket使用活动套接字操作，这类似于PJ_ACTIVESOCK中的（并有更详细的描述）。
  */
 
 
  /**
- * This opaque structure describes the secure socket.
+ * 这个不透明的结构描述了安全套接字
  */
 typedef struct pj_ssl_sock_t pj_ssl_sock_t;
 
 
 /**
- * Opaque declaration of endpoint certificate or credentials. This may contains
- * certificate, private key, and trusted Certificate Authorities list.
+ * 端点证书或凭据的不透明声明。这可能包含证书、私钥和受信任的证书颁发机构列表
  */
 typedef struct pj_ssl_cert_t pj_ssl_cert_t;
 
@@ -63,68 +58,62 @@ typedef struct pj_ssl_cert_t pj_ssl_cert_t;
 typedef enum pj_ssl_cert_verify_flag_t
 {
     /**
-     * No error in verification.
+     * 验证无误
      */
     PJ_SSL_CERT_ESUCCESS				= 0,
 
     /**
-     * The issuer certificate cannot be found.
+     * 找不到颁发者证书
      */
     PJ_SSL_CERT_EISSUER_NOT_FOUND			= (1 << 0),
 
     /**
-     * The certificate is untrusted.
+     * 证书不可信
      */
     PJ_SSL_CERT_EUNTRUSTED				= (1 << 1),
 
     /**
-     * The certificate has expired or not yet valid.
+     * 证书已过期或尚未生效
      */
     PJ_SSL_CERT_EVALIDITY_PERIOD			= (1 << 2),
 
     /**
-     * One or more fields of the certificate cannot be decoded due to
-     * invalid format.
+     * 由于格式无效，证书的一个或多个字段无法解码
      */
     PJ_SSL_CERT_EINVALID_FORMAT				= (1 << 3),
 
     /**
-     * The certificate cannot be used for the specified purpose.
+     * 证书不能用于指定的目的
      */
     PJ_SSL_CERT_EINVALID_PURPOSE			= (1 << 4),
 
     /**
-     * The issuer info in the certificate does not match to the (candidate) 
-     * issuer certificate, e.g: issuer name not match to subject name
-     * of (candidate) issuer certificate.
+     * 证书中的颁发者信息与（候选）颁发者证书不匹配，例如：颁发者名称与（候选）颁发者证书的使用者名称不匹配
      */
     PJ_SSL_CERT_EISSUER_MISMATCH			= (1 << 5),
 
     /**
-     * The CRL certificate cannot be found or cannot be read properly.
+     * 找不到或无法正确读取CRL证书
      */
     PJ_SSL_CERT_ECRL_FAILURE				= (1 << 6),
 
     /**
-     * The certificate has been revoked.
+     * 证书已被吊销。
      */
     PJ_SSL_CERT_EREVOKED				= (1 << 7),
 
     /**
-     * The certificate chain length is too long.
+     * 证书链长度太长
      */
     PJ_SSL_CERT_ECHAIN_TOO_LONG				= (1 << 8),
 
     /**
-     * The server identity does not match to any identities specified in 
-     * the certificate, e.g: subjectAltName extension, subject common name.
-     * This flag will only be set by application as SSL socket does not 
-     * perform server identity verification.
+     * 服务器标识与证书中指定的任何标识不匹配，例如：subjectAltName extension、subject common name。此标志仅由应用程序设置，因为SSL套接字不执行服务器身份验证。
      */
     PJ_SSL_CERT_EIDENTITY_NOT_MATCH			= (1 << 30),
 
     /**
-     * Unknown verification error.
+     * 未知验证错误。
      */
     PJ_SSL_CERT_EUNKNOWN				= (1 << 31)
 
@@ -141,7 +130,7 @@ typedef enum pj_ssl_cert_name_type
 } pj_ssl_cert_name_type;
 
 /**
- * Describe structure of certificate info.
+ * 验证信息结构
  */
 typedef struct pj_ssl_cert_info {
 

@@ -1,24 +1,5 @@
-/* $Id: jbuf.h 5803 2018-06-06 08:38:29Z nanang $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
- */
-/*
- * Based on implementation kindly contributed by Switchlab, Ltd.
+/**
+ * 已完成
  */
 #ifndef __PJMEDIA_JBUF_H__
 #define __PJMEDIA_JBUF_H__
@@ -26,19 +7,17 @@
 
 /**
  * @file jbuf.h
- * @brief Adaptive jitter buffer implementation.
+ * @brief 自适应抖动缓冲实现
  */
 #include <pjmedia/types.h>
 
 /**
- * @defgroup PJMED_JBUF Adaptive jitter buffer
+ * @defgroup PJMED_JBUF 自适应抖动缓冲
  * @ingroup PJMEDIA_FRAME_OP
- * @brief Adaptive de-jitter buffering implementation
+ * @brief 自适应去抖动缓冲实现
  * @{
  *
- * This section describes PJMEDIA's implementation of de-jitter buffer.
- * The de-jitter buffer may be set to operate in adaptive mode or fixed
- * delay mode.
+ * 本节描述 PJMEDIA 的去抖动缓冲的实现。去抖动缓冲器可被设置为在自适应模式或固定延迟模式下操作。
  */
 
 
@@ -46,47 +25,34 @@ PJ_BEGIN_DECL
 
 
 /**
- * Types of frame returned by the jitter buffer.
+ * 抖动缓冲区返回的帧类型
  */
 typedef enum pjmedia_jb_frame_type 
 {
-    PJMEDIA_JB_MISSING_FRAME	   = 0, /**< No frame because it's missing  */
-    PJMEDIA_JB_NORMAL_FRAME	   = 1, /**< Normal frame is being returned */
-    PJMEDIA_JB_ZERO_PREFETCH_FRAME = 2, /**< Zero frame is being returned  
-					     because JB is bufferring.	    */
-    PJMEDIA_JB_ZERO_EMPTY_FRAME	   = 3	/**< Zero frame is being returned
-					     because JB is empty.	    */
+    PJMEDIA_JB_MISSING_FRAME	   = 0, /**< 丢帧  */
+    PJMEDIA_JB_NORMAL_FRAME	   = 1, /**< 正常帧 */
+    PJMEDIA_JB_ZERO_PREFETCH_FRAME = 2, /**< 返回零帧，因为JB是缓冲中	    */
+    PJMEDIA_JB_ZERO_EMPTY_FRAME	   = 3	/**< 返回零帧，因为JB为空	    */
 } pjmedia_jb_frame_type;
 
 
 /**
- * Enumeration of jitter buffer discard algorithm. The jitter buffer
- * continuously calculates the jitter level to get the optimum latency at
- * any time and in order to adjust the latency, the jitter buffer may need
- * to discard some frames.
+ * 抖动缓冲区丢弃算法的枚举。抖动缓冲器在任何时间连续计算抖动水平以获得最佳延迟，并且为了调整延迟，抖动缓冲器可能需要丢弃一些帧。
  */
 typedef enum pjmedia_jb_discard_algo
 {
     /**
-     * Jitter buffer should not discard any frame, except when the jitter
-     * buffer is full and a new frame arrives, one frame will be discarded
-     * to make space for the new frame.
+     * 抖动缓冲区不应丢弃任何帧，除非抖动缓冲区已满且新帧到达时，将丢弃一帧以为新帧留出空间。
      */
     PJMEDIA_JB_DISCARD_NONE	   = 0,
 
     /**
-     * Only discard one frame in at least 200ms when the latency is considered
-     * much higher than it should be. When the jitter buffer is full and a new
-     * frame arrives, one frame will be discarded to make space for the new
-     * frame.
+     * 当延迟被认为比应该的要高得多时，在至少200毫秒内只丢弃一帧。当抖动缓冲区已满且新帧到达时，将丢弃一帧以为新帧腾出空间
      */
     PJMEDIA_JB_DISCARD_STATIC,
 
     /**
-     * The discard rate is dynamically calculated based on actual parameters
-     * such as jitter level and latency. When the jitter buffer is full and
-     * a new frame arrives, one frame will be discarded to make space for the
-     * new frame.
+     * 丢弃率根据实际参数（如抖动级别和延迟）动态计算。当抖动缓冲区已满且新帧到达时，将丢弃一帧以为新帧腾出空间。
      */
     PJMEDIA_JB_DISCARD_PROGRESSIVE
 
@@ -94,71 +60,59 @@ typedef enum pjmedia_jb_discard_algo
 
 
 /**
- * This structure describes jitter buffer state.
+ * 此结构描述抖动缓冲区状态
  */
 typedef struct pjmedia_jb_state
 {
-    /* Setting */
-    unsigned	frame_size;	    /**< Individual frame size, in bytes.   */
-    unsigned	min_prefetch;	    /**< Minimum allowed prefetch, in frms. */
-    unsigned	max_prefetch;	    /**< Maximum allowed prefetch, in frms. */
+    /* 设置 */
+    unsigned	frame_size;	    /**< 单个帧大小，以字节为单位。  */
+    unsigned	min_prefetch;	    /**< 允许的最小预取，以frms为单位。 */
+    unsigned	max_prefetch;	    /**< 允许的最大预取，以frms为单位。 */
 
-    /* Status */
-    unsigned	burst;		    /**< Current burst level, in frames	    */
-    unsigned	prefetch;	    /**< Current prefetch value, in frames  */
-    unsigned	size;		    /**< Current buffer size, in frames.    */
+    /* 状态 */
+    unsigned	burst;		    /**< 当前突发级别，以帧为单位  */
+    unsigned	prefetch;	    /**< 当前预取值，以帧为单位  */
+    unsigned	size;		    /**< 当前缓冲区大小，以帧为单位   */
 
-    /* Statistic */
-    unsigned	avg_delay;	    /**< Average delay, in ms.		    */
-    unsigned	min_delay;	    /**< Minimum delay, in ms.		    */
-    unsigned	max_delay;	    /**< Maximum delay, in ms.		    */
-    unsigned	dev_delay;	    /**< Standard deviation of delay, in ms.*/
-    unsigned	avg_burst;	    /**< Average burst, in frames.	    */
-    unsigned	lost;		    /**< Number of lost frames.		    */
-    unsigned	discard;	    /**< Number of discarded frames.	    */
-    unsigned	empty;		    /**< Number of empty on GET events.	    */
+    /* 统计的 */
+    unsigned	avg_delay;	    /**< 平均延时，ms	    */
+    unsigned	min_delay;	    /**< 最小延时，ms		    */
+    unsigned	max_delay;	    /**< 最大延迟，ms	    */
+    unsigned	dev_delay;	    /**< 延迟的标准偏差，单位为ms。*/
+    unsigned	avg_burst;	    /**< 平均突发，以帧为单位。	    */
+    unsigned	lost;		    /**< 丢失的帧数		    */
+    unsigned	discard;	    /**< 丢弃的帧数    */
+    unsigned	empty;		    /**< 获取时为空的事件数   */
 } pjmedia_jb_state;
 
 
 /**
- * The constant PJMEDIA_JB_DEFAULT_INIT_DELAY specifies default jitter
- * buffer prefetch count during jitter buffer creation.
+ * 常量PJMEDIA_JB_DEFAULT_INIT_DELAY 指定抖动缓冲区创建期间的默认抖动缓冲区预取计数
  */
 #define PJMEDIA_JB_DEFAULT_INIT_DELAY    15
 
 /**
- * Opaque declaration for jitter buffer.
+ * 抖动缓冲区的不透明声明
  */
 typedef struct pjmedia_jbuf pjmedia_jbuf;
 
 
 /**
- * Create an adaptive jitter buffer according to the specification. If
- * application wants to have a fixed jitter buffer, it may call
- * #pjmedia_jbuf_set_fixed() after the jitter buffer is created. Also
- * if application wants to alter the discard algorithm, which the default
- * PJMEDIA_JB_DISCARD_PROGRESSIVE, it may call #pjmedia_jbuf_set_discard().
+ * 根据规范创建自适应抖动缓冲区。如果应用程序想要有一个固定的抖动缓冲区，它可以在创建抖动缓冲区后调用
+ * pjmedia_jbuf_set_fixed()。另外，如果应用程序想要更改 discard 算法（PJMEDIA_JB_DISCARD_PROGRESSIVE），
+ * 它可以调用 pjmedia_jbuf_set_discard()
  *
- * This function may allocate large chunk of memory to keep the frames in 
- * the buffer.
+ * 此函数可能会分配大量内存以将帧保留在缓冲区中。
  *
  * @param pool		The pool to allocate memory.
- * @param name		Name to identify the jitter buffer for logging
- *			purpose.
- * @param frame_size	The size of each frame that will be kept in the
- *			jitter buffer, in bytes. This should correspond
- *			to the minimum frame size supported by the codec.
- *			For example, a 10ms frame (80 bytes) would be 
- *			recommended for G.711 codec.
- * @param max_count	Maximum number of frames that can be kept in the
- *			jitter buffer. This effectively means the maximum
- *			delay that may be introduced by this jitter 
- *			buffer.
- * @param ptime		Indication of frame duration, used to calculate 
- *			the interval between jitter recalculation.
- * @param p_jb		Pointer to receive jitter buffer instance.
+ * @param name		名称以标识用于日志记录的抖动缓冲区
+ * @param frame_size	将保留在抖动缓冲区中的每个帧的大小，以字节为单位。这应该与编解码器支持的最小帧大小相对应。
+ * 例如，建议G.711编解码器使用 10ms帧（80字节）
+ * @param max_count	抖动缓冲区中可以保留的最大帧数。这实际上意味着该抖动缓冲器可能引入的最大延迟
+ * @param ptime		帧持续时间的指示，用于计算抖动重新计算之间的间隔
+ * @param p_jb		接收抖动缓冲区实例的指针
  *
- * @return		PJ_SUCCESS on success.
+ * @return		成功返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pjmedia_jbuf_create(pj_pool_t *pool,
 					 const pj_str_t *name,
@@ -168,23 +122,22 @@ PJ_DECL(pj_status_t) pjmedia_jbuf_create(pj_pool_t *pool,
 					 pjmedia_jbuf **p_jb);
 
 /**
- * Set the jitter buffer's frame duration.
+ * 设置抖动缓冲区的帧持续时间
  *
- * @param jb		The jitter buffer
- * @param ptime		Frame duration.
+ * @param jb		抖动buf
+ * @param ptime		帧长
  *
- * @return		PJ_SUCCESS on success.
+ * @return		成功返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pjmedia_jbuf_set_ptime( pjmedia_jbuf *jb,
 					     unsigned ptime);
 
 
 /**
- * Set the jitter buffer to fixed delay mode. The default behavior
- * is to adapt the delay with actual packet delay.
+ * 将抖动缓冲设置为固定延迟模式。默认行为是根据实际的数据包延迟调整延迟。
  *
- * @param jb		The jitter buffer
- * @param prefetch	The fixed delay value, in number of frames.
+ * @param jb		抖动buf
+ * @param prefetch	固定延时值，帧数
  *
  * @return		PJ_SUCCESS on success.
  */
@@ -193,19 +146,13 @@ PJ_DECL(pj_status_t) pjmedia_jbuf_set_fixed( pjmedia_jbuf *jb,
 
 
 /**
- * Set the jitter buffer to adaptive mode.
+ * 将抖动缓冲区设置为自适应模式
  *
- * @param jb		The jitter buffer.
- * @param prefetch	The initial prefetch value to be applied to the
- *			jitter buffer. Setting this to other than 0 will
- *			activate prefetch buffering, a jitter buffer feature
- *			that each time it gets empty, it won't return a 
- *			normal frame until its size reaches the number
- *			specified here.
- * @param min_prefetch	The minimum delay that must be applied to each
- *			incoming packets, in number of frames.
- * @param max_prefetch	The maximum allowable value for prefetch delay,
- *			in number of frames.
+ * @param jb		抖动buf
+ * @param prefetch	要应用于抖动缓冲区的初始预取值。将此设置为 0 以外的值将激活预取缓冲，这是一种抖动缓冲功能，每次它变空时，
+ * 它都不会返回正常帧，直到其大小达到此处指定的数字
+ * @param min_prefetch	必须应用于每个传入数据包的最小延迟，以帧数为单位
+ * @param max_prefetch	预取延迟的最大允许值，帧数
  *
  * @return		PJ_SUCCESS on success.
  */
@@ -216,11 +163,10 @@ PJ_DECL(pj_status_t) pjmedia_jbuf_set_adaptive( pjmedia_jbuf *jb,
 
 
 /**
- * Set the jitter buffer discard algorithm. The default discard algorithm,
- * set in jitter buffer creation, is PJMEDIA_JB_DISCARD_PROGRESSIVE.
+ * 设置抖动缓冲丢弃算法。在抖动缓冲区创建中设置的默认丢弃算法是PJMEDIA_JB_DISCARD_PROGRESSIVE
  *
- * @param jb		The jitter buffer.
- * @param algo		The discard algorithm to be used.
+ * @param jb		抖动buf
+ * @param algo		使用的丢弃算法
  *
  * @return		PJ_SUCCESS on success.
  */
@@ -229,9 +175,9 @@ PJ_DECL(pj_status_t) pjmedia_jbuf_set_discard(pjmedia_jbuf *jb,
 
 
 /**
- * Destroy jitter buffer instance.
+ * 销毁抖动buf 实例
  *
- * @param jb		The jitter buffer.
+ * @param jb		抖动buf
  *
  * @return		PJ_SUCCESS on success.
  */
@@ -239,28 +185,23 @@ PJ_DECL(pj_status_t) pjmedia_jbuf_destroy(pjmedia_jbuf *jb);
 
 
 /**
- * Restart jitter. This function flushes all packets in the buffer and
- * reset the internal sequence number.
+ * 重新启动抖动。此函数用于刷新缓冲区中的所有数据包并重置内部序列号
  *
- * @param jb		The jitter buffer.
+ * @param jb		抖动buf
  *
  * @return		PJ_SUCCESS on success.
  */
 PJ_DECL(pj_status_t) pjmedia_jbuf_reset(pjmedia_jbuf *jb);
 
 /**
- * Put a frame to the jitter buffer. If the frame can be accepted (based
- * on the sequence number), the jitter buffer will copy the frame and put
- * it in the appropriate position in the buffer.
+ * 将一帧放入抖动缓冲区。如果可以接受帧（基于序列号），抖动缓冲器将复制帧并将其放在缓冲器中的适当位置
  *
- * Application MUST manage it's own synchronization when multiple threads
- * are accessing the jitter buffer at the same time.
+ * 当多个线程同时访问抖动缓冲区时，应用程序必须管理自己的同步
  *
- * @param jb		The jitter buffer.
- * @param frame		Pointer to frame buffer to be stored in the jitter
- *			buffer.
- * @param size		The frame size.
- * @param frame_seq	The frame sequence number.
+ * @param jb		抖动buf
+ * @param frame		指向要存储在抖动缓冲区中的帧缓冲区的指针
+ * @param size		帧大小
+ * @param frame_seq	帧序列号
  */
 PJ_DECL(void) pjmedia_jbuf_put_frame( pjmedia_jbuf *jb, 
 				      const void *frame, 
@@ -268,23 +209,16 @@ PJ_DECL(void) pjmedia_jbuf_put_frame( pjmedia_jbuf *jb,
 				      int frame_seq);
 
 /**
- * Put a frame to the jitter buffer. If the frame can be accepted (based
- * on the sequence number), the jitter buffer will copy the frame and put
- * it in the appropriate position in the buffer.
+ * 将一帧放入抖动缓冲区。如果可以接受帧（基于序列号），抖动缓冲器将复制帧并将其放在缓冲器中的适当位置。
  *
- * Application MUST manage it's own synchronization when multiple threads
- * are accessing the jitter buffer at the same time.
+ * 当多个线程同时访问抖动缓冲区时，应用程序必须管理自己的同步
  *
- * @param jb		The jitter buffer.
- * @param frame		Pointer to frame buffer to be stored in the jitter
- *			buffer.
- * @param size		The frame size.
- * @param bit_info	Bit precise info of the frame, e.g: a frame may not 
- *			exactly start and end at the octet boundary, so this
- *			field may be used for specifying start & end bit
- *			offset.
- * @param frame_seq	The frame sequence number.
- * @param discarded	Flag whether the frame is discarded by jitter buffer.
+ * @param jb		抖动buf
+ * @param frame		指向要存储在抖动缓冲区中的帧缓冲区的指针
+ * @param size		帧大小
+ * @param bit_info	帧的位精确信息，例如：帧可能不完全在 8字节边界处开始和结束，因此此字段可用于指定开始和结束位偏移
+ * @param frame_seq	帧的序列号
+ * @param discarded	标记该帧是否被抖动buf丢弃
  */
 PJ_DECL(void) pjmedia_jbuf_put_frame2( pjmedia_jbuf *jb, 
 				       const void *frame, 
@@ -294,24 +228,17 @@ PJ_DECL(void) pjmedia_jbuf_put_frame2( pjmedia_jbuf *jb,
 				       pj_bool_t *discarded);
 
 /**
- * Put a frame to the jitter buffer. If the frame can be accepted (based
- * on the sequence number), the jitter buffer will copy the frame and put
- * it in the appropriate position in the buffer.
+ * 将一帧放入抖动缓冲区。如果可以接受帧（基于序列号），抖动缓冲器将复制帧并将其放在缓冲器中的适当位置。
  *
- * Application MUST manage it's own synchronization when multiple threads
- * are accessing the jitter buffer at the same time.
+ * 当多个线程同时访问抖动缓冲区时，应用程序必须管理自己的同步。
  *
- * @param jb		The jitter buffer.
- * @param frame		Pointer to frame buffer to be stored in the jitter
- *			buffer.
- * @param size		The frame size.
- * @param bit_info	Bit precise info of the frame, e.g: a frame may not 
- *			exactly start and end at the octet boundary, so this
- *			field may be used for specifying start & end bit
- *			offset.
- * @param frame_seq	The frame sequence number.
- * @param frame_ts	The frame timestamp.
- * @param discarded	Flag whether the frame is discarded by jitter buffer.
+ * @param jb		抖动buf
+ * @param frame		指向要存储在抖动缓冲区中的帧缓冲区的指针
+ * @param size		帧大小
+ * @param bit_info	帧的位精确信息，例如：帧可能不能在 8进制边界处精确地开始和结束，因此该字段可用于指定起始位和结束位偏移
+ * @param frame_seq	帧的序列号
+ * @param frame_ts	帧的时间戳
+ * @param discarded	标记该帧是否被抖动buf丢弃
  */
 PJ_DECL(void) pjmedia_jbuf_put_frame3( pjmedia_jbuf *jb, 
 				       const void *frame, 
@@ -321,49 +248,34 @@ PJ_DECL(void) pjmedia_jbuf_put_frame3( pjmedia_jbuf *jb,
 				       pj_uint32_t frame_ts,
 				       pj_bool_t *discarded);
 /**
- * Get a frame from the jitter buffer. The jitter buffer will return the
- * oldest frame from it's buffer, when it is available.
+ * 从抖动缓冲区获取一帧。抖动缓冲区将返回最早的帧从它的缓冲区，当它是可用的。
  *
- * Application MUST manage it's own synchronization when multiple threads
- * are accessing the jitter buffer at the same time.
+ * 当多个线程同时访问抖动缓冲区时，应用程序必须管理自己的同步。
  *
- * @param jb		The jitter buffer.
- * @param frame		Buffer to receive the payload from the jitter buffer.
- *			Application MUST make sure that the buffer has
- *			appropriate size (i.e. not less than the frame size,
- *			as specified when the jitter buffer was created).
- *			The jitter buffer only copied a frame to this 
- *			buffer when the frame type returned by this function
- *			is PJMEDIA_JB_NORMAL_FRAME.
- * @param p_frm_type	Pointer to receive frame type. If jitter buffer is
- *			currently empty or bufferring, the frame type will
- *			be set to PJMEDIA_JB_ZERO_FRAME, and no frame will
- *			be copied. If the jitter buffer detects that frame is
- *			missing with current sequence number, the frame type
- *			will be set to PJMEDIA_JB_MISSING_FRAME, and no
- *			frame will be copied. If there is a frame, the jitter
- *			buffer will copy the frame to the buffer, and frame
- *			type will be set to PJMEDIA_JB_NORMAL_FRAME.
+ * @param jb		抖动buf
+ * @param frame		从抖动缓冲区接收有效负载。应用程序必须确保缓冲区具有适当的大小（即不小于创建抖动缓冲区时指定的帧大小）
+ * 当此函数返回的帧类型为 PJMEDIA_JB_NORMAL_FRAME 时，抖动缓冲区仅将一个帧复制到此缓冲区
+ *
+ * @param p_frm_type	指向接收帧类型的指针。如果jitter buffer当前为空或 bufferring，则帧类型将设置为PJMEDIA_JB_ZERO_FRAME，
+ * 并且不会复制任何帧。如果抖动缓冲区检测到当前序列号的帧丢失，帧类型将设置为PJMEDIA_JB_MISSING_FRAME，并且不会复制任何帧。如果有帧，
+ * 抖动缓冲区会将帧复制到缓冲区，并且帧类型会设置为PJMEDIA_JB_NORMAL_FRAME
+ *
  */
 PJ_DECL(void) pjmedia_jbuf_get_frame( pjmedia_jbuf *jb, 
 				      void *frame, 
 				      char *p_frm_type);
 
 /**
- * Get a frame from the jitter buffer. The jitter buffer will return the
- * oldest frame from it's buffer, when it is available.
+ * 从抖动缓冲区获取一帧。抖动缓冲区将返回最早的帧从它的缓冲区，当它是可用的
  *
- * @param jb		The jitter buffer.
- * @param frame		Buffer to receive the payload from the jitter buffer.
- *			@see pjmedia_jbuf_get_frame().    
- * @param size		On input, it points to maximum buffer length.
- *			On output, it will be filled with received frame size.
- * @param p_frm_type	Pointer to receive frame type.
- *			@see pjmedia_jbuf_get_frame().    
- * @param bit_info	Bit precise info of the frame, e.g: a frame may not 
- *			exactly start and end at the octet boundary, so this
- *			field may be used for specifying start & end bit
- *			offset.
+ * @param jb		抖动buf
+ * @param frame		从抖动缓冲区接收有效负载。
+ * 					@请参见pjmedia_jbuf_get_frame()
+ * @param size		输入时，它指向最大缓冲区长度。
+ * 					输出时，它将填充接收到的帧大小
+ * @param p_frm_type	指向接收帧类型的指针。
+ * 						@请参见pjmedia_jbuf_get_frame()
+ * @param bit_info	帧的位精确信息，例如：帧可能不完全在 8 位字节边界处开始和结束，因此此字段可用于指定开始和结束位偏移
  */
 PJ_DECL(void) pjmedia_jbuf_get_frame2(pjmedia_jbuf *jb, 
 				      void *frame, 
@@ -373,22 +285,18 @@ PJ_DECL(void) pjmedia_jbuf_get_frame2(pjmedia_jbuf *jb,
 
 
 /**
- * Get a frame from the jitter buffer. The jitter buffer will return the
- * oldest frame from it's buffer, when it is available.
+ * 从抖动缓冲区获取一帧。抖动缓冲区将返回最早的帧从它的缓冲区，当它是可用的。
  *
- * @param jb		The jitter buffer.
- * @param frame		Buffer to receive the payload from the jitter buffer.
- *			@see pjmedia_jbuf_get_frame().    
- * @param size		On input, it points to maximum buffer length.
- *			On output, it will be filled with received frame size.
- * @param p_frm_type	Pointer to receive frame type.
- *			@see pjmedia_jbuf_get_frame().    
- * @param bit_info	Bit precise info of the frame, e.g: a frame may not 
- *			exactly start and end at the octet boundary, so this
- *			field may be used for specifying start & end bit
- *			offset.
- * @param ts		Frame timestamp.
- * @param seq		Frame sequence number.
+ * @param jb		抖动buf
+ * @param frame		从抖动缓冲区接收有效负载。
+ * 					@请参见pjmedia_jbuf_get_frame()
+ * @param size		输入时，它指向最大缓冲区长度
+ * 					输出时，它将填充接收到的帧大小
+ * @param p_frm_type	指向接收帧类型的指针
+ *						@参见 pjmedia_jbuf_get_frame().
+ * @param bit_info	帧的位精确信息，例如：帧可能不完全在 8位字节边界处开始和结束，因此此字段可用于指定开始和结束位偏移
+ * @param ts		帧的时间戳
+ * @param seq		帧的序列号
  */
 PJ_DECL(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb, 
 				      void *frame, 
@@ -400,22 +308,18 @@ PJ_DECL(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
 
 
 /**
- * Peek a frame from the jitter buffer. The jitter buffer state will not be
- * modified.
+ * 从抖动缓冲区 peek一帧。不会修改抖动缓冲区状态
  *
- * @param jb		The jitter buffer.
- * @param offset	Offset from the oldest frame to be peeked.
- * @param frame		Buffer to receive the payload from the jitter buffer.
- *			@see pjmedia_jbuf_get_frame().    
- * @param size		Pointer to receive frame size.
- * @param p_frm_type	Pointer to receive frame type.
- *			@see pjmedia_jbuf_get_frame().    
- * @param bit_info	Bit precise info of the frame, e.g: a frame may not 
- *			exactly start and end at the octet boundary, so this
- *			field may be used for specifying start & end bit
- *			offset.
- * @param ts		Frame timestamp.
- * @param seq		Frame sequence number.
+ * @param jb		抖动buf
+ * @param offset	从要偷看的最旧帧偏移
+ * @param frame		从抖动缓冲区接收有效负载。
+ * 					@请参见pjmedia_jbuf_get_frame()
+ * @param size		接收帧大小的指针
+ * @param p_frm_type	指向接收帧类型的指针。
+ * 						@请参见pjmedia_jbuf_get_frame()
+ * @param bit_info	帧的位精确信息，例如：帧可能不完全在8位字节边界处开始和结束，因此此字段可用于指定开始和结束位偏移
+ * @param ts		帧时间戳
+ * @param seq		帧序列号
  */
 PJ_DECL(void) pjmedia_jbuf_peek_frame(pjmedia_jbuf *jb,
 				      unsigned offset,
@@ -428,33 +332,33 @@ PJ_DECL(void) pjmedia_jbuf_peek_frame(pjmedia_jbuf *jb,
 
 
 /**
- * Remove frames from the jitter buffer.
+ * 从抖动缓冲区中删除帧
  *
- * @param jb		The jitter buffer.
- * @param frame_cnt	Number of frames to be removed.
+ * @param jb		抖动buf
+ * @param frame_cnt	要删除的帧数
  *
- * @return		The number of frame successfully removed.
+ * @return		已成功删除的帧数
  */
 PJ_DECL(unsigned) pjmedia_jbuf_remove_frame(pjmedia_jbuf *jb, 
 					    unsigned frame_cnt);
 
 /**
- * Check if the jitter buffer is full.
+ * 检查抖动缓冲区是否已满
  *
- * @param jb		The jitter buffer.
+ * @param jb		抖动buf
  *
- * @return		PJ_TRUE if it is full.
+ * @return		满了返回 PJ_TRUE
  */
 PJ_DECL(pj_bool_t) pjmedia_jbuf_is_full(const pjmedia_jbuf *jb);
 
 
 /**
- * Get jitter buffer current state/settings.
+ * 获取抖动缓冲区当前状态/设置
  *
- * @param jb		The jitter buffer.
- * @param state		Buffer to receive jitter buffer state.
+ * @param jb		抖动buf
+ * @param state		接收抖动缓冲状态的缓冲区
  *
- * @return		PJ_SUCCESS on success.
+ * @return		成功返回 PJ_SUCCESS
  */
 PJ_DECL(pj_status_t) pjmedia_jbuf_get_state( const pjmedia_jbuf *jb,
 					     pjmedia_jb_state *state );
