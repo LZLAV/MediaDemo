@@ -23,7 +23,7 @@
 
 /**
  * @file circbuf.h
- * @brief Circular Buffer.
+ * @brief 循环buf
  */
 
 #include <pj/assert.h>
@@ -32,20 +32,18 @@
 #include <pjmedia/frame.h>
 
 /**
- * @defgroup PJMED_CIRCBUF Circular Buffer
+ * @defgroup PJMED_CIRCBUF 循环buf
  * @ingroup PJMEDIA_FRAME_OP
- * @brief Circular buffer manages read and write contiguous audio samples in a 
- * non-contiguous buffer as if the buffer were contiguous. This should give
- * better performance than keeping contiguous samples in a contiguous buffer,
- * since read/write operations will only update the pointers, instead of 
- * shifting audio samples.
+ * @brief	循环缓冲区在非连续缓冲区中管理读写连续音频样本，就好像缓冲区是连续的一样。这应该比在连续的缓冲区中保持连
+ * 			续的样本提供更好的性能，因为读/写操作只会更新指针，而不是移动音频样本
  *
  * @{
  *
- * This section describes PJMEDIA's implementation of circular buffer.
+ * 本节描述 PJMEDIA 的循环缓冲区实现
+ *
  */
 
-/* Algorithm checkings, for development purpose only */
+/* 算法检查，仅供开发使用  */
 #if 0
 #   define PJMEDIA_CIRC_BUF_CHECK(x) pj_assert(x)
 #else
@@ -55,39 +53,34 @@
 PJ_BEGIN_DECL
 
 /** 
- * Circular buffer structure
+ * 循环buf 结构
  */
 typedef struct pjmedia_circ_buf {
-    pj_int16_t	    *buf;	    /**< The buffer			*/
-    unsigned	     capacity;	    /**< Buffer capacity, in samples	*/
+    pj_int16_t *buf;        /**< 缓存		*/
+    unsigned capacity;        /**< 缓存容量,单位帧采样	*/
 
-    pj_int16_t	    *start;	    /**< Pointer to the first sample	*/
-    unsigned	     len;	    /**< Audio samples length, 
-					 in samples			*/
+    pj_int16_t *start;        /**< 首帧采样地址	*/
+    unsigned len;        /**< 音频样本长度，以样本为单位 */
 } pjmedia_circ_buf;
 
 
 /**
- * Create the circular buffer.
+ * 创建一个循环buf
  *
- * @param pool		    Pool where the circular buffer will be allocated
- *			    from.
- * @param capacity	    Capacity of the buffer, in samples.
- * @param p_cb		    Pointer to receive the circular buffer instance.
+ * @param pool		    循环缓冲区将从中分配的池。
+ * @param capacity	    buf 容量, 以样本为单位
+ * @param p_cb		    接收循环缓冲区实例的指针
  *
- * @return		    PJ_SUCCESS if the circular buffer has been
- *			    created successfully, otherwise the appropriate
- *			    error will be returned.
+ * @return		    如果已成功创建循环缓冲区，则返回 PJ_SUCCESS，否则返回相应的错误
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_create(pj_pool_t *pool, 
-					       unsigned capacity, 
-					       pjmedia_circ_buf **p_cb)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_create(pj_pool_t *pool,
+                                               unsigned capacity,
+                                               pjmedia_circ_buf **p_cb) {
     pjmedia_circ_buf *cbuf;
 
     cbuf = PJ_POOL_ZALLOC_T(pool, pjmedia_circ_buf);
-    cbuf->buf = (pj_int16_t*) pj_pool_calloc(pool, capacity, 
-					     sizeof(pj_int16_t));
+    cbuf->buf = (pj_int16_t *) pj_pool_calloc(pool, capacity,
+                                              sizeof(pj_int16_t));
     cbuf->capacity = capacity;
     cbuf->start = cbuf->buf;
     cbuf->len = 0;
@@ -99,14 +92,13 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_create(pj_pool_t *pool,
 
 
 /**
- * Reset the circular buffer.
+ * 重置循环buf
  *
- * @param circbuf	    The circular buffer.
+ * @param circbuf	    循环buf
  *
- * @return		    PJ_SUCCESS when successful.
+ * @return		    成功返回 PJ_SUCCESS
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_reset(pjmedia_circ_buf *circbuf)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_reset(pjmedia_circ_buf *circbuf) {
     circbuf->start = circbuf->buf;
     circbuf->len = 0;
 
@@ -115,57 +107,48 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_reset(pjmedia_circ_buf *circbuf)
 
 
 /**
- * Get the circular buffer length, it is number of samples buffered in the 
- * circular buffer.
+ * 获取循环缓冲区长度，它是循环缓冲区中缓冲的样本数。
  *
- * @param circbuf	    The circular buffer.
+ * @param circbuf	   循环缓冲区
  *
- * @return		    The buffer length.
+ * @return		    缓存区的长度
  */
-PJ_INLINE(unsigned) pjmedia_circ_buf_get_len(pjmedia_circ_buf *circbuf)
-{
+PJ_INLINE(unsigned) pjmedia_circ_buf_get_len(pjmedia_circ_buf *circbuf) {
     return circbuf->len;
 }
 
 
 /**
- * Set circular buffer length. This is useful when audio buffer is manually 
- * manipulated by the user, e.g: shrinked, expanded.
+ * 设置循环缓冲区长度。这在用户手动操作音频缓冲区时非常有用，例如：缩小、扩展
  *
- * @param circbuf	    The circular buffer.
- * @param len		    The new buffer length.
+ * @param circbuf	    循环缓存区
+ * @param len		    新的buf 长度
  */
 PJ_INLINE(void) pjmedia_circ_buf_set_len(pjmedia_circ_buf *circbuf,
-					 unsigned len)
-{
+                                         unsigned len) {
     PJMEDIA_CIRC_BUF_CHECK(len <= circbuf->capacity);
     circbuf->len = len;
 }
 
 
 /**
- * Advance the read pointer of circular buffer. This function will discard
- * the skipped samples while advancing the read pointer, thus reducing 
- * the buffer length.
+ * 前进循环缓冲区的读取指针。此函数将在前进读取指针时丢弃跳过的样本，从而减少缓冲区长度
  *
  * @param circbuf	    The circular buffer.
- * @param count		    Distance from current read pointer, can only be
- *			    possitive number, in samples.
+ * @param count		    距离当前读取指针的距离，只能是正数，在样本中
  *
- * @return		    PJ_SUCCESS when successful, otherwise 
- *			    the appropriate error will be returned.
+ * @return		    成功时返回 PJ_SUCCESS，否则返回相应的错误码
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_adv_read_ptr(pjmedia_circ_buf *circbuf, 
-						     unsigned count)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_adv_read_ptr(pjmedia_circ_buf *circbuf,
+                                                     unsigned count) {
     if (count >= circbuf->len)
-	return pjmedia_circ_buf_reset(circbuf);
+        return pjmedia_circ_buf_reset(circbuf);
 
     PJMEDIA_CIRC_BUF_CHECK(count <= circbuf->len);
 
     circbuf->start += count;
-    if (circbuf->start >= circbuf->buf + circbuf->capacity) 
-	circbuf->start -= circbuf->capacity;
+    if (circbuf->start >= circbuf->buf + circbuf->capacity)
+        circbuf->start -= circbuf->capacity;
     circbuf->len -= count;
 
     return PJ_SUCCESS;
@@ -173,22 +156,17 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_adv_read_ptr(pjmedia_circ_buf *circbuf,
 
 
 /**
- * Advance the write pointer of circular buffer. Since write pointer is always
- * pointing to a sample after the end of sample, so this function also means
- * increasing the buffer length.
+ * 推进循环缓冲区的写入指针。因为write指针总是指向 sample 结束后的一个 sample，所以这个函数还意味着增加缓冲区长度。
  *
- * @param circbuf	    The circular buffer.
- * @param count		    Distance from current write pointer, can only be
- *			    possitive number, in samples.
+ * @param circbuf	    循环buf
+ * @param count		    距离当前写指针的距离，只能是正数，在样本中
  *
- * @return		    PJ_SUCCESS when successful, otherwise 
- *			    the appropriate error will be returned.
+ * @return		    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_INLINE(pj_status_t) pjmedia_circ_buf_adv_write_ptr(pjmedia_circ_buf *circbuf,
-						      unsigned count)
-{
+                                                      unsigned count) {
     if (count + circbuf->len > circbuf->capacity)
-	return PJ_ETOOBIG;
+        return PJ_ETOOBIG;
 
     circbuf->len += count;
 
@@ -197,105 +175,97 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_adv_write_ptr(pjmedia_circ_buf *circbuf,
 
 
 /**
- * Get the real buffer addresses containing the audio samples.
+ * 获取包含音频样本的真实缓冲区地址
  *
- * @param circbuf	    The circular buffer.
- * @param reg1		    Pointer to store the first buffer address.
- * @param reg1_len	    Pointer to store the length of the first buffer, 
- *			    in samples.
- * @param reg2		    Pointer to store the second buffer address.
- * @param reg2_len	    Pointer to store the length of the second buffer, 
- *			    in samples.
+ * @param circbuf	    循环buf
+ * @param reg1		    存储第一个缓冲区地址的指针
+ * @param reg1_len	    用于存储第一个缓冲区长度的指针，以样本为单位
+ * @param reg2		    存储第二个缓冲区地址的指针
+ * @param reg2_len	    用于存储第二个缓冲区长度的指针，以样本为单位
  */
-PJ_INLINE(void) pjmedia_circ_buf_get_read_regions(pjmedia_circ_buf *circbuf, 
-						  pj_int16_t **reg1, 
-						  unsigned *reg1_len, 
-						  pj_int16_t **reg2, 
-						  unsigned *reg2_len)
-{
+PJ_INLINE(void) pjmedia_circ_buf_get_read_regions(pjmedia_circ_buf *circbuf,
+                                                  pj_int16_t **reg1,
+                                                  unsigned *reg1_len,
+                                                  pj_int16_t **reg2,
+                                                  unsigned *reg2_len) {
     *reg1 = circbuf->start;
     *reg1_len = circbuf->len;
     if (*reg1 + *reg1_len > circbuf->buf + circbuf->capacity) {
-	*reg1_len = (unsigned)(circbuf->buf + circbuf->capacity - 
-			       circbuf->start);
-	*reg2 = circbuf->buf;
-	*reg2_len = circbuf->len - *reg1_len;
+        *reg1_len = (unsigned) (circbuf->buf + circbuf->capacity -
+                                circbuf->start);
+        *reg2 = circbuf->buf;
+        *reg2_len = circbuf->len - *reg1_len;
     } else {
-	*reg2 = NULL;
-	*reg2_len = 0;
+        *reg2 = NULL;
+        *reg2_len = 0;
     }
 
-    PJMEDIA_CIRC_BUF_CHECK(*reg1_len != 0 || (*reg1_len == 0 && 
-					      circbuf->len == 0));
+    PJMEDIA_CIRC_BUF_CHECK(*reg1_len != 0 || (*reg1_len == 0 &&
+                                              circbuf->len == 0));
     PJMEDIA_CIRC_BUF_CHECK(*reg1_len + *reg2_len == circbuf->len);
 }
 
 
 /**
- * Get the real buffer addresses that is empty or writeable.
+ * 获取空的或可写的实际缓冲区地址
  *
- * @param circbuf	    The circular buffer.
- * @param reg1		    Pointer to store the first buffer address.
- * @param reg1_len	    Pointer to store the length of the first buffer, 
- *			    in samples.
- * @param reg2		    Pointer to store the second buffer address.
- * @param reg2_len	    Pointer to store the length of the second buffer, 
- *			    in samples.
+ * @param circbuf	    循环buf
+ * @param reg1		    存储第一个缓冲区地址的指针
+ * @param reg1_len	    用于存储第一个缓冲区长度的指针，以样本为单位
+ * @param reg2		    存储第二个缓冲区地址的指针
+ * @param reg2_len	    用于存储第二个缓冲区长度的指针，以样本为单位
  */
-PJ_INLINE(void) pjmedia_circ_buf_get_write_regions(pjmedia_circ_buf *circbuf, 
-						   pj_int16_t **reg1, 
-						   unsigned *reg1_len, 
-						   pj_int16_t **reg2, 
-						   unsigned *reg2_len)
-{
+PJ_INLINE(void) pjmedia_circ_buf_get_write_regions(pjmedia_circ_buf *circbuf,
+                                                   pj_int16_t **reg1,
+                                                   unsigned *reg1_len,
+                                                   pj_int16_t **reg2,
+                                                   unsigned *reg2_len) {
     *reg1 = circbuf->start + circbuf->len;
     if (*reg1 >= circbuf->buf + circbuf->capacity)
-	*reg1 -= circbuf->capacity;
+        *reg1 -= circbuf->capacity;
     *reg1_len = circbuf->capacity - circbuf->len;
     if (*reg1 + *reg1_len > circbuf->buf + circbuf->capacity) {
-	*reg1_len = (unsigned)(circbuf->buf + circbuf->capacity - *reg1);
-	*reg2 = circbuf->buf;
-	*reg2_len = (unsigned)(circbuf->start - circbuf->buf);
+        *reg1_len = (unsigned) (circbuf->buf + circbuf->capacity - *reg1);
+        *reg2 = circbuf->buf;
+        *reg2_len = (unsigned) (circbuf->start - circbuf->buf);
     } else {
-	*reg2 = NULL;
-	*reg2_len = 0;
+        *reg2 = NULL;
+        *reg2_len = 0;
     }
 
-    PJMEDIA_CIRC_BUF_CHECK(*reg1_len != 0 || (*reg1_len == 0 && 
-					      circbuf->len == 0));
-    PJMEDIA_CIRC_BUF_CHECK(*reg1_len + *reg2_len == circbuf->capacity - 
-			   circbuf->len);
+    PJMEDIA_CIRC_BUF_CHECK(*reg1_len != 0 || (*reg1_len == 0 &&
+                                              circbuf->len == 0));
+    PJMEDIA_CIRC_BUF_CHECK(*reg1_len + *reg2_len == circbuf->capacity -
+                                                    circbuf->len);
 }
 
 
 /**
- * Read audio samples from the circular buffer.
+ * 从循环缓冲区读取音频样本
  *
- * @param circbuf	    The circular buffer.
- * @param data		    Buffer to store the read audio samples.
- * @param count		    Number of samples being read.
+ * @param circbuf	    循环buf
+ * @param data		    缓冲区来存储读取的音频样本
+ * @param count		    正在读取的样本数
  *
- * @return		    PJ_SUCCESS when successful, otherwise 
- *			    the appropriate error will be returned.
+ * @return		    成功返回PJ_SUCCESS，否则返回相应的错误码
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_read(pjmedia_circ_buf *circbuf, 
-					     pj_int16_t *data, 
-					     unsigned count)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_read(pjmedia_circ_buf *circbuf,
+                                             pj_int16_t *data,
+                                             unsigned count) {
     pj_int16_t *reg1, *reg2;
     unsigned reg1cnt, reg2cnt;
 
-    /* Data in the buffer is less than requested */
+    /* 缓冲区中的数据少于请求的数据 */
     if (count > circbuf->len)
-	return PJ_ETOOBIG;
+        return PJ_ETOOBIG;
 
-    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt, 
-				      &reg2, &reg2cnt);
+    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt,
+                                      &reg2, &reg2cnt);
     if (reg1cnt >= count) {
-	pjmedia_copy_samples(data, reg1, count);
+        pjmedia_copy_samples(data, reg1, count);
     } else {
-	pjmedia_copy_samples(data, reg1, reg1cnt);
-	pjmedia_copy_samples(data + reg1cnt, reg2, count - reg1cnt);
+        pjmedia_copy_samples(data, reg1, reg1cnt);
+        pjmedia_copy_samples(data + reg1cnt, reg2, count - reg1cnt);
     }
 
     return pjmedia_circ_buf_adv_read_ptr(circbuf, count);
@@ -303,33 +273,31 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_read(pjmedia_circ_buf *circbuf,
 
 
 /**
- * Write audio samples to the circular buffer.
+ * 将音频样本写入循环缓冲区。
  *
- * @param circbuf	    The circular buffer.
- * @param data		    Audio samples to be written.
- * @param count		    Number of samples being written.
+ * @param circbuf	    循环buf
+ * @param data		    要编写的音频样本
+ * @param count		    正在写入的样本数
  *
- * @return		    PJ_SUCCESS when successful, otherwise
- *			    the appropriate error will be returned.
+ * @return		    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_write(pjmedia_circ_buf *circbuf, 
-					      pj_int16_t *data, 
-					      unsigned count)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_write(pjmedia_circ_buf *circbuf,
+                                              pj_int16_t *data,
+                                              unsigned count) {
     pj_int16_t *reg1, *reg2;
     unsigned reg1cnt, reg2cnt;
 
-    /* Data to write is larger than buffer can store */
+    /* 要写入的数据大于缓冲区所存储的数据 */
     if (count > circbuf->capacity - circbuf->len)
-	return PJ_ETOOBIG;
+        return PJ_ETOOBIG;
 
-    pjmedia_circ_buf_get_write_regions(circbuf, &reg1, &reg1cnt, 
-				       &reg2, &reg2cnt);
+    pjmedia_circ_buf_get_write_regions(circbuf, &reg1, &reg1cnt,
+                                       &reg2, &reg2cnt);
     if (reg1cnt >= count) {
-	pjmedia_copy_samples(reg1, data, count);
+        pjmedia_copy_samples(reg1, data, count);
     } else {
-	pjmedia_copy_samples(reg1, data, reg1cnt);
-	pjmedia_copy_samples(reg2, data + reg1cnt, count - reg1cnt);
+        pjmedia_copy_samples(reg1, data, reg1cnt);
+        pjmedia_copy_samples(reg2, data + reg1cnt, count - reg1cnt);
     }
 
     return pjmedia_circ_buf_adv_write_ptr(circbuf, count);
@@ -337,40 +305,38 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_write(pjmedia_circ_buf *circbuf,
 
 
 /**
- * Copy audio samples from the circular buffer without changing its state. 
+ * 从循环缓冲区复制音频样本，而不更改其状态
  *
- * @param circbuf	    The circular buffer.
- * @param start_idx	    Starting sample index to be copied.
- * @param data		    Buffer to store the read audio samples.
- * @param count		    Number of samples being read.
+ * @param circbuf	    循环buf
+ * @param start_idx	    开始复制样本索引
+ * @param data		    缓冲区来存储读取的音频样本
+ * @param count		    正在读取的样本数
  *
- * @return		    PJ_SUCCESS when successful, otherwise 
- *			    the appropriate error will be returned.
+ * @return		    成功返回PJ_SUCCESS，否则返回相应的错误码
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_copy(pjmedia_circ_buf *circbuf, 
-					     unsigned start_idx,
-					     pj_int16_t *data, 
-					     unsigned count)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_copy(pjmedia_circ_buf *circbuf,
+                                             unsigned start_idx,
+                                             pj_int16_t *data,
+                                             unsigned count) {
     pj_int16_t *reg1, *reg2;
     unsigned reg1cnt, reg2cnt;
 
-    /* Data in the buffer is less than requested */
+    /* 缓冲区中的数据少于请求的数据 */
     if (count + start_idx > circbuf->len)
-	return PJ_ETOOBIG;
+        return PJ_ETOOBIG;
 
-    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt, 
-				      &reg2, &reg2cnt);
+    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt,
+                                      &reg2, &reg2cnt);
     if (reg1cnt > start_idx) {
-	unsigned tmp_len;
-	tmp_len = reg1cnt - start_idx;
-	if (tmp_len > count)
-	    tmp_len = count;
-	pjmedia_copy_samples(data, reg1 + start_idx, tmp_len);
-	if (tmp_len < count)
-	    pjmedia_copy_samples(data + tmp_len, reg2, count - tmp_len);
+        unsigned tmp_len;
+        tmp_len = reg1cnt - start_idx;
+        if (tmp_len > count)
+            tmp_len = count;
+        pjmedia_copy_samples(data, reg1 + start_idx, tmp_len);
+        if (tmp_len < count)
+            pjmedia_copy_samples(data + tmp_len, reg2, count - tmp_len);
     } else {
-	pjmedia_copy_samples(data, reg2 + start_idx - reg1cnt, count);
+        pjmedia_copy_samples(data, reg2 + start_idx - reg1cnt, count);
     }
 
     return PJ_SUCCESS;
@@ -378,50 +344,48 @@ PJ_INLINE(pj_status_t) pjmedia_circ_buf_copy(pjmedia_circ_buf *circbuf,
 
 
 /**
- * Pack the buffer so the first sample will be in the beginning of the buffer.
- * This will also make the buffer contiguous.
+ * 打包缓冲区，使第一个样本位于缓冲区的开头
+ * 这也将使缓冲区连续
  *
- * @param circbuf	    The circular buffer.
+ * @param circbuf	    循环buf
  *
- * @return		    PJ_SUCCESS when successful, otherwise 
- *			    the appropriate error will be returned.
+ * @return		    成功返回 PJ_SUCCESS,否则返回相应错误码
  */
-PJ_INLINE(pj_status_t) pjmedia_circ_buf_pack_buffer(pjmedia_circ_buf *circbuf)
-{
+PJ_INLINE(pj_status_t) pjmedia_circ_buf_pack_buffer(pjmedia_circ_buf *circbuf) {
     pj_int16_t *reg1, *reg2;
     unsigned reg1cnt, reg2cnt;
     unsigned gap;
 
-    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt, 
-				      &reg2, &reg2cnt);
+    pjmedia_circ_buf_get_read_regions(circbuf, &reg1, &reg1cnt,
+                                      &reg2, &reg2cnt);
 
-    /* Check if not contigue */
+    /* 不连续检查 */
     if (reg2cnt != 0) {
-	/* Check if no space left to roll the buffer 
-	 * (or should this function provide temporary buffer?)
-	 */
-	gap = circbuf->capacity - pjmedia_circ_buf_get_len(circbuf);
-	if (gap == 0)
-	    return PJ_ETOOBIG;
+        /*
+         * 检查是否没有空间来滚动缓冲区（或者该功能是否提供临时缓冲区？）
+         */
+        gap = circbuf->capacity - pjmedia_circ_buf_get_len(circbuf);
+        if (gap == 0)
+            return PJ_ETOOBIG;
 
-	/* Roll buffer left using the gap until reg2cnt == 0 */
-	do {
-	    if (gap > reg2cnt)
-		gap = reg2cnt;
-	    pjmedia_move_samples(reg1 - gap, reg1, reg1cnt);
-	    pjmedia_copy_samples(reg1 + reg1cnt - gap, reg2, gap);
-	    if (gap < reg2cnt)
-		pjmedia_move_samples(reg2, reg2 + gap, reg2cnt - gap);
-	    reg1 -= gap;
-	    reg1cnt += gap;
-	    reg2cnt -= gap;
-	} while (reg2cnt > 0);
+        /* 使用间隙向左滚动缓冲区，直到 reg2cnt==0 */
+        do {
+            if (gap > reg2cnt)
+                gap = reg2cnt;
+            pjmedia_move_samples(reg1 - gap, reg1, reg1cnt);
+            pjmedia_copy_samples(reg1 + reg1cnt - gap, reg2, gap);
+            if (gap < reg2cnt)
+                pjmedia_move_samples(reg2, reg2 + gap, reg2cnt - gap);
+            reg1 -= gap;
+            reg1cnt += gap;
+            reg2cnt -= gap;
+        } while (reg2cnt > 0);
     }
 
-    /* Finally, Shift samples to the left edge */
+    /* 最后，将采样移到左边缘 */
     if (reg1 != circbuf->buf)
-	pjmedia_move_samples(circbuf->buf, reg1, 
-			     pjmedia_circ_buf_get_len(circbuf));
+        pjmedia_move_samples(circbuf->buf, reg1,
+                             pjmedia_circ_buf_get_len(circbuf));
     circbuf->start = circbuf->buf;
 
     return PJ_SUCCESS;

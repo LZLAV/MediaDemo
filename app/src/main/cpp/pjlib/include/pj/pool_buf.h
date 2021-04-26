@@ -1,4 +1,6 @@
 /**
+ *	已完成
+ *		基于堆栈/缓冲区的内存池
  *
  */
 #ifndef __POOL_STACK_H__
@@ -7,23 +9,15 @@
 #include <pj/pool.h>
 
 /**
- * @defgroup PJ_POOL_BUFFER Stack/Buffer Based Memory Pool Allocator
+ * @defgroup PJ_POOL_BUFFER 基于堆栈/缓冲区的内存池分配器
  * @ingroup PJ_POOL_GROUP
- * @brief Stack/buffer based pool.
+ * @brief 基于堆栈/缓冲区的池
  *
- * This section describes an implementation of memory pool which uses
- * memory allocated from the stack. Application creates this pool
- * by specifying a buffer (which can be allocated from static memory or
- * stack variable), and then use normal pool API to access/use the pool.
+ * 本节描述内存池的实现，它使用从堆栈分配的内存。应用程序通过指定一个缓冲区（可以从静态内存或堆栈变量分配）来创建这个池，然后使用普通池API来访问/使用这个池。
  *
- * If the buffer specified during pool creation is a buffer located in the
- * stack, the pool will be invalidated (or implicitly destroyed) when the
- * execution leaves the enclosing block containing the buffer. Note
- * that application must make sure that any objects allocated from this
- * pool (such as mutexes) have been destroyed before the pool gets
- * invalidated.
+ * 如果在池创建期间指定的缓冲区是位于堆栈中的缓冲区，则当执行离开包含缓冲区的封闭块时，该池将无效（或隐式销毁）。请注意，应用程序必须确保在此池中分配的任何对象（如互斥）在该池失效之前已被销毁。
  *
- * Sample usage:
+ * 使用例子:
  *
  * \code
   #include <pjlib.h>
@@ -58,22 +52,16 @@
 PJ_BEGIN_DECL
 
 /**
- * Create the pool using the specified buffer as the pool's memory.
- * Subsequent allocations made from the pool will use the memory from
- * this buffer.
+ * 使用指定的缓冲区作为池的内存来创建池。
+ * 从池中进行的后续分配将使用此缓冲区中的内存。
  *
- * If the buffer specified in the parameter is a buffer located in the
- * stack, the pool will be invalid (or implicitly destroyed) when the
- * execution leaves the enclosing block containing the buffer. Note
- * that application must make sure that any objects allocated from this
- * pool (such as mutexes) have been destroyed before the pool gets
- * invalidated.
+ * 如果参数中指定的缓冲区是位于堆栈中的缓冲区，则当执行离开包含缓冲区的封闭块时，池将无效（或隐式销毁）。请注意，应用程序必须确保在此池中分配的任何对象（如互斥）在该池失效之前已被销毁。
  *
- * @param name	    Optional pool name.
- * @param buf	    Buffer to be used by the pool.
- * @param size	    The size of the buffer.
+ * @param name	    可选池名称
+ * @param buf	    池要使用的缓冲区
+ * @param size	    缓冲区的大小
  *
- * @return	    The memory pool instance.
+ * @return	    内存池实例
  */
 PJ_DECL(pj_pool_t*) pj_pool_create_on_buf(const char *name,
 					  void *buf,

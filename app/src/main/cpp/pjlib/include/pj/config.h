@@ -575,7 +575,7 @@
 #endif
 
 /**
- * Do we have alternate pool implementation?
+ * 我们有备用池实现吗？
  *
  * Default: 0
  */

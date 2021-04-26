@@ -1,21 +1,7 @@
-/* $Id: delaybuf.c 3841 2011-10-24 09:28:13Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成:
+ *  学习过程：
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 
 #include <pjmedia/delaybuf.h>
@@ -36,53 +22,49 @@
 #   define TRACE__(x)
 #endif
 
-/* Operation types of delay buffer */
+/* 延迟缓冲器的操作类型 */
 enum OP
 {
     OP_PUT,
     OP_GET
 };
 
-/* Specify time for delaybuf to recalculate effective delay, in ms.
+/*
+ * 指定 delaybuf 重新计算有效延迟的时间（毫秒）
  */
 #define RECALC_TIME	    2000
 
-/* Default value of maximum delay, in ms, this value is used when 
- * maximum delay requested is less than ptime (one frame length).
+/*
+ * 最大延迟的默认值（毫秒），当请求的最大延迟小于ptime（一帧长度）时使用此值
  */
 #define DEFAULT_MAX_DELAY   400
 
-/* Number of frames to add to learnt level for additional stability.
+/* 要添加到学习级别以获得额外稳定性的帧数。Number of frames to add to learnt level for additional stability
  */
 #define SAFE_MARGIN	    0
 
-/* This structure describes internal delaybuf settings and states.
+/* 该结构描述内部延迟BUF设置和状态
  */
 struct pjmedia_delay_buf
 {
-    /* Properties and configuration */
+    /* 属性和配置 */
     char	     obj_name[PJ_MAX_OBJ_NAME];
-    pj_lock_t	    *lock;		/**< Lock object.		     */
-    unsigned	     samples_per_frame; /**< Number of samples in one frame  */
-    unsigned	     ptime;		/**< Frame time, in ms		     */
-    unsigned	     channel_count;	/**< Channel count, in ms	     */
-    pjmedia_circ_buf *circ_buf;		/**< Circular buffer to store audio
-					     samples			     */
-    unsigned	     max_cnt;		/**< Maximum samples to be buffered  */
-    unsigned	     eff_cnt;		/**< Effective count of buffered 
-					     samples to keep the optimum
-					     balance between delay and 
-					     stability. This is calculated 
-					     based on burst level.	     */
+    pj_lock_t	    *lock;		/**< 锁对象   */
+    unsigned	     samples_per_frame; /**< 一帧中的样本数  */
+    unsigned	     ptime;		/**< 帧时间，ms		     */
+    unsigned	     channel_count;	/**< 通道数，毫秒     */
+    pjmedia_circ_buf *circ_buf;		/**< 循环缓冲区，用于存储音频样本 */
+    unsigned	     max_cnt;		/**< 要缓冲的最大样本数  */
+    unsigned	     eff_cnt;		/**< 缓冲样本的有效计数，以保持延迟和稳定性之间的最佳平衡。这是根据突发级别计算的 */
 
-    /* Learning vars */
-    unsigned	     level;		/**< Burst level counter	     */
-    enum OP	     last_op;		/**< Last op (GET or PUT) of learning*/
-    int		     recalc_timer;	/**< Timer for recalculating max_level*/
-    unsigned	     max_level;		/**< Current max burst level	     */
+    /* 学习变量 */
+    unsigned	     level;		/**< 突发电平计数器     */
+    enum OP	     last_op;		/**< 学习的最近一次操作(PUT 或 GET)*/
+    int		     recalc_timer;	/**< 用于重新计算max_level 的计时器 */
+    unsigned	     max_level;		/**< 当前最大脉冲电平	     */
 
-    /* Drift handler */
-    pjmedia_wsola   *wsola;		/**< Drift handler		     */
+    /* 漂移处理器*/
+    pjmedia_wsola   *wsola;		/**< 漂移处理器   */
 };
 
 
@@ -119,13 +101,13 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_create( pj_pool_t *pool,
     b->eff_cnt = b->max_cnt >> 1;
     b->recalc_timer = RECALC_TIME;
 
-    /* Create circular buffer */
+    /* 创建循环buf */
     status = pjmedia_circ_buf_create(pool, b->max_cnt, &b->circ_buf);
     if (status != PJ_SUCCESS)
 	return status;
 
     if (!(options & PJMEDIA_DELAY_BUF_SIMPLE_FIFO)) {
-        /* Create WSOLA */
+        /* 创建 WSOLA */
         status = pjmedia_wsola_create(pool, clock_rate, samples_per_frame, 1,
 				      PJMEDIA_WSOLA_NO_FADING, &b->wsola);
         if (status != PJ_SUCCESS)
@@ -135,7 +117,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_create( pj_pool_t *pool,
         PJ_LOG(5, (b->obj_name, "Using simple FIFO delay buffer."));
     }
 
-    /* Finally, create mutex */
+    /* 最后，创建互斥量 */
     status = pj_lock_create_recursive_mutex(pool, b->obj_name, 
 					    &b->lock);
     if (status != PJ_SUCCESS)
@@ -170,8 +152,8 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_destroy(pjmedia_delay_buf *b)
     return status;
 }
 
-/* This function will erase samples from delay buffer.
- * The number of erased samples is guaranteed to be >= erase_cnt.
+/* 此函数将从延迟缓冲区中删除样本。
+ * 擦除样本的数量保证为 >= erase_cnt
  */
 static void shrink_buffer(pjmedia_delay_buf *b, unsigned erase_cnt)
 {
@@ -188,9 +170,7 @@ static void shrink_buffer(pjmedia_delay_buf *b, unsigned erase_cnt)
 				   &erase_cnt);
 
     if ((status == PJ_SUCCESS) && (erase_cnt > 0)) {
-	/* WSOLA discard will manage the first buffer to be full, unless 
-	 * erase_cnt is greater than second buffer length. So it is safe
-	 * to just set the circular buffer length.
+	/* WSOLA discard将管理第一个缓冲区是否已满，除非erase_cnt大于第二个缓冲区长度。因此，只需设置循环缓冲区长度是安全的
 	 */
 
 	pjmedia_circ_buf_set_len(b->circ_buf, 
@@ -202,7 +182,7 @@ static void shrink_buffer(pjmedia_delay_buf *b, unsigned erase_cnt)
     }
 }
 
-/* Fast increase, slow decrease */
+/* 快升慢降 */
 #define AGC_UP(cur, target) cur = (cur + target*3) >> 2
 #define AGC_DOWN(cur, target) cur = (cur*3 + target) >> 2
 #define AGC(cur, target) \
@@ -211,13 +191,13 @@ static void shrink_buffer(pjmedia_delay_buf *b, unsigned erase_cnt)
 
 static void update(pjmedia_delay_buf *b, enum OP op)
 {
-    /* Sequential operation */
+    /* 顺序操作 */
     if (op == b->last_op) {
 	++b->level;
 	return;
     } 
 
-    /* Switching operation */
+    /* 开关操作 */
     if (b->level > b->max_level)
 	b->max_level = b->level;
 
@@ -226,15 +206,14 @@ static void update(pjmedia_delay_buf *b, enum OP op)
     b->last_op = op;
     b->level = 1;
 
-    /* Recalculate effective count based on max_level */
+    /* 根据max_level重新计算有效计数 */
     if (b->recalc_timer <= 0) {
 	unsigned new_eff_cnt = (b->max_level+SAFE_MARGIN)*b->samples_per_frame;
 
-	/* Smoothening effective count transition */
+	/* 平滑有效计数转换 */
 	AGC(b->eff_cnt, new_eff_cnt);
 	
-	/* Make sure the new effective count is multiplication of 
-	 * channel_count, so let's round it up.
+	/* 确保新的有效计数是通道计数的乘法，所以让我们将其取整
 	 */
 	if (b->eff_cnt % b->channel_count)
 	    b->eff_cnt += b->channel_count - (b->eff_cnt % b->channel_count);
@@ -245,7 +224,7 @@ static void update(pjmedia_delay_buf *b, enum OP op)
 	b->recalc_timer = RECALC_TIME;
     }
 
-    /* See if we need to shrink the buffer to reduce delay */
+    /* 看看我们是否需要缩小缓冲区以减少延迟 */
     if (op == OP_PUT && pjmedia_circ_buf_get_len(b->circ_buf) > 
 	b->samples_per_frame + b->eff_cnt)
     {
@@ -279,14 +258,14 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_put(pjmedia_delay_buf *b,
         }
     }
 
-    /* Overflow checking */
+    /* 溢出检查 */
     if (pjmedia_circ_buf_get_len(b->circ_buf) + b->samples_per_frame > 
 	b->max_cnt)
     {
 	unsigned erase_cnt;
 
         if (b->wsola) {
-	    /* shrink one frame or just the diff? */
+	    /* 缩小一帧还是只差一帧？ */
 	    //erase_cnt = b->samples_per_frame;
 	    erase_cnt = pjmedia_circ_buf_get_len(b->circ_buf) + 
 		        b->samples_per_frame - b->max_cnt;
@@ -294,9 +273,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_put(pjmedia_delay_buf *b,
 	    shrink_buffer(b, erase_cnt);
         }
 
-	/* Check if shrinking failed or erased count is less than requested,
-	 * delaybuf needs to drop eldest samples, this is bad since the voice
-	 * samples get rough transition which may produce tick noise.
+	/* 检查收缩失败或擦除计数是否小于请求的值，delaybuf需要删除最早的样本，这是不好的，因为语音样本得到粗糙的过渡，可能会产生滴答噪声
 	 */
 	if (pjmedia_circ_buf_get_len(b->circ_buf) + b->samples_per_frame > 
 	    b->max_cnt) 
@@ -330,7 +307,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_get( pjmedia_delay_buf *b,
     if (b->wsola)
         update(b, OP_GET);
 
-    /* Starvation checking */
+    /* 饥饿检查 */
     if (pjmedia_circ_buf_get_len(b->circ_buf) < b->samples_per_frame) {
 
 	PJ_LOG(4,(b->obj_name,"Underflow, buf_cnt=%d, will generate 1 frame",
@@ -346,7 +323,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_get( pjmedia_delay_buf *b,
 		    return PJ_SUCCESS;
 	        }
 
-	        /* Put generated frame into buffer */
+	        /* 将生成的帧放入缓冲区 */
 	        pjmedia_circ_buf_write(b->circ_buf, frame,
                                        b->samples_per_frame);
             }
@@ -355,7 +332,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_get( pjmedia_delay_buf *b,
 	if (!b->wsola || status != PJ_SUCCESS) {
 	    unsigned buf_len = pjmedia_circ_buf_get_len(b->circ_buf);
 	    
-	    /* Give all what delay buffer has, then pad with zeroes */
+	    /* 给出所有的延迟缓冲区，然后用零填充 */
             if (b->wsola)
 	        PJ_LOG(4,(b->obj_name,"Error generating frame, status=%d", 
 		          status));
@@ -364,7 +341,7 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_get( pjmedia_delay_buf *b,
 	    pjmedia_zero_samples(&frame[buf_len], 
 				 b->samples_per_frame - buf_len);
 
-	    /* The buffer is empty now, reset it */
+	    /* 缓冲区现在是空的，请重置它 */
 	    pjmedia_circ_buf_reset(b->circ_buf);
 
 	    pj_lock_release(b->lock);
@@ -389,10 +366,10 @@ PJ_DEF(pj_status_t) pjmedia_delay_buf_reset(pjmedia_delay_buf *b)
 
     b->recalc_timer = RECALC_TIME;
 
-    /* Reset buffer */
+    /* 重置缓冲区 */
     pjmedia_circ_buf_reset(b->circ_buf);
 
-    /* Reset WSOLA */
+    /* 重置 WSOLA */
     if (b->wsola)
         pjmedia_wsola_reset(b->wsola, 0);
 

@@ -1,24 +1,6 @@
-/* $Id$ */
-/*
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-/*
- * Based on implementation kindly contributed by Switchlab, Ltd.
  */
 #include <pjmedia/jbuf.h>
 #include <pjmedia/errno.h>
@@ -32,57 +14,52 @@
 #define THIS_FILE   "jbuf.c"
 
 
-/* Invalid sequence number, used as the initial value. */
+/* 序列号无效，用作初始值 */
 #define INVALID_OFFSET        -9999
 
-/* Maximum burst length, whenever an operation is bursting longer than
- * this value, JB will assume that the opposite operation was idle.
+/*
+ * 最大突发长度，每当一个操作的突发长度大于此值时，JB将假定相反的操作处于空闲状态
  */
 #define MAX_BURST_MSEC        1000
 
-/* Number of OP switches to be performed in JB_STATUS_INITIALIZING, before
- * JB can switch its states to JB_STATUS_PROCESSING.
+/* 在JB可以将其状态切换到JB_STATUS_PROCESSING之前，在JB_STATUS_INITIALIZING中要执行的OP切换数
  */
 #define INIT_CYCLE        10
 
 
-/* Maximum frame index in JB framelist (estimated).
- * As index is calculated as (RTP-timestamp/timestamp-span), the maximum index
- * usually ranging from MAXUINT32/9000 (10 fps video at 90kHz) to MAXUINT32/80
- * (10 ms audio at 8000Hz), lets take the 'lowest'.
+/*
+ * JB帧列表中的最大帧索引（估计）。
+ * 由于索引计算为 (RTP-timestamp/timestamp-span)，最大索引通常从 MAXUINT32/9000（90kHz时为10fps视频）到 MAXUINT32/80（8000Hz时为10ms音频），让我们取“最低”
  */
 #define MAX_FRAME_INDEX        (0xFFFFFFFF/9000)
 
 
-/* Minimal difference between JB size and 2*burst-level to perform
- * JB shrinking in static discard algorithm.
+/*
+ * 在静态丢弃算法中，JB size和2*burst-level之间的最小差异用于执行JB收缩
  */
 #define STA_DISC_SAFE_SHRINKING_DIFF    1
 
 
-/* Struct of JB internal buffer, represented in a circular buffer containing
- * frame content, frame type, frame length, and frame bit info.
+/*
+ * JB内部缓冲区的结构，用包含帧内容、帧类型、帧长度和帧位信息的循环缓冲区表示
  */
 typedef struct jb_framelist_t {
-    /* Settings */
-    unsigned frame_size;    /**< maximum size of frame	    */
-    unsigned max_count;        /**< maximum number of frames	    */
+    /* 设置 */
+    unsigned frame_size;    /**< 帧的最大长度	    */
+    unsigned max_count;        /**< 最大的帧数	    */
 
-    /* Buffers */
-    char *content;        /**< frame content array	    */
-    int *frame_type;    /**< frame type array		    */
-    pj_size_t *content_len;    /**< frame length array		    */
-    pj_uint32_t *bit_info;        /**< frame bit info array	    */
-    pj_uint32_t *ts;        /**< timestamp array		    */
+    /* 缓存 */
+    char *content;        /**< 帧内容数组	    */
+    int *frame_type;    /**< 帧类型数组		    */
+    pj_size_t *content_len;    /**< 帧长度数组		    */
+    pj_uint32_t *bit_info;        /**< 帧位信息数组	    */
+    pj_uint32_t *ts;        /**< 时间戳数组		    */
 
-    /* States */
-    unsigned head;        /**< index of head, pointed frame
-					     will be returned by next GET  : 0 ~ (max_count-1)  */
-    unsigned size;        /**< current size of framelist,
-					     including discarded frames.    */
-    unsigned discarded_num;    /**< current number of discarded
-					     frames.			    */
-    int origin;        /**< original index of flist_head  : frame seq */
+    /* 状态 */
+    unsigned head;        /**< 头的索引号，下一次GET 获取到的帧的指针 0 ~ (max_count-1)  */
+    unsigned size;        /**< 帧列表的当前大小，包括丢弃的帧    */
+    unsigned discarded_num;    /**< 当前丢弃的帧数		    */
+    int origin;        /**< 在 flist_head中的原始索引：帧序列 */
 
 } jb_framelist_t;
 
@@ -95,62 +72,41 @@ static void jbuf_discard_progressive(pjmedia_jbuf *jb);
 
 
 struct pjmedia_jbuf {
-    /* Settings (consts) */
-    pj_str_t jb_name;        /**< jitter buffer name		    */
-    pj_size_t jb_frame_size;    /**< frame size			    */
-    unsigned jb_frame_ptime;    /**< frame duration.		    */
-    pj_size_t jb_max_count;    /**< capacity of jitter buffer,
-					     in frames			    */
-    int jb_init_prefetch;    /**< Initial prefetch		    */
-    int jb_min_prefetch;    /**< Minimum allowable prefetch	    */
-    int jb_max_prefetch;    /**< Maximum allowable prefetch	    */
-    int jb_max_burst;    /**< maximum possible burst, whenever
-					     burst exceeds this value, it
-					     won't be included in level
-					     calculation		    */
-    int jb_min_shrink_gap;    /**< How often can we shrink	    */
-    discard_algo jb_discard_algo;    /**< Discard algorithm		    */
+    /* 设置（常量） */
+    pj_str_t jb_name;        /**< 抖动buf 名称	    */
+    pj_size_t jb_frame_size;    /**< 帧大小			    */
+    unsigned jb_frame_ptime;    /**< 帧长	    */
+    pj_size_t jb_max_count;    /**< 抖动缓冲区容量，单位帧		    */
+    int jb_init_prefetch;    /**< 初始预取值	    */
+    int jb_min_prefetch;    /**< 最小允许预取值	    */
+    int jb_max_prefetch;    /**< 最大允许预取	    */
+    int jb_max_burst;    /**<    最大可能爆发，每当爆发超过这个值，它将不包括在水平计算 */
+    int jb_min_shrink_gap;    /**< 收缩的间隔    */
+    discard_algo jb_discard_algo;    /**< 丢弃算法  */
 
-    /* Buffer */
-    jb_framelist_t jb_framelist;    /**< the buffer			    */
+    /* 缓冲 */
+    jb_framelist_t jb_framelist;    /**< 缓冲区  */
 
-    /* States */
-    int jb_level;        /**< delay between source &
-					     destination (calculated according
-					     of the number of burst get/put
-					     operations)		    */
-    int jb_max_hist_level;  /**< max level during the last level
-					     calculations		    */
-    int jb_stable_hist;    /**< num of times the delay has	been
-					     lower then the prefetch num    */
-    int jb_last_op;        /**< last operation executed
-					     (put/get)			    */
-    int jb_eff_level;    /**< effective burst level	    */
-    int jb_prefetch;    /**< no. of frame to insert before
-					     removing some (at the beginning
-					     of the framelist->content
-					     operation), the value may be
-					     continuously updated based on
-					     current frame burst level.	    */
-    pj_bool_t jb_prefetching;    /**< flag if jbuf is prefetching.   */
-    int jb_status;        /**< status is 'init' until the	first
-					     'put' operation		    */
-    int jb_init_cycle_cnt;    /**< status is 'init' until the	first
-					     'put' operation		    */
+    /* 状态 */
+    int jb_level;        /**< 源和目标之间的延迟（根据突发get/put操作数计算） */
+    int jb_max_hist_level;  /**< 最近一次计算的最大级别 */
+    int jb_stable_hist;    /**<    延迟低于预取延迟的次数 */
+    int jb_last_op;        /**< 上一次执行的操作 */
+    int jb_eff_level;    /**< 有效突发级别	    */
+    int jb_prefetch;    /**<    在删除某些帧之前要插入的帧数（在 framelist->content 操作开始时），该值可能会根据当前帧突发级别不断更新 */
+    pj_bool_t jb_prefetching;    /**< 标志jbuf是否为预取   */
+    int jb_status;        /**< 状态为“init”，直到第一个“put”操作		    */
+    int jb_init_cycle_cnt;    /**< 状态为“init”，直到第一个“put”操作		    */
 
-    int jb_discard_ref;    /**< Seq # of last frame deleted or
-					     discarded			    */
-    unsigned jb_discard_dist;    /**< Distance from jb_discard_ref
-					     to perform discard (in frm)    */
+    int jb_discard_ref;    /**< 删除或丢弃最近一帧的序列 */
+    unsigned jb_discard_dist;    /**< 从 jb_discard_ref 到执行 discard 的距离（单位：frm） */
 
-    /* Statistics */
-    pj_math_stat jb_delay;        /**< Delay statistics of jitter buffer
-					     (in ms)			    */
-    pj_math_stat jb_burst;        /**< Burst statistics (in frames)   */
-    unsigned jb_lost;        /**< Number of lost frames.	    */
-    unsigned jb_discard;        /**< Number of discarded frames.    */
-    unsigned jb_empty;        /**< Number of empty/prefetching frame
-					     returned by GET. */
+    /* 统计 */
+    pj_math_stat jb_delay;        /**< 抖动缓冲器的延迟统计(in ms)			    */
+    pj_math_stat jb_burst;        /**< 突发统计 (in frames)   */
+    unsigned jb_lost;        /**< 丢失帧数	    */
+    unsigned jb_discard;        /**< 丢弃的帧数    */
+    unsigned jb_empty;        /**< GET返回的空/预取帧数 */
 };
 
 
@@ -159,21 +115,20 @@ struct pjmedia_jbuf {
 
 
 
-/* Progressive discard algorithm introduced to reduce JB latency
- * by discarding incoming frames with adaptive aggressiveness based on
- * actual burst level.
+/*
+ * 提出了一种渐进丢弃算法，根据实际突发级别自适应地丢弃传入帧，以减少JB延迟
  */
-#define PROGRESSIVE_DISCARD 1
+#define PROGRESSIVE_DISCARD 1       //渐进式丢弃
 
-/* Internal JB frame flag, discarded frame will not be returned by JB to
- * application, it's just simply discarded.
+/*
+ * 内部JB frame标志，被丢弃的帧不会被JB返回给应用程序，它只是简单地被丢弃。
  */
 #define PJMEDIA_JB_DISCARDED_FRAME 1024
 
 
 
-/* Enabling this would log the jitter buffer state about once per
- * second.
+/*
+ * 启用此选项将每秒记录一次抖动缓冲区状态
  */
 #if 0
 #  define TRACE__(args)	    PJ_LOG(5,args)
@@ -277,18 +232,18 @@ static pj_bool_t jb_framelist_get(jb_framelist_t *framelist,
     if (framelist->size) {
         pj_bool_t prev_discarded = PJ_FALSE;
 
-        /* Skip discarded frames */
+        /* 跳过丢弃的帧 */
         while (framelist->frame_type[framelist->head] ==
                PJMEDIA_JB_DISCARDED_FRAME) {
             jb_framelist_remove_head(framelist, 1);
             prev_discarded = PJ_TRUE;
         }
 
-        /* Return the head frame if any */
+        /* 如有，返回头帧 */
         if (framelist->size) {
             if (prev_discarded) {
-                /* Ticket #1188: when previous frame(s) was discarded, return
-                 * 'missing' frame to trigger PLC to get smoother signal.
+                /*
+                 * #1188：当前一帧被丢弃时，返回 missing 帧以触发PLC以获得更平滑的信号。
                  */
                 *p_type = PJMEDIA_JB_MISSING_FRAME;
                 if (size)
@@ -303,7 +258,7 @@ static pj_bool_t jb_framelist_get(jb_framelist_t *framelist,
                 pj_size_t max_size = size ? *size : frm_size;
                 pj_size_t copy_size = PJ_MIN(max_size, frm_size);
 
-                /* Buffer size should not be smaller than frame size. */
+                /* 缓冲区大小不应小于帧大小 */
                 if (max_size < frm_size) {
                     pj_assert(!"Buffer too small");
                     PJ_LOG(4, (THIS_FILE, "JB Warning: buffer too small for the retrieved frame!"));
@@ -343,7 +298,7 @@ static pj_bool_t jb_framelist_get(jb_framelist_t *framelist,
         }
     }
 
-    /* No frame available */
+    /* 无帧可用 */
     pj_bzero(frame, framelist->frame_size);
 
     return PJ_FALSE;
@@ -366,7 +321,7 @@ static pj_bool_t jb_framelist_peek(jb_framelist_t *framelist,  //for  vid_stream
     pos = framelist->head;
     idx = offset;
 
-    /* Find actual peek position, note there may be discarded frames */
+    /* 找到实际的peek位置，注意可能有丢弃的帧 */
     while (1) {
         if (framelist->frame_type[pos] != PJMEDIA_JB_DISCARDED_FRAME) {
             if (idx == 0)
@@ -377,7 +332,7 @@ static pj_bool_t jb_framelist_peek(jb_framelist_t *framelist,  //for  vid_stream
         pos = (pos + 1) % framelist->max_count;
     }
 
-    /* Return the frame pointer */
+    /* 返回帧指针 */
     if (frame)
         *frame = framelist->content + pos * framelist->frame_size;
     if (type)
@@ -396,13 +351,13 @@ static pj_bool_t jb_framelist_peek(jb_framelist_t *framelist,  //for  vid_stream
 }
 
 
-/* Remove oldest frames as many as param 'count' */
+/* 删除 count 个最旧的帧 */
 static unsigned jb_framelist_remove_head(jb_framelist_t *framelist, unsigned count) {
     if (count > framelist->size)
         count = framelist->size;
 
     if (count) {
-        /* may be done in two steps if overlapping */
+        /* 如果重叠，可分两步进行 */
         unsigned step1, step2;
         unsigned tmp = framelist->head + count;
         unsigned i;
@@ -447,7 +402,7 @@ static unsigned jb_framelist_remove_head(jb_framelist_t *framelist, unsigned cou
                      step2 * sizeof(framelist->content_len[0]));
         }
 
-        /* update states */
+        /* 更新状态 */
         framelist->origin += count;
         framelist->head = (framelist->head + count) % framelist->max_count;
         framelist->size -= count;
@@ -475,18 +430,18 @@ static pj_status_t jb_framelist_put_at(jb_framelist_t *framelist,
 
     PJ_ASSERT_RETURN(frame_size <= framelist->frame_size, PJ_EINVAL);
 
-    /* get distance of this frame to the first frame in the buffer */
+    /* 获取此帧到缓冲区中第一帧的距离 */
     distance = index - framelist->origin;
 
-    /* too late or sequence restart or far jump */
+    /* 太晚或序列重新启动或跳远 */
     if (distance < 0) {
         if (framelist->origin - index < MAX_MISORDER) {
-            /* too late */
+            /* 太晚 */
             /*TRACE__(*/PJ_LOG(4, (THIS_FILE, "JB Put frame #%d: too late (distance=%d)",
                     index, distance));
             return PJ_ETOOSMALL;
         } else if (framelist->origin + framelist->size >= MAX_FRAME_INDEX) {
-            /* sequence restart */
+            /* 序列重新开始 */
             /*TRACE__(*/PJ_LOG(4, (THIS_FILE, "JB Put frame #%d: sequence restart (distance=%d, "
                                               "orig=%d, size=%d)",
                     index, distance, framelist->origin,
@@ -494,7 +449,7 @@ static pj_status_t jb_framelist_put_at(jb_framelist_t *framelist,
             framelist->origin = index - framelist->size;
             distance = framelist->size;
         } else {
-            /* jump too far, reset the buffer */
+            /* 跳得太远，重置缓冲区 */
             /*TRACE__(*/PJ_LOG(4, (THIS_FILE, "JB Put frame #%d: far jump (distance=%d)",
                     index, distance));
             jb_framelist_reset(framelist);
@@ -503,7 +458,7 @@ static pj_status_t jb_framelist_put_at(jb_framelist_t *framelist,
         }
     }
 
-    /* if jbuf is empty, just reset the origin */
+    /* 如果jbuf为空，只需重置 origin */
     if (framelist->size == 0) {
         pj_assert(framelist->discarded_num == 0);
         TRACE__((THIS_FILE, "JB Put frame #%d: origin reset (from %d) as JB empty",
@@ -512,44 +467,44 @@ static pj_status_t jb_framelist_put_at(jb_framelist_t *framelist,
         distance = 0;
     }
 
-    /* far jump, the distance is greater than buffer capacity */
+    /* jump太远，距离大于缓冲容量 */
     if (distance >= (int) framelist->max_count) {
         if (distance > MAX_DROPOUT) {
-            /* jump too far, reset the buffer */
+            /* jump太远，重置 buffer */
             /*TRACE__(*/PJ_LOG(4, (THIS_FILE, "JB Put frame #%d: far jump (distance=%d)",
                     index, distance));
             jb_framelist_reset(framelist);
             framelist->origin = index;
             distance = 0;
         } else {
-            /* otherwise, reject the frame */
+            /* 否则，拒绝帧*/
             TRACE__((THIS_FILE, "JB Put frame #%d: rejected due to JB full",
                     index));//if not listening, print too many. //maojh
             return PJ_ETOOMANY;
         }
     }
 
-    /* get the slot position */
+    /* 获取slot 位置 */
     pos = (framelist->head + distance) % framelist->max_count;
 
-    /* if the slot is occupied, it must be duplicated frame, ignore it. */
+    /* 如果slot被占用，它必须是复制帧，忽略它 */
     if (framelist->frame_type[pos] != PJMEDIA_JB_MISSING_FRAME) {
         /*TRACE__(*/PJ_LOG(4, (THIS_FILE, "JB Put frame #%d maybe a duplicate, ignored", index));
         return PJ_EEXISTS;
     }
 
-    /* put the frame into the slot */
+    /* 放一帧到 slot */
     framelist->frame_type[pos] = frame_type;
     framelist->content_len[pos] = frame_size;
     framelist->bit_info[pos] = bit_info;
     framelist->ts[pos] = ts;
 
-    /* update framelist size */
+    /* 更新 framelist size */
     if (framelist->origin + (int) framelist->size <= index)
         framelist->size = distance + 1;
 
     if (PJMEDIA_JB_NORMAL_FRAME == frame_type) {
-        /* copy frame content */
+        /* 拷贝帧内容 */
         pj_memcpy(framelist->content + pos * framelist->frame_size,
                   frame, frame_size);
     }
@@ -566,11 +521,11 @@ static pj_status_t jb_framelist_discard(jb_framelist_t *framelist,
                      index < framelist->origin + (int) framelist->size,
                      PJ_EINVAL);
 
-    /* Get the slot position */
+    /* 获得 slot 位置 */
     pos = (framelist->head + (index - framelist->origin)) %
           framelist->max_count;
 
-    /* Discard the frame */
+    /* 丢弃帧 */
     framelist->frame_type[pos] = PJMEDIA_JB_DISCARDED_FRAME;
     framelist->discarded_num++;
 
@@ -635,18 +590,16 @@ PJ_DEF(pj_status_t) pjmedia_jbuf_set_ptime(pjmedia_jbuf *jb,
     PJ_ASSERT_RETURN(jb, PJ_EINVAL);
 
     jb->jb_frame_ptime = ptime;
-    jb->jb_min_shrink_gap = PJMEDIA_JBUF_DISC_MIN_GAP / ptime;
+    jb->jb_min_shrink_gap = PJMEDIA_JBUF_DISC_MIN_GAP / ptime;      //最小收缩间隔 200/ptime
     jb->jb_max_burst = PJ_MAX(MAX_BURST_MSEC / ptime,
-                              jb->jb_max_count * 3 / 4);
+                              jb->jb_max_count * 3 / 4);        //最大的 burst max(1000/ptime,max_count*3/4)
 
     return PJ_SUCCESS;
 }
 
 
 /*
- * Set the jitter buffer to fixed delay mode. The default behavior
- * is to adapt the delay with actual packet delay.
- *
+ * 将抖动缓冲设置为固定延迟模式。默认行为是根据实际的数据包延迟调整延迟
  */
 PJ_DEF(pj_status_t) pjmedia_jbuf_set_fixed(pjmedia_jbuf *jb,
                                            unsigned prefetch) {
@@ -662,7 +615,7 @@ PJ_DEF(pj_status_t) pjmedia_jbuf_set_fixed(pjmedia_jbuf *jb,
 
 
 /*
- * Set the jitter buffer to adaptive mode.
+ * 将抖动缓冲区设置为自适应模式
  */
 PJ_DEF(pj_status_t) pjmedia_jbuf_set_adaptive(pjmedia_jbuf *jb,
                                               unsigned prefetch,
@@ -683,7 +636,12 @@ PJ_DEF(pj_status_t) pjmedia_jbuf_set_adaptive(pjmedia_jbuf *jb,
     return PJ_SUCCESS;
 }
 
-
+/**
+ * 设置丢弃算法
+ * @param jb
+ * @param algo
+ * @return
+ */
 PJ_DEF(pj_status_t) pjmedia_jbuf_set_discard(pjmedia_jbuf *jb,
                                              pjmedia_jb_discard_algo algo) {
     PJ_ASSERT_RETURN(jb, PJ_EINVAL);
@@ -746,6 +704,10 @@ PJ_DEF(pj_bool_t) pjmedia_jbuf_is_full(const pjmedia_jbuf *jb) {
     return jb->jb_framelist.size == jb->jb_framelist.max_count;
 }
 
+/**
+ * 计算抖动
+ * @param jb
+ */
 static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
     int diff, cur_size;
 
@@ -753,7 +715,7 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
     pj_math_stat_update(&jb->jb_burst, jb->jb_level);
     jb->jb_max_hist_level = PJ_MAX(jb->jb_max_hist_level, jb->jb_level);
 
-    /* Burst level is decreasing */
+    /* 突发级别正在降低 */
     if (jb->jb_level < jb->jb_eff_level) {
 
         enum {
@@ -762,8 +724,7 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
 
         jb->jb_stable_hist++;
 
-        /* Only update the effective level (and prefetch) if 'stable'
-         * condition is reached (not just short time impulse)
+        /* 仅在达到“稳定”条件（而不仅仅是短时脉冲）时才更新有效电平（和预取）
          */
         if (jb->jb_stable_hist > STABLE_HISTORY_LIMIT) {
 
@@ -772,10 +733,10 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
             if (diff < 1)
                 diff = 1;
 
-            /* Update effective burst level */
+            /* 更新有效突发水平 */
             jb->jb_eff_level -= diff;
 
-            /* Update prefetch based on level */
+            /* 基于级别更新预取 */
             if (jb->jb_init_prefetch) {
                 jb->jb_prefetch = jb->jb_eff_level;
                 if (jb->jb_prefetch < jb->jb_min_prefetch)
@@ -784,7 +745,7 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
                     jb->jb_prefetch = jb->jb_max_prefetch;
             }
 
-            /* Reset history */
+            /* 重置历史数据 */
             jb->jb_max_hist_level = 0;
             jb->jb_stable_hist = 0;
 
@@ -794,14 +755,14 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
         }
     }
 
-        /* Burst level is increasing */
+        /* 突发级别正在增加 */
     else if (jb->jb_level > jb->jb_eff_level) {
 
-        /* Instaneous set effective burst level to recent maximum level */
+        /* 瞬时将有效突发电平设置为最近的最大电平 */
         jb->jb_eff_level = PJ_MIN(jb->jb_max_hist_level,
                                   (int) (jb->jb_max_count * 4 / 5));
 
-        /* Update prefetch based on level */
+        /* 基于级别更新预取 */
         if (jb->jb_init_prefetch) {
             jb->jb_prefetch = jb->jb_eff_level;
             if (jb->jb_prefetch > jb->jb_max_prefetch)
@@ -811,14 +772,14 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
         }
 
         jb->jb_stable_hist = 0;
-        /* Do not reset max_hist_level. */
+        /* 不要重置 max_hist_level */
         //jb->jb_max_hist_level = 0;
 
         TRACE__((jb->jb_name.ptr, "JB updated(2), level=%d pre=%d, size=%d",
                 jb->jb_eff_level, jb->jb_prefetch, cur_size));
     }
 
-        /* Level is unchanged */
+        /* 级别不变 */
     else {
         jb->jb_stable_hist = 0;
     }
@@ -826,22 +787,14 @@ static void jbuf_calculate_jitter(pjmedia_jbuf *jb) {
 
 
 static void jbuf_discard_static(pjmedia_jbuf *jb) {
-    /* These code is used for shortening the delay in the jitter buffer.
-     * It needs shrink only when there is possibility of drift. Drift
-     * detection is performed by inspecting the jitter buffer size, if
-     * its size is twice of current burst level, there can be drift.
+    /*
+     * 这些代码用于缩短抖动缓冲区中的延迟。
+     * 只有在有漂移的可能时才需要收缩。漂移检测是通过检测抖动缓冲区的大小来实现的，如果抖动缓冲区的大小是当前突发电平的两倍，则会出现漂移
+     * 此外，通常漂移电平很低，因此JB不需要剧烈收缩，它将使每个 PJMEDIA_JBUF_DISC_MIN_GAP ms最多收缩一帧。理论上，
+     * JB可以处理漂移电平为=FRAME_PTIME/PJMEDIA_JBUF_DISC_MIN_GAP * 100%
      *
-     * Moreover, normally drift level is quite low, so JB shouldn't need
-     * to shrink aggresively, it will shrink maximum one frame per
-     * PJMEDIA_JBUF_DISC_MIN_GAP ms. Theoritically, JB may handle drift level
-     * as much as = FRAME_PTIME/PJMEDIA_JBUF_DISC_MIN_GAP * 100%
-     *
-     * Whenever there is drift, where PUT > GET, this method will keep
-     * the latency (JB size) as much as twice of burst level.
-     */
-
-    /* Shrinking due of drift will be implicitly done by progressive discard,
-     * so just disable it when progressive discard is active.
+     * 每当出现漂移时，在 PUT>GET 处，这种方法将保持延迟（JB大小）为突发级别的两倍
+     * 由于漂移而导致的收缩将由渐进丢弃隐式完成，所以只要在渐进丢弃处于活动状态时禁用它即可
      */
     int diff, burst_level;
 
@@ -851,18 +804,17 @@ static void jbuf_discard_static(pjmedia_jbuf *jb) {
     if (diff >= STA_DISC_SAFE_SHRINKING_DIFF) {
         int seq_origin;
 
-        /* Check and adjust jb_discard_ref, in case there was
-         * seq restart
+        /* 检查并调整jb_discard_ref，以防出现 seq 重启
          */
         seq_origin = jb_framelist_origin(&jb->jb_framelist);
         if (seq_origin < jb->jb_discard_ref)
             jb->jb_discard_ref = seq_origin;
 
         if (seq_origin - jb->jb_discard_ref >= jb->jb_min_shrink_gap) {
-            /* Shrink slowly, one frame per cycle */
+            /* 缓慢收缩，每周期一帧 */
             diff = 1;
 
-            /* Drop frame(s)! */
+            /* 丢帧 */
             diff = jb_framelist_remove_head(&jb->jb_framelist, diff);
             jb->jb_discard_ref = jb_framelist_origin(&jb->jb_framelist);
             jb->jb_discard += diff;
@@ -879,20 +831,20 @@ static void jbuf_discard_progressive(pjmedia_jbuf *jb) {
     unsigned cur_size, burst_level, overflow, T, discard_dist;
     int last_seq;
 
-    /* Should be done in PUT operation */
+    /*PUT操作已经完成 */
     if (jb->jb_last_op != JB_OP_PUT)
         return;
 
-    /* Check if latency is longer than burst */
+    /* 检查延迟是否长于突发 */
     cur_size = jb_framelist_eff_size(&jb->jb_framelist);
     burst_level = PJ_MAX(jb->jb_eff_level, jb->jb_level);
     if (cur_size <= burst_level) {
-        /* Reset any scheduled discard */
+        /* 重置丢弃计划 */
         jb->jb_discard_dist = 0;
         return;
     }
 
-    /* Estimate discard duration needed for adjusting latency */
+    /* 估计调整延迟所需的丢弃持续时间 */
     if (burst_level <= PJMEDIA_JBUF_PRO_DISC_MIN_BURST)
         T = PJMEDIA_JBUF_PRO_DISC_T1;
     else if (burst_level >= PJMEDIA_JBUF_PRO_DISC_MAX_BURST)
@@ -903,27 +855,26 @@ static void jbuf_discard_progressive(pjmedia_jbuf *jb) {
             (burst_level - PJMEDIA_JBUF_PRO_DISC_MIN_BURST) /
             (PJMEDIA_JBUF_PRO_DISC_MAX_BURST - PJMEDIA_JBUF_PRO_DISC_MIN_BURST);
 
-    /* Calculate current discard distance */
+    /* 计算当前丢弃距离 */
     overflow = cur_size - burst_level;
     discard_dist = T / overflow / jb->jb_frame_ptime;
 
-    /* Get last seq number in the JB */
+    /* 获取JB中的最后一个序列号 */
     last_seq = jb_framelist_origin(&jb->jb_framelist) +
                jb_framelist_size(&jb->jb_framelist) - 1;
 
-    /* Setup new discard schedule if none, otherwise, update the existing
-     * discard schedule (can be delayed or accelerated).
+    /* 如果没有则设置新的丢弃计划，否则，更新现有的放弃计划（可以延迟或加速）
      */
     if (jb->jb_discard_dist == 0) {
-        /* Setup new discard schedule */
+        /* 设置新的放弃计划 */
         jb->jb_discard_ref = last_seq;
     } else if (last_seq < jb->jb_discard_ref) {
-        /* Seq restarted, update discard reference */
+        /* 序列重启，更新丢弃引用 */
         jb->jb_discard_ref = last_seq;
     }
     jb->jb_discard_dist = PJ_MAX(jb->jb_min_shrink_gap, (int) discard_dist);
 
-    /* Check if we need to discard now */
+    /* 检查是否需要丢弃 */
     if (last_seq >= (jb->jb_discard_ref + (int) jb->jb_discard_dist)) {
         int discard_seq;
 
@@ -945,7 +896,7 @@ static void jbuf_discard_progressive(pjmedia_jbuf *jb) {
                 jb->jb_eff_level,
                 burst_level));
 
-        /* Update discard reference */
+        /* 更新丢弃引用 */
         jb->jb_discard_ref = discard_seq;
     }
 }
@@ -956,15 +907,13 @@ PJ_INLINE(void) jbuf_update(pjmedia_jbuf *jb, int oper) {
         jb->jb_last_op = oper;
 
         if (jb->jb_status == JB_STATUS_INITIALIZING) {
-            /* Switch status 'initializing' -> 'processing' after some OP
-             * switch cycles and current OP is GET (burst level is calculated
-             * based on PUT burst), so burst calculation is guaranted to be
-             * performed right after the status switching.
+            /*
+             * 切换状态'initializing' -> 'processing' 在一些 OP 切换周期之后，并且当前 OP 是GET（突发电平基于 PUT突发计算），
+             * 因此保证在状态切换之后立即执行突发计算
              */
             if (++jb->jb_init_cycle_cnt >= INIT_CYCLE && oper == JB_OP_GET) {
                 jb->jb_status = JB_STATUS_PROCESSING;
-                /* To make sure the burst calculation will be done right after
-                 * this, adjust burst level if it exceeds max burst level.
+                /* 为确保在此之后立即进行突发计算，如果突发级别超过最大突发级别，请调整突发级别
                  */
                 jb->jb_level = PJ_MIN(jb->jb_level, jb->jb_max_burst);
             } else {
@@ -973,11 +922,9 @@ PJ_INLINE(void) jbuf_update(pjmedia_jbuf *jb, int oper) {
             }
         }
 
-        /* Perform jitter calculation based on PUT burst-level only, since
-         * GET burst-level may not be accurate, e.g: when VAD is active.
-         * Note that when burst-level is too big, i.e: exceeds jb_max_burst,
-         * the GET op may be idle, in this case, we better skip the jitter
-         * calculation.
+        /*
+         * 仅基于 PUT 突发级别执行抖动计算，因为 GET 突发级别可能不准确，例如：当VAD处于活动状态时
+         * 请注意，当burst-level 太大时，即：超过jb_max_bursts，GET op可能处于空闲状态，在这种情况下，我们最好跳过抖动计算
          */
         if (oper == JB_OP_GET && jb->jb_level <= jb->jb_max_burst)
             jbuf_calculate_jitter(jb);
@@ -985,7 +932,7 @@ PJ_INLINE(void) jbuf_update(pjmedia_jbuf *jb, int oper) {
         jb->jb_level = 0;
     }
 
-    /* Call discard algorithm */
+    /* 调用丢弃算法 */
     if (jb->jb_status == JB_STATUS_PROCESSING && jb->jb_discard_algo) {
         (*jb->jb_discard_algo)(jb);
     }
@@ -1021,27 +968,26 @@ PJ_DEF(void) pjmedia_jbuf_put_frame3(pjmedia_jbuf *jb,
 
     cur_size = jb_framelist_eff_size(&jb->jb_framelist);
 
-    /* Check if frame size is larger than JB frame size */
+    /* 检查帧的大小是否大于JB 帧 size  */
     if (frame_size > jb->jb_frame_size) {
         PJ_LOG(4,
                (THIS_FILE, "JB Warning: frame too large for jitter buffer, (( frame_size=%d > jb_frame_size=%d )), it will be truncated!", frame_size, jb->jb_frame_size));
     }
 
-    /* Attempt to store the frame */
+    /* 尝试存储帧 */
     min_frame_size = PJ_MIN(frame_size, jb->jb_frame_size);
     status = jb_framelist_put_at(&jb->jb_framelist, frame_seq, frame,
                                  (unsigned) min_frame_size, bit_info, ts,
                                  PJMEDIA_JB_NORMAL_FRAME);
 
-    /* Jitter buffer is full, remove some older frames */
+    /* 抖动缓冲区已满，请删除一些旧帧 */
     while (status == PJ_ETOOMANY) {
         int distance;
         unsigned removed;
 
-        /* Remove as few as possible just to make this frame in. Note that
-         * the cases of seq-jump, out-of-order, and seq restart should have
-         * been handled/normalized by previous call of jb_framelist_put_at().
-         * So we're confident about 'distance' value here.
+        /*
+         * 移除尽可能少，仅仅是为了放入该帧
+         * 请注意，seq-jump、out-of-order 和 seq restart等情况应该先由 jb_framelist_put_at() 处理/规范化。因此我们对这里的'distance'值很有信心
          */
         distance = (frame_seq - jb_framelist_origin(&jb->jb_framelist)) -
                    (int) jb->jb_max_count + 1;
@@ -1055,10 +1001,10 @@ PJ_DEF(void) pjmedia_jbuf_put_frame3(pjmedia_jbuf *jb,
         jb->jb_discard += removed;
     }
 
-    /* Get new JB size after PUT */
+    /* 在PUT 之后获取一个新的 JB size */
     new_size = jb_framelist_eff_size(&jb->jb_framelist);
 
-    /* Return the flag if this frame is discarded */
+    /* 如果丢弃此帧，则返回标志 */
     if (discarded)
         *discarded = (status != PJ_SUCCESS);
 
@@ -1076,7 +1022,7 @@ PJ_DEF(void) pjmedia_jbuf_put_frame3(pjmedia_jbuf *jb,
 }
 
 /*
- * Get frame from jitter buffer.
+ * 从抖动缓冲区获取帧
  */
 PJ_DEF(void) pjmedia_jbuf_get_frame(pjmedia_jbuf *jb,
                                     void *frame,
@@ -1086,7 +1032,7 @@ PJ_DEF(void) pjmedia_jbuf_get_frame(pjmedia_jbuf *jb,
 }
 
 /*
- * Get frame from jitter buffer.
+ * 从抖动缓冲区获取帧
  */
 PJ_DEF(void) pjmedia_jbuf_get_frame2(pjmedia_jbuf *jb,
                                      void *frame,
@@ -1098,7 +1044,7 @@ PJ_DEF(void) pjmedia_jbuf_get_frame2(pjmedia_jbuf *jb,
 }
 
 /*
- * Get frame from jitter buffer.
+ * 从抖动缓冲区获取帧
  */
 PJ_DEF(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
                                      void *frame,
@@ -1109,8 +1055,8 @@ PJ_DEF(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
                                      int *seq) {
     if (jb->jb_prefetching) {
 
-        /* Can't return frame because jitter buffer is filling up
-         * minimum prefetch.
+        /*
+         * 无法返回帧，因为抖动缓冲区正在填充最小预取
          */
 
         //pj_bzero(frame, jb->jb_frame_size);
@@ -1128,12 +1074,11 @@ PJ_DEF(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
         pjmedia_jb_frame_type ftype = PJMEDIA_JB_NORMAL_FRAME;
         pj_bool_t res;
 
-        /* Try to retrieve a frame from frame list */
+        /* 尝试从 framelist 中检索帧 */
         res = jb_framelist_get(&jb->jb_framelist, frame, size, &ftype,
                                bit_info, ts, seq);
         if (res) {
-            /* We've successfully retrieved a frame from the frame list, but
-             * the frame could be a blank frame!
+            /* 我们已成功从帧列表中检索到帧，但该帧可能是空白帧
              */
             if (ftype == PJMEDIA_JB_NORMAL_FRAME) {
                 *p_frame_type = PJMEDIA_JB_NORMAL_FRAME;
@@ -1146,17 +1091,17 @@ PJ_DEF(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
                 }
             }
 
-            /* Store delay history at the first GET */
+            /* 首次获取时存储延迟历史记录 */
             if (jb->jb_last_op == JB_OP_PUT) {
                 unsigned cur_size;
 
-                /* We've just retrieved one frame, so add one to cur_size */
+                /* 我们刚检索到一帧，所以添加一个到cur_size */
                 cur_size = jb_framelist_eff_size(&jb->jb_framelist) + 1;
                 pj_math_stat_update(&jb->jb_delay,
                                     cur_size * jb->jb_frame_ptime);
             }
         } else {
-            /* Jitter buffer is empty */
+            /* 抖动缓冲区为空 */
             if (jb->jb_prefetch)
                 jb->jb_prefetching = PJ_TRUE;
 
@@ -1174,7 +1119,7 @@ PJ_DEF(void) pjmedia_jbuf_get_frame3(pjmedia_jbuf *jb,
 }
 
 /*
- * Get jitter buffer state.
+ * 获取抖动缓冲区状态
  */
 PJ_DEF(pj_status_t) pjmedia_jbuf_get_state(const pjmedia_jbuf *jb,
                                            pjmedia_jb_state *state) {
@@ -1235,15 +1180,15 @@ PJ_DEF(unsigned) pjmedia_jbuf_remove_frame(pjmedia_jbuf *jb,  //for  vid_stream
     last_discard_num = jb->jb_framelist.discarded_num;
     count = jb_framelist_remove_head(&jb->jb_framelist, frame_cnt);
 
-    /* Remove some more when there were discarded frames included */
+    /* 当包含丢弃的帧时，再删除一些 */
     while (jb->jb_framelist.discarded_num < last_discard_num) {
-        /* Calculate frames count to be removed next */
+        /* 计算下一步要删除的帧数 */
         frame_cnt = last_discard_num - jb->jb_framelist.discarded_num;
 
-        /* Normalize non-discarded frames count just been removed */
+        /* 刚刚被移除的正常不丢弃帧数 */
         count -= frame_cnt;
 
-        /* Remove more frames */
+        /* 移除更多帧 */
         last_discard_num = jb->jb_framelist.discarded_num;
         count += jb_framelist_remove_head(&jb->jb_framelist, frame_cnt);
     }

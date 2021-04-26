@@ -42,7 +42,7 @@ typedef enum pjmedia_jb_frame_type
 typedef enum pjmedia_jb_discard_algo
 {
     /**
-     * 抖动缓冲区不应丢弃任何帧，除非抖动缓冲区已满且新帧到达时，将丢弃一帧以为新帧留出空间。
+     * 抖动缓冲区不应丢弃任何帧，除非抖动缓冲区已满且新帧到达时，将丢弃一帧以为新帧留出空间
      */
     PJMEDIA_JB_DISCARD_NONE	   = 0,
 
@@ -87,7 +87,7 @@ typedef struct pjmedia_jb_state
 
 
 /**
- * 常量PJMEDIA_JB_DEFAULT_INIT_DELAY 指定抖动缓冲区创建期间的默认抖动缓冲区预取计数
+ * 常量 PJMEDIA_JB_DEFAULT_INIT_DELAY 指定抖动缓冲区创建期间的默认抖动缓冲区预取计数
  */
 #define PJMEDIA_JB_DEFAULT_INIT_DELAY    15
 
