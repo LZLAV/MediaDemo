@@ -1,28 +1,13 @@
-/* $Id: addr_resolv.h 4218 2012-08-07 02:18:15Z bennylp $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成
+ * 	地址解析
  */
 #ifndef __PJ_ADDR_RESOLV_H__
 #define __PJ_ADDR_RESOLV_H__
 
 /**
  * @file addr_resolv.h
- * @brief IP address resolution.
+ * @brief IP地址解析
  */
 
 #include <pj/sock.h>
@@ -30,13 +15,11 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup pj_addr_resolve Network Address Resolution
+ * @defgroup pj_addr_resolve 网络地址解析
  * @ingroup PJ_IO
  * @{
  *
- * This module provides function to resolve Internet address of the
- * specified host name. To resolve a particular host name, application
- * can just call #pj_gethostbyname().
+ * 此模块提供解析指定主机名的 Internet地址的功能。要解析特定的主机名，应用程序只需调用pj_gethostbyname()
  *
  * Example:
  * <pre>
@@ -58,82 +41,65 @@ PJ_BEGIN_DECL
  *   ...
  * </pre>
  *
- * It's pretty simple really...
+ * 真的很简单。。。
  */
 
-/** This structure describes an Internet host address. */
+/** 此结构描述Internet主机地址 */
 typedef struct pj_hostent
 {
-    char    *h_name;		/**< The official name of the host. */
-    char   **h_aliases;		/**< Aliases list. */
-    int	     h_addrtype;	/**< Host address type. */
-    int	     h_length;		/**< Length of address. */
-    char   **h_addr_list;	/**< List of addresses. */
+    char    *h_name;		/**< 主机的正式名字 */
+    char   **h_aliases;		/**< 别名列表 */
+    int	     h_addrtype;	/**< 主机地址的类型 */
+    int	     h_length;		/**< 地址的长度 */
+    char   **h_addr_list;	/**< 地址列表 */
 } pj_hostent;
 
-/** Shortcut to h_addr_list[0] */
+/** h_addr_list[0] 的别名 */
 #define h_addr h_addr_list[0]
 
 /** 
- * This structure describes address information pj_getaddrinfo().
+ * 这个结构描述地址信息 pj_getaddrinfo()
  */
 typedef struct pj_addrinfo
 {
-    char	 ai_canonname[PJ_MAX_HOSTNAME]; /**< Canonical name for host*/
-    pj_sockaddr  ai_addr;			/**< Binary address.	    */
+    char	 ai_canonname[PJ_MAX_HOSTNAME]; /**< 主机的规范名称 */
+    pj_sockaddr  ai_addr;			/**< 二进制地址	    */
 } pj_addrinfo;
 
 
 /**
- * This function fills the structure of type pj_hostent for a given host name.
- * For host resolution function that also works with IPv6, please see
- * #pj_getaddrinfo().
+ * 此函数用于填充给定主机名的 pj_hostent 类型的结构。
+ * 有关同样适用于IPv6的主机解析函数，请参阅 pj_getaddrinfo()
  *
- * @param name	    Host name to resolve. Specifying IPv4 address here
- *		    may fail on some platforms (e.g. Windows)
- * @param he	    The pj_hostent structure to be filled. Note that
- *		    the pointers in this structure points to temporary
- *		    variables which value will be reset upon subsequent
- *		    invocation.
+ * @param name	    要解析的主机名。在某些平台（如Windows）上，在此处指定IPv4地址可能会失败
+ * @param he	    要填充的 pj_hostent 结构。请注意，此结构中的指针指向临时变量，该值将在后续调用时重置
  *
- * @return	    PJ_SUCCESS, or the appropriate error codes.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应错误码
  */ 
 PJ_DECL(pj_status_t) pj_gethostbyname(const pj_str_t *name, pj_hostent *he);
 
 
 /**
- * Resolve the primary IP address of local host. 
+ * 解析本地主机的主IP地址
  *
- * @param af	    The desired address family to query. Valid values
- *		    are pj_AF_INET() or pj_AF_INET6().
- * @param addr      On successful resolution, the address family and address
- *		    part of this socket address will be filled up with the host
- *		    IP address, in network byte order. Other parts of the socket
- *		    address are untouched.
+ * @param af	    地址族。有效值为 pj_AF_INET() 或 pj_AF_INET6()
+ * @param addr      成功解析后，此套接字地址的地址族和地址部分将按网络字节顺序填充主机IP地址。套接字地址的其他部分是不变的
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_gethostip(int af, pj_sockaddr *addr);
 
 
 /**
- * Get the interface IP address to send data to the specified destination.
+ * 获取接口IP地址以将数据发送到指定的目标
  *
- * @param af	    The desired address family to query. Valid values
- *		    are pj_AF_INET() or pj_AF_INET6().
- * @param dst	    The destination host.
- * @param itf_addr  On successful resolution, the address family and address
- *		    part of this socket address will be filled up with the host
- *		    IP address, in network byte order. Other parts of the socket
- *		    address should be ignored.
- * @param allow_resolve   If \a dst may contain hostname (instead of IP
- * 		    address), specify whether hostname resolution should
- * 	            be performed. If not, default interface address will
- *  		    be returned.
- * @param p_dst_addr If not NULL, it will be filled with the IP address of
- * 		    the destination host.
+ * @param af	    所需地址协议族的查询，有效值为 pj_AF_INET() 或 pj_AF_INET6().
+ * @param dst	    目的主机
+ * @param itf_addr  成功解析后，此套接字地址的地址族和地址部分将按网络字节顺序填充主机IP地址。应该忽略套接字地址的其他部分
+ * @param allow_resolve   如果 dst 可能包含主机名（而不是IP地址），请指定是否应执行主机名解析。否则，将返回默认接口地址
+ * @param p_dst_addr 如果不为空，则用目标主机的IP地址填充
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_getipinterface(int af,
                                        const pj_str_t *dst,
@@ -142,40 +108,26 @@ PJ_DECL(pj_status_t) pj_getipinterface(int af,
                                        pj_sockaddr *p_dst_addr);
 
 /**
- * Get the IP address of the default interface. Default interface is the
- * interface of the default route.
+ * 获取默认接口的IP地址。默认接口是默认路由的接口
  *
- * @param af	    The desired address family to query. Valid values
- *		    are pj_AF_INET() or pj_AF_INET6().
- * @param addr      On successful resolution, the address family and address
- *		    part of this socket address will be filled up with the host
- *		    IP address, in network byte order. Other parts of the socket
- *		    address are untouched.
+ * @param af	    所需地址协议族的查询，有效值为 pj_AF_INET() 或 pj_AF_INET6()
+ * @param addr      成功解析后，此套接字地址的地址族和地址部分将按网络字节顺序填充主机IP地址。套接字地址的其他部分是不变的
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_getdefaultipinterface(int af,
 					      pj_sockaddr *addr);
 
 
 /**
- * This function translates the name of a service location (for example, 
- * a host name) and returns a set of addresses and associated information
- * to be used in creating a socket with which to address the specified 
- * service.
+ * 此函数用于转换服务位置的名称（例如，主机名），并返回一组地址和相关信息，用于创建用于为指定服务寻址的套接字
  *
- * @param af	    The desired address family to query. Valid values
- *		    are pj_AF_INET(), pj_AF_INET6(), or pj_AF_UNSPEC().
- * @param name	    Descriptive name or an address string, such as host
- *		    name.
- * @param count	    On input, it specifies the number of elements in
- *		    \a ai array. On output, this will be set with the
- *		    number of address informations found for the
- *		    specified name.
- * @param ai	    Array of address info to be filled with the information
- *		    about the host.
+ * @param af	    所需地址协议族的查询，有效值为 pj_AF_INET(), pj_AF_INET6() 或 pj_AF_UNSPEC()
+ * @param name	    描述性名称或地址字符串，如主机名
+ * @param count	    输入时，它指定ai数组中的元素数。在输出时，将使用为指定名称找到的地址信息数进行设置
+ * @param ai	    要用主机信息填充的地址信息数组
  *
- * @return	    PJ_SUCCESS on success, or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_getaddrinfo(int af, const pj_str_t *name,
 				    unsigned *count, pj_addrinfo ai[]);

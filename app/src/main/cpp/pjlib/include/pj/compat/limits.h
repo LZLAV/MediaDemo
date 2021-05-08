@@ -1,28 +1,15 @@
-/* $Id: limits.h 5682 2017-11-08 02:58:18Z riza $ */
-/*
- * Copyright (C) 2017 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2017 George Joseph <gjoseph@digium.com>
+/**
+ * 已完成
+ *  整数限制
+ *      无符号、有符号 最大值和最小值
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 #ifndef __PJ_COMPAT_LIMITS_H__
 #define __PJ_COMPAT_LIMITS_H__
 
 /**
  * @file limits.h
- * @brief Provides integer limits normally found in limits.h.
+ * @brief 提供通常在limits.h中找到的整数限制
  */
 
 #if defined(PJ_HAS_LIMITS_H) && PJ_HAS_LIMITS_H != 0
@@ -39,7 +26,7 @@
            "overridable in config_site.h"
 #  endif
 
-/* Minimum and maximum values a `signed long int' can hold.  */
+/* "signed long int"可以容纳的最小值和最大值  */
 #  ifndef LONG_MAX
 #    if __WORDSIZE == 64
 #      define LONG_MAX     9223372036854775807L
@@ -52,7 +39,7 @@
 #    define LONG_MIN      (-LONG_MAX - 1L)
 #  endif
 
-/* Maximum value an `unsigned long int' can hold.  (Minimum is 0.)  */
+/* "unsigned long int"可以容纳的最大值(最小值为0）  */
 #  ifndef ULONG_MAX
 #    if __WORDSIZE == 64
 #      define ULONG_MAX    18446744073709551615UL

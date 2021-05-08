@@ -1,40 +1,37 @@
-/* $Id: rand.h 5692 2017-11-13 06:06:25Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
+ *  伪随机数
+ *      rand()函数是使用线性同余法做的，它并不是真的随机数，因为其周期特别长，所以在一定范围内可以看成随机的。
+ *      rand()函数不需要参数，它将会返回 0 到 RAND_MAX 之间的任意的整数。
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ *      srand()为初始化随机数发生器，用于设置 rand()产生随机数时的种子。传入的参数 seed 为unsigned int类型，
+ *      通常我们会使用 time(0) 或 time(NULL) 的返回值作为seed。
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *      默认为 srand(1)
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ *      srand(time(0))
+ *          time(0) 返回的是从1970 UTC Jan 1 00:00到当前时刻的秒数，为unsigned int类型
+ *          两次调用srand()函数设置随机数种子之间的时间间隔不超过1s，这会导致我们重置随机数种子，从而等价于使用了一个固定的随机数种子。
+ *
+ *      固定种子，多次执行所产生的随机数会一致
  */
 #ifndef __PJ_COMPAT_RAND_H__
 #define __PJ_COMPAT_RAND_H__
 
 /**
  * @file rand.h
- * @brief Provides platform_rand() and platform_srand() functions.
+ * @brief 提供 platform_rand() 和 platform_srand() 函数
  */
 
 #if defined(PJ_HAS_STDLIB_H) && PJ_HAS_STDLIB_H != 0
    /*
-    * Use stdlib based rand() and srand().
+    * 使用 stdlib 的 rand() 和 srand().
     */
 #  include <stdlib.h>
 #  define platform_srand    srand
 #  if defined(RAND_MAX) && RAND_MAX <= 0xFFFF
        /*
-        * When rand() is only 16 bit strong, double the strength
-	* by calling it twice!
+        * 当rand（）只有16位强函数时，通过两次调用它来加倍强函数！
 	*/
        PJ_INLINE(int) platform_rand(void)
        {

@@ -23,11 +23,11 @@
 
 /**
  * @file config.h
- * @brief PJLIB Main configuration settings.
+ * @brief PJLIB 主配置设置
  */
 
 /********************************************************************
- * Include compiler specific configuration.
+ * 包括编译器特定的配置
  */
 #if defined(_MSC_VER)
 #  include <pj/compat/cc_msvc.h>
@@ -45,13 +45,13 @@
 #  error "Unknown compiler."
 #endif
 
-/* PJ_ALIGN_DATA is compiler specific directive to align data address */
+/* PJ_ALIGN_DATA 是编译器特定的用于对齐数据地址的指令 */
 #ifndef PJ_ALIGN_DATA
 #  error "PJ_ALIGN_DATA is not defined!"
 #endif
 
 /********************************************************************
- * Include target OS specific configuration.
+ * 包括特定于目标操作系统的配置
  */
 #if defined(PJ_AUTOCONF)
     /*
@@ -157,7 +157,7 @@
 
 
 /********************************************************************
- * Target machine specific configuration.
+ * 目标计算机特定配置
  */
 #if defined(PJ_AUTOCONF)
     /*
@@ -303,16 +303,16 @@
 #   error "Please specify target machine."
 #endif
 
-/* Include size_t definition. */
+/* 包含 size_t 定义 */
 #include <pj/compat/size_t.h>
 
-/* Include site/user specific configuration to control PJLIB features.
- * YOU MUST CREATE THIS FILE YOURSELF!!
+/* 包括站点/用户特定的配置以控制 PJLIB 功能。
+ * 你必须自己创建这个文件！！
  */
 #include <pj/config_site.h>
 
 /********************************************************************
- * PJLIB Features.
+ * PJLIB 特性
  */
 
 /* Overrides for DOXYGEN */
@@ -338,21 +338,16 @@
 #endif
 
 /**
- * @defgroup pj_config Build Configuration
+ * @defgroup pj_config 构建配置Build Configuration
  * @{
  *
- * This section contains macros that can set during PJLIB build process
- * to controll various aspects of the library.
- *
- * <b>Note</b>: the values in this page does NOT necessarily reflect to the
- * macro values during the build process.
+ * 本节包含可以在 PJLIB 构建过程中设置的宏，以控制库的各个方面
+ * 注意：此页中的值不一定反映为生成过程中的宏值
  */
 
 /**
- * If this macro is set to 1, it will enable some debugging checking
- * in the library.
- *
- * Default: equal to (NOT NDEBUG).
+ * 如果此宏设置为 1，它将启用库中的某些调试检查
+ * 默认值：等于（不是 NDEBUG）
  */
 #ifndef PJ_DEBUG
 #  ifndef NDEBUG
@@ -363,112 +358,104 @@
 #endif
 
 /**
- * Enable this macro to activate logging to mutex/semaphore related events.
- * This is useful to troubleshoot concurrency problems such as deadlocks.
- * In addition, you should also add PJ_LOG_HAS_THREAD_ID flag to the
- * log decoration to assist the troubleshooting.
+ * 启用此宏可激活与互斥/信号量相关事件的日志记录
+ * 这对于解决诸如死锁之类的并发问题很有用。此外，还应该在日志装饰中添加 PJ_LOG_HAS_THREAD_ID 标志，以帮助解决问题。
  *
- * Default: 0
+ * 默认值：0
  */
 #ifndef PJ_DEBUG_MUTEX
 #   define PJ_DEBUG_MUTEX	    0
 #endif
 
 /**
- * Expand functions in *_i.h header files as inline.
+ * 以内联方式展开 *_i.h头文件中的函数
  *
- * Default: 0.
+ * 默认值：0
  */
 #ifndef PJ_FUNCTIONS_ARE_INLINED
 #  define PJ_FUNCTIONS_ARE_INLINED  0
 #endif
 
 /**
- * Use floating point computations in the library.
+ * 使用库中的浮点计算
  *
- * Default: 1.
+ * 默认值：1
  */
 #ifndef PJ_HAS_FLOATING_POINT
 #  define PJ_HAS_FLOATING_POINT	    1
 #endif
 
 /**
- * Declare maximum logging level/verbosity. Lower number indicates higher
- * importance, with the highest importance has level zero. The least
- * important level is five in this implementation, but this can be extended
- * by supplying the appropriate implementation.
+ * 声明最大日志记录级别/详细程度。数字越小表示重要性越高，重要性最高的级别为零。在这个实现中，最不重要的级别是5，
+ * 但是可以通过提供适当的实现来扩展它
+ * 级别约定：
+ * 	-0:致命错误
+ * 	-1:错误
+ * 	-2:警告
+ * 	-3:信息
+ * 	-4:调试
+ * 	-5:跟踪
+ * 	-6:更详细的跟踪
  *
- * The level conventions:
- *  - 0: fatal error
- *  - 1: error
- *  - 2: warning
- *  - 3: info
- *  - 4: debug
- *  - 5: trace
- *  - 6: more detailed trace
- *
- * Default: 4
+ * 	默认值：4
  */
 #ifndef PJ_LOG_MAX_LEVEL
 #  define PJ_LOG_MAX_LEVEL   5
 #endif
 
 /**
- * Maximum message size that can be sent to output device for each call
- * to PJ_LOG(). If the message size is longer than this value, it will be cut.
- * This may affect the stack usage, depending whether PJ_LOG_USE_STACK_BUFFER
- * flag is set.
+ * 每次调用 PJ_LOG（）都可以发送到输出设备的最大消息大小。如果邮件大小大于此值，则会被剪切
+ * 这可能会影响堆栈的使用，具体取决于是否设置了 PJ_LOG_USE_STACK_BUFFER 标志
  *
- * Default: 4000
+ * 默认值：4000
+ *
  */
 #ifndef PJ_LOG_MAX_SIZE
 #  define PJ_LOG_MAX_SIZE	    4000
 #endif
 
 /**
- * Log buffer.
- * Does the log get the buffer from the stack? (default is yes).
- * If the value is set to NO, then the buffer will be taken from static
- * buffer, which in this case will make the log function non-reentrant.
+ * 日志缓冲区
+ * 日志是否从堆栈中获取缓冲区(默认为“是”）。
+ * 如果将该值设置为NO，那么将从静态缓冲区获取缓冲区，这将使日志函数不可重入。
  *
- * Default: 1
+ * 默认值：1
  */
 #ifndef PJ_LOG_USE_STACK_BUFFER
 #  define PJ_LOG_USE_STACK_BUFFER   1
 #endif
 
 /**
- * Enable log indentation feature.
+ * 启用日志缩进功能。
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_LOG_ENABLE_INDENT
 #   define PJ_LOG_ENABLE_INDENT        1
 #endif
 
 /**
- * Number of PJ_LOG_INDENT_CHAR to put every time pj_log_push_indent()
- * is called.
+ * 每次调用pj_log_push_indent() 时要放入的 PJ_LOG_INDENT_CHAR数
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_LOG_INDENT_SIZE
 #   define PJ_LOG_INDENT_SIZE        1
 #endif
 
 /**
- * Log indentation character.
+ * 日志缩进字符。
  *
- * Default: space
+ * 默认值: 空格
  */
 #ifndef PJ_LOG_INDENT_CHAR
 #   define PJ_LOG_INDENT_CHAR	    '.'
 #endif
 
 /**
- * Log sender width.
+ * 日志发送器宽度
  *
- * Default: 22 (for 64-bit machines), 14 otherwise
+ * 默认值: 22 (64位机器), 其他 14
  */
 #ifndef PJ_LOG_SENDER_WIDTH
 #   if PJ_HAS_STDINT_H
@@ -484,18 +471,18 @@
 #endif
 
 /**
- * Log thread name width.
+ * 日志线程名称宽度
  *
- * Default: 12
+ * 默认值: 12
  */
 #ifndef PJ_LOG_THREAD_WIDTH
 #   define PJ_LOG_THREAD_WIDTH	    12
 #endif
 
 /**
- * Colorfull terminal (for logging etc).
+ * 彩色终端（用于记录等）
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_TERM_HAS_COLOR
 #  define PJ_TERM_HAS_COLOR	    1

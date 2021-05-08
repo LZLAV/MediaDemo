@@ -22,7 +22,7 @@
 
 /**
  * @file m_alpha.h
- * @brief Describes Alpha processor family specifics.
+ * @brief 描述 Alpha 处理器系列的细节
  */
 
 #define PJ_M_NAME		"alpha"

@@ -1,21 +1,6 @@
-/* $Id: high_precision.h 5692 2017-11-13 06:06:25Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成
+ *  高精度数
  */
 #ifndef __PJ_COMPAT_HIGH_PRECISION_H__
 #define __PJ_COMPAT_HIGH_PRECISION_H__
@@ -23,7 +8,7 @@
 
 #if defined(PJ_HAS_FLOATING_POINT) && PJ_HAS_FLOATING_POINT != 0
     /*
-     * The first choice for high precision math is to use double.
+     * 高精度数学的第一选择是使用双精度
      */
 #   include <math.h>
     typedef double pj_highprec_t;
@@ -33,15 +18,15 @@
 
 #elif defined(PJ_HAS_INT64) && PJ_HAS_INT64 != 0
     /*
-     * Next choice is to use 64-bit arithmatics.
+     * 下一个选择是使用64位算法
      */
     typedef pj_int64_t pj_highprec_t;
 
 #else
-#   warning "High precision math is not available"
+#   警告"高精度数学不可用"
 
     /*
-     * Last, fallback to 32-bit arithmetics.
+     * 最后，回到32位算法
      */
     typedef pj_int32_t pj_highprec_t;
 
@@ -49,8 +34,8 @@
 
 /**
  * @def pj_highprec_mul
- * pj_highprec_mul(a1, a2) - High Precision Multiplication
- * Multiply a1 and a2, and store the result in a1.
+ * pj_highprec_mul(a1, a2) - 高精度乘法
+ * 将a1和a2相乘，结果存储在a1中
  */
 #ifndef pj_highprec_mul
 #   define pj_highprec_mul(a1,a2)   (a1 = a1 * a2)
@@ -58,8 +43,8 @@
 
 /**
  * @def pj_highprec_div
- * pj_highprec_div(a1, a2) - High Precision Division
- * Divide a2 from a1, and store the result in a1.
+ * pj_highprec_div(a1, a2) - 高精度除法
+ * 将a2与a1相除，结果存储在a1中
  */
 #ifndef pj_highprec_div
 #   define pj_highprec_div(a1,a2)   (a1 = a1 / a2)
@@ -67,8 +52,8 @@
 
 /**
  * @def pj_highprec_mod
- * pj_highprec_mod(a1, a2) - High Precision Modulus
- * Get the modulus a2 from a1, and store the result in a1.
+ * pj_highprec_mod(a1, a2) - 高精度余数
+ * a1与a2的余数，并存储到 a1
  */
 #ifndef pj_highprec_mod
 #   define pj_highprec_mod(a1,a2)   (a1 = a1 % a2)
@@ -77,7 +62,7 @@
 
 /**
  * @def PJ_HIGHPREC_VALUE_IS_ZERO(a)
- * Test if the specified high precision value is zero.
+ * 测试指定的高精度值是否为零
  */
 #ifndef PJ_HIGHPREC_VALUE_IS_ZERO
 #   define PJ_HIGHPREC_VALUE_IS_ZERO(a)     (a==0)

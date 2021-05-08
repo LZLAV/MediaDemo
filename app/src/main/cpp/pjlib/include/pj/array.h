@@ -1,51 +1,34 @@
-/* $Id: array.h 3553 2011-05-05 06:14:19Z nanang $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成
+ * 	数组的插入、删除和搜索
  */
 #ifndef __PJ_ARRAY_H__
 #define __PJ_ARRAY_H__
 
 /**
  * @file array.h
- * @brief PJLIB Array helper.
+ * @brief PJLIB 数组帮助
  */
 #include <pj/types.h>
 
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_ARRAY Array helper.
+ * @defgroup PJ_ARRAY 数组帮助
  * @ingroup PJ_DS
  * @{
  *
- * This module provides helper to manipulate array of elements of any size.
- * It provides most used array operations such as insert, erase, and search.
+ * 此模块提供帮助程序来操作任意大小的元素数组。它提供最常用的数组操作，如插入、擦除和搜索
  */
 
 /**
- * Insert value to the array at the given position, and rearrange the
- * remaining nodes after the position.
+ * 在给定位置向数组中插入值，并在该位置后重新排列其余节点
  *
- * @param array	    the array.
- * @param elem_size the size of the individual element.
- * @param count	    the CURRENT number of elements in the array.
- * @param pos	    the position where the new element is put.
- * @param value	    the value to copy to the new element.
+ * @param array	    数组
+ * @param elem_size 单个元素的大小
+ * @param count	    数组中当前的元素数
+ * @param pos	    新元素放置的位置
+ * @param value	    要复制到新元素的值
  */
 PJ_DECL(void) pj_array_insert( void *array,
 			       unsigned elem_size,
@@ -54,13 +37,12 @@ PJ_DECL(void) pj_array_insert( void *array,
 			       const void *value);
 
 /**
- * Erase a value from the array at given position, and rearrange the remaining
- * elements post the erased element.
+ * 在给定位置从数组中删除一个值，并在删除元素后重新排列其余元素
  *
- * @param array	    the array.
- * @param elem_size the size of the individual element.
- * @param count	    the current number of elements in the array.
- * @param pos	    the index/position to delete.
+ * @param array	    数组
+ * @param elem_size 单个元素的大小
+ * @param count	    数组中当前的元素数
+ * @param pos	    要删除的索引/位置
  */
 PJ_DECL(void) pj_array_erase( void *array,
 			      unsigned elem_size,
@@ -68,16 +50,15 @@ PJ_DECL(void) pj_array_erase( void *array,
 			      unsigned pos);
 
 /**
- * Search the first value in the array according to matching function.
+ * 根据匹配函数搜索数组中的第一个值
  *
- * @param array	    the array.
- * @param elem_size the individual size of the element.
- * @param count	    the number of elements.
- * @param matching  the matching function, which MUST return PJ_SUCCESS if 
- *		    the specified element match.
- * @param result    the pointer to the value found.
+ * @param array	    数组
+ * @param elem_size 单个元素的大小
+ * @param count	    元素的数量
+ * @param matching  匹配函数，如果指定的元素匹配，则必须返回PJ_SUCCESS
+ * @param result    指向找到的值的指针
  *
- * @return	    PJ_SUCCESS if value is found, otherwise the error code.
+ * @return	    值找到返回 PJ_SUCCESS，否则返回错误码
  */
 PJ_DECL(pj_status_t) pj_array_find(   const void *array, 
 				      unsigned elem_size, 

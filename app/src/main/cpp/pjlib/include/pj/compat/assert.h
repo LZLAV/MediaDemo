@@ -1,28 +1,17 @@
-/* $Id: assert.h 5692 2017-11-13 06:06:25Z ming $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
+ *  assert() 宏的原型定义在 assert.h 中，其作用是如果它的条件返回错误，则终止程序执行
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ *  void assert( int expression );
+ *      assert 的作用是现计算表达式 expression ，如果其值为假（即为0），那么它先向 stderr 打印一条出错信息,然后通过调用 abort 来终止程序运行。
+ *  使用 assert 的缺点是，频繁的调用会极大的影响程序的性能，增加额外的开销。
  */
 #ifndef __PJ_COMPAT_ASSERT_H__
 #define __PJ_COMPAT_ASSERT_H__
 
 /**
  * @file assert.h
- * @brief Provides assert() macro.
+ * @brief 提供 assert() 宏
  */
 
 #if defined(PJ_HAS_ASSERT_H) && PJ_HAS_ASSERT_H != 0

@@ -28,7 +28,7 @@ PJ_BEGIN_DECL
 
 /**
  * @defgroup PJ_ACTIVESOCK 活动 socket I/O
- * @brief Active socket performs active operations on socket.
+ * @brief 活动套接字对套接字执行活动操作
  * @ingroup PJ_IO
  * @{
  *

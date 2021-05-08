@@ -22,28 +22,26 @@
 
 /**
  * @file assert.h
- * @brief Assertion macro pj_assert().
+ * @brief 断言宏pj_assert()
  */
 
 #include <pj/config.h>
 #include <pj/compat/assert.h>
 
 /**
- * @defgroup pj_assert Assertion Macro
+ * @defgroup pj_assert 断言宏
  * @ingroup PJ_MISC
  * @{
  *
- * Assertion and other helper macros for sanity checking.
+ * 断言和其他辅助宏用于健全性检查
  */
 
 /**
  * @hideinitializer
- * Check during debug build that an expression is true. If the expression
- * computes to false during run-time, then the program will stop at the
- * offending statements.
- * For release build, this macro will not do anything.
+ * 在调试生成期间检查表达式是否为 true。如果表达式在运行时计算为 false，那么程序将在出现问题的语句处停止。
+ * 对于release build，此宏不会执行任何操作
  *
- * @param expr	    The expression to be evaluated.
+ * @param expr	    要计算的表达式
  */
 #ifndef pj_assert
 #   define pj_assert(expr)   assert(expr)
@@ -52,13 +50,9 @@
 
 /**
  * @hideinitializer
- * If #PJ_ENABLE_EXTRA_CHECK is declared and the value is non-zero, then 
- * #PJ_ASSERT_RETURN macro will evaluate the expression in @a expr during
- * run-time. If the expression yields false, assertion will be triggered
- * and the current function will return with the specified return value.
- *
- * If #PJ_ENABLE_EXTRA_CHECK is not declared or is zero, then no run-time
- * checking will be performed. The macro simply evaluates to pj_assert(expr).
+ * 如果声明了 PJ_ENABLE_EXTRA_CHECK 且值非零，则 PJ_ASSERT_RETURN 宏将在运行时对
+ * @a expr中的表达式求值。如果表达式产生false，将触发断言，当前函数将返回指定的返回值。
+ * 如果 PJ_ENABLE_EXTRA_CHECK 未声明或为零，则不会执行运行时检查。宏的计算结果只是 pj_assert(expr)
  */
 #if defined(PJ_ENABLE_EXTRA_CHECK) && PJ_ENABLE_EXTRA_CHECK != 0
 #   define PJ_ASSERT_RETURN(expr,retval)    \
@@ -71,13 +65,9 @@
 
 /**
  * @hideinitializer
- * If #PJ_ENABLE_EXTRA_CHECK is declared and non-zero, then 
- * #PJ_ASSERT_ON_FAIL macro will evaluate the expression in @a expr during
- * run-time. If the expression yields false, assertion will be triggered
- * and @a exec_on_fail will be executed.
- *
- * If #PJ_ENABLE_EXTRA_CHECK is not declared or is zero, then no run-time
- * checking will be performed. The macro simply evaluates to pj_assert(expr).
+ * 如果声明了 PJ_ENABLE_EXTRA_CHECK 且非零，则 PJ_ASSERT_ON_FAIL 宏将在运行时对
+ * @a expr中的表达式求值。如果表达式产生 false，将触发断言并执行@a exec_on_fail
+ * 如果 PJ_ENABLE_EXTRA_CHECK 未声明或为零，则不会执行运行时检查。宏的计算结果只是pj_assert(expr)
  */
 #if defined(PJ_ENABLE_EXTRA_CHECK) && PJ_ENABLE_EXTRA_CHECK != 0
 #   define PJ_ASSERT_ON_FAIL(expr,exec_on_fail)    \

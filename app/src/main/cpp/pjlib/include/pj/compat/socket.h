@@ -22,7 +22,7 @@
 
 /**
  * @file socket.h
- * @brief Provides all socket related functions,data types, error codes, etc.
+ * @brief 提供所有套接字相关功能、数据类型、错误代码等
  */
 
 #if defined(PJ_HAS_WINSOCK2_H) && PJ_HAS_WINSOCK2_H != 0
@@ -39,25 +39,22 @@
 
 
 /*
- * IPv6 for Visual Studio's
+ * 用于 Visual Studio的IPv6
  *
  * = Visual Studio 6 =
  *
- * Visual Studio 6 does not ship with IPv6 support, so you MUST
- * download and install IPv6 Tehnology Preview (IPv6Kit) from:
+ * Visual Studio 6不附带IPv6支持，因此您必须从以下位置下载并安装IPv6技术预览（IPv6Kit）：
  *    http://msdn.microsoft.com/downloads/sdks/platform/tpipv6/ReadMe.asp
- * Then put IPv6Kit\inc in your Visual Studio include path.
+ * 然后将 IPv6Kit\inc 放入Visual Studio包含路径
  * 
- * In addition, by default IPv6Kit does not want to install on
- * Windows 2000 SP4. Please see:
+ * 另外，默认情况下IPv6Kit不希望安装在 Windows 2000 SP4。请看：
  *    http://msdn.microsoft.com/downloads/sdks/platform/tpipv6/faq.asp
- * on  how to install IPv6Kit on Win2K SP4.
+ * 介绍如何在Win2K SP4上安装IPv6Kit
  *
  *
  * = Visual Studio 2003, 2005 (including Express) =
  *
- * These VS uses Microsoft Platform SDK for Windows Server 2003 SP1, and
- * it has built-in IPv6 support.
+ * 这些VS使用用于Windows Server 2003 SP1 的MicrosoftPlatform SDK，并且具有内置的IPv6支持
  */
 #if defined(_MSC_VER) && defined(PJ_HAS_IPV6) && PJ_HAS_IPV6!=0
 #   ifndef s_addr
@@ -95,7 +92,7 @@
 #endif
 
 #if defined(PJ_HAS_NETINET_IN_SYSTM_H) && PJ_HAS_NETINET_IN_SYSTM_H != 0
-/* Required to include netinet/ip.h in FreeBSD 7.0 */
+/* 需要在FreeBSD 7.0中包含NetNet/ip.h */
 #  include <netinet/in_systm.h>
 #endif
 
@@ -149,7 +146,7 @@
 
 
 /*
- * Define common errors.
+ * 定义常见错误
  */
 #if (defined(PJ_WIN32) && PJ_WIN32!=0) || \
     (defined(PJ_WIN32_WINCE) && PJ_WIN32_WINCE!=0) || \
@@ -178,34 +175,27 @@
 
 
 /*
- * And undefine these..
+ * 取消这些定义
  */
 #undef s_addr
 #undef s6_addr
 #undef sin_zero
 
 /*
- * This will finally be obsoleted, since it should be declared in
- * os_auto.h
+ * 这将最终被淘汰，因为它应该在 os_auto.h 中声明
  */
 #if !defined(PJ_HAS_SOCKLEN_T) || PJ_HAS_SOCKLEN_T==0
     typedef int socklen_t;
 #endif
 
-/* Regarding sin_len member of sockaddr_in:
- *  BSD systems (including MacOS X requires that the sin_len member of 
- *  sockaddr_in be set to sizeof(sockaddr_in), while other systems (Windows
- *  and Linux included) do not.
+/*
+ * 关于sockaddr_in 的 sin_len成员：
+ *  BSD系统（包括MacOS X）要求将 sockaddr_in的 sin_len 成员设置为sizeof(sockaddr_in)，而其他系统（包括Windows和Linux）则不要求
+ *  为了保持系统之间的兼容性，PJLIB 将在调用本机OS socket API之前自动设置此字段，并且在将 pj_sockaddr_in 返回到应用程序之前（例如在pj_getsockname()
+ *  和pj_recvfrom() 中）始终将此字段重置为零。
  *
- *  To maintain compatibility between systems, PJLIB will automatically
- *  set this field before invoking native OS socket API, and it will
- *  always reset the field to zero before returning pj_sockaddr_in to
- *  application (such as in pj_getsockname() and pj_recvfrom()).
- *
- *  Application MUST always set this field to zero.
- *
- *  This way we can avoid hard to find problem such as when the socket 
- *  address is used as hash table key.
+ *  应用程序必须始终将此字段设置为零
+ *  这样就可以避免使用套接字地址作为哈希表密钥时难以发现的问题
  */
 #if defined(PJ_SOCKADDR_HAS_LEN) && PJ_SOCKADDR_HAS_LEN!=0
 #   define PJ_SOCKADDR_SET_LEN(addr,len) (((pj_addr_hdr*)(addr))->sa_zero_len=(len))

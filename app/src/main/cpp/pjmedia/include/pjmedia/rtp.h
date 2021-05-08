@@ -33,7 +33,7 @@ PJ_BEGIN_DECL
  *
  * RTP模块根本不使用任何动态内存。
  *
- * \section P1 如何使用RTP模块H
+ * \section P1 如何使用RTP模块
  * 
  * 第一个应用程序必须调用 pjmedia_rtp_session_init() 来初始化rtp会话
  *
