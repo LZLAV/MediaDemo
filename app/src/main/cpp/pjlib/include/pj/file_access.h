@@ -1,102 +1,83 @@
-/* $Id: file_access.h 3553 2011-05-05 06:14:19Z nanang $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成
+ *      文件访问及其访问记录
  */
 #ifndef __PJ_FILE_ACCESS_H__
 #define __PJ_FILE_ACCESS_H__
 
 /**
  * @file file_access.h
- * @brief File manipulation and access.
+ * @brief 文件操作和访问
  */
 #include <pj/types.h>
 
 PJ_BEGIN_DECL 
 
 /**
- * @defgroup PJ_FILE_ACCESS File Access
+ * @defgroup PJ_FILE_ACCESS 文件存取
  * @ingroup PJ_IO
  * @{
  *
  */
 
 /**
- * This structure describes file information, to be obtained by
- * calling #pj_file_getstat(). The time information in this structure
- * is in local time.
+ * 此结构描述通过调用 pj_file_getstat() 获得的文件信息。此结构中的时间信息是本地时间
  */
 typedef struct pj_file_stat
 {
-    pj_off_t        size;   /**< Total file size.               */
-    pj_time_val     atime;  /**< Time of last access.           */
-    pj_time_val     mtime;  /**< Time of last modification.     */
-    pj_time_val     ctime;  /**< Time of last creation.         */
+    pj_off_t        size;   /**< 总文件大小             */
+    pj_time_val     atime;  /**< 最后一次访问时间        */
+    pj_time_val     mtime;  /**< 最后一次修改时间        */
+    pj_time_val     ctime;  /**< 最后一次创建时间        */
 } pj_file_stat;
 
 
 /**
- * Returns non-zero if the specified file exists.
+ * 如果指定的文件存在，则返回非零
  *
- * @param filename      The file name.
+ * @param filename      文件名称
  *
- * @return              Non-zero if the file exists.
+ * @return              文件存在返回非零
  */
 PJ_DECL(pj_bool_t) pj_file_exists(const char *filename);
 
 /**
- * Returns the size of the file.
+ * 返回文件的大小
  *
- * @param filename      The file name.
+ * @param filename      文件名称
  *
- * @return              The file size in bytes or -1 on error.
+ * @return              文件大小以字节为单位，错误时为-1
  */
 PJ_DECL(pj_off_t) pj_file_size(const char *filename);
 
 /**
- * Delete a file.
+ * 删除文件
  *
- * @param filename      The filename.
+ * @param filename      文件名称
  *
- * @return              PJ_SUCCESS on success or the appropriate error code.
+ * @return              成功返回PJ_SUCCESS,否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_file_delete(const char *filename);
 
 /**
- * Move a \c oldname to \c newname. If \c newname already exists,
- * it will be overwritten.
+ * 将oldname 移动到newname。如果 newname 已存在，则将覆盖它
  *
- * @param oldname       The file to rename.
- * @param newname       New filename to assign.
+ * @param oldname       要重命名的文件
+ * @param newname       要分配的新文件名
  *
- * @return              PJ_SUCCESS on success or the appropriate error code.
+ * @return              成功返回PJ_SUCCESS,否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_file_move( const char *oldname, 
                                    const char *newname);
 
 
 /**
- * Return information about the specified file. The time information in
- * the \c stat structure will be in local time.
+ * 返回指定文件的有关信息。stat 结构中的时间信息将是本地时间
  *
- * @param filename      The filename.
- * @param stat          Pointer to variable to receive file information.
+ * @param filename      文件名称
+ * @param stat          指向接收文件信息的变量的指针
  *
- * @return              PJ_SUCCESS on success or the appropriate error code.
+ * @return              成功返回PJ_SUCCESS,否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_file_getstat(const char *filename, pj_file_stat *stat);
 

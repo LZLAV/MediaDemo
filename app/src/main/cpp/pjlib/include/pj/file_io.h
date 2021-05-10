@@ -1,95 +1,71 @@
-/* $Id: file_io.h 3553 2011-05-05 06:14:19Z nanang $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成
+ *      文件操作：
+ *          打开
+ *          关闭
+ *          读取
+ *          写入
+ *          获取当前位置
+ *          设置位置
  */
 #ifndef __PJ_FILE_IO_H__
 #define __PJ_FILE_IO_H__
 
 /**
  * @file file_io.h
- * @brief Simple file I/O abstraction.
+ * @brief Simple 文件 I/O 抽象
  */
 #include <pj/types.h>
 
 PJ_BEGIN_DECL 
 
 /**
- * @defgroup PJ_FILE_IO File I/O
+ * @defgroup PJ_FILE_IO 文件I/O
  * @ingroup PJ_IO
  * @{
  *
- * This file contains functionalities to perform file I/O. The file
- * I/O can be implemented with various back-end, either using native
- * file API or ANSI stream. 
+ * 此文件包含执行文件I/O的功能。文件I/O可以通过各种后端实现，可以使用本机文件 API 或 ANSI 流
  *
- * @section pj_file_size_limit_sec Size Limits
+ * @section pj_file_size_limit_sec 大小限制
  *
- * There may be limitation on the size that can be handled by the
- * #pj_file_setpos() or #pj_file_getpos() functions. The API itself
- * uses 64-bit integer for the file offset/position (where available); 
- * however some backends (such as ANSI) may only support signed 32-bit 
- * offset resolution.
+ * pj_file_setpos() 或 pj_file_getpos() 函数可以处理的大小可能有限制。API本身使用64位整数作为文件偏移量/位置（如果可用）；
+ * 但是，某些后端（如 ANSI）可能只支持有符号32位偏移分辨率
  *
- * Reading and writing operation uses signed 32-bit integer to indicate
- * the size.
- *
+ * 读写操作使用有符号的32位整数来表示大小
  *
  */
 
 /**
- * These enumerations are used when opening file. Values PJ_O_RDONLY,
- * PJ_O_WRONLY, and PJ_O_RDWR are mutually exclusive. Value PJ_O_APPEND
- * can only be used when the file is opened for writing. 
+ * 打开文件时使用这些枚举。值PJ_O_RDONLY、PJ_O_WRONLY和PJ_O_RDWR是互斥的。值PJ_O_APPEND只能在打开文件进行写入时使用
  */
 enum pj_file_access
 {
-    PJ_O_RDONLY     = 0x1101,   /**< Open file for reading.             */
-    PJ_O_WRONLY     = 0x1102,   /**< Open file for writing.             */
-    PJ_O_RDWR       = 0x1103,   /**< Open file for reading and writing. 
-                                     File will be truncated.            */
-    PJ_O_APPEND     = 0x1108    /**< Append to existing file.           */
+    PJ_O_RDONLY     = 0x1101,   /**< 读打开文件      */
+    PJ_O_WRONLY     = 0x1102,   /**< 写打开文件      */
+    PJ_O_RDWR       = 0x1103,   /**< 读写打开文件，文件将被截断     */
+    PJ_O_APPEND     = 0x1108    /**< 附加到已存在的文件        */
 };
 
 /**
- * The seek directive when setting the file position with #pj_file_setpos.
+ * 使用pj_file_setpos设置文件位置时的seek指令
  */
 enum pj_file_seek_type
 {
-    PJ_SEEK_SET     = 0x1201,   /**< Offset from beginning of the file. */
-    PJ_SEEK_CUR     = 0x1202,   /**< Offset from current position.      */
-    PJ_SEEK_END     = 0x1203    /**< Size of the file plus offset.      */
+    PJ_SEEK_SET     = 0x1201,   /**< 文件起始   */
+    PJ_SEEK_CUR     = 0x1202,   /**< 文件当前位置     */
+    PJ_SEEK_END     = 0x1203    /**< 文件末尾     */
 };
 
 /**
- * Open the file as specified in \c pathname with the specified
- * mode, and return the handle in \c fd. All files will be opened
- * as binary.
+ * 以指定的模式打开指定路径的文件，并在 fd中返回句柄。所有文件都将以二进制格式打开
  *
- * @param pool          Pool to allocate memory for the new file descriptor.
- * @param pathname      The file name to open.
- * @param flags         Open flags, which is bitmask combination of
- *                      #pj_file_access enum. The flag must be either
- *                      PJ_O_RDONLY, PJ_O_WRONLY, or PJ_O_RDWR. When file
- *                      writing is specified, existing file will be 
- *                      truncated unless PJ_O_APPEND is specified.
- * @param fd            The returned descriptor.
+ * @param pool          池为新文件描述符分配内存
+ * @param pathname      打开文件的名称
+ * @param flags         打开文件标识 flags，是 pj_file_access 的位掩码组合。标志必须是PJ_O_RDONLY、PJ_O_WRONLY或P
+ *                      PJ_O_RDWR。指定文件写入时，除非指定PJ_O_APPEND，否则现有文件将被截断。
+ * @param fd            返回的文件描述符
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_open(pj_pool_t *pool,
                                   const char *pathname, 
@@ -97,79 +73,72 @@ PJ_DECL(pj_status_t) pj_file_open(pj_pool_t *pool,
                                   pj_oshandle_t *fd);
 
 /**
- * Close an opened file descriptor.
+ * 关闭一个打开的文件描述符
  *
- * @param fd            The file descriptor.
+ * @param fd            文件描述符
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_close(pj_oshandle_t fd);
 
 /**
- * Write data with the specified size to an opened file.
+ * 将指定大小的数据写入打开的文件
  *
- * @param fd            The file descriptor.
- * @param data          Data to be written to the file.
- * @param size          On input, specifies the size of data to be written.
- *                      On return, it contains the number of data actually
- *                      written to the file.
+ * @param fd            文件描述符
+ * @param data          要写入文件的数据
+ * @param size          输入时，指定要写入的数据的大小。
+ *                      返回时，它包含实际写入文件的数据数
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_write(pj_oshandle_t fd,
                                    const void *data,
                                    pj_ssize_t *size);
 
 /**
- * Read data from the specified file. When end-of-file condition is set,
- * this function will return PJ_SUCCESS but the size will contain zero.
+ * 从指定文件读取数据。当设置文件结束条件时，此函数将返回 PJ_SUCCESS，但大小将包含零
  *
- * @param fd            The file descriptor.
- * @param data          Pointer to buffer to receive the data.
- * @param size          On input, specifies the maximum number of data to
- *                      read from the file. On output, it contains the size
- *                      of data actually read from the file. It will contain
- *                      zero when EOF occurs.
+ * @param fd            文件描述符
+ * @param data          指向接收数据的缓冲区的指针
+ * @param size          输入时，指定从文件中读取的最大数据数。在输出时，它包含实际从文件中读取的数据的大小。当 EOF发生时，它将包含零。
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
- *                      When EOF occurs, the return is PJ_SUCCESS but size
- *                      will report zero.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
+ *                      当EOF发生时，返回的是PJ_SUCCESS，但size将报告为零
  */
 PJ_DECL(pj_status_t) pj_file_read(pj_oshandle_t fd,
                                   void *data,
                                   pj_ssize_t *size);
 
 /**
- * Set file position to new offset according to directive \c whence.
+ * 根据指令 whence 将文件位置设置为新偏移量
  *
- * @param fd            The file descriptor.
- * @param offset        The new file position to set.
- * @param whence        The directive.
+ * @param fd            文件描述符
+ * @param offset        要设置的新文件位置
+ * @param whence        参考位置
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_setpos(pj_oshandle_t fd,
                                     pj_off_t offset,
                                     enum pj_file_seek_type whence);
 
 /**
- * Get current file position.
+ * 获取当前文件的位置
  *
- * @param fd            The file descriptor.
- * @param pos           On return contains the file position as measured
- *                      from the beginning of the file.
+ * @param fd            文件描述符
+ * @param pos           返回时包含从文件开头开始测量的文件位置
  *
- * @return              PJ_SUCCESS or the appropriate error code on error.
+ * @return              成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_getpos(pj_oshandle_t fd,
                                     pj_off_t *pos);
 
 /**
- * Flush file buffers.
+ * 刷新文件缓存区
  *
- * @param fd		The file descriptor.
+ * @param fd		文件描述符
  *
- * @return		PJ_SUCCESS or the appropriate error code on error.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_file_flush(pj_oshandle_t fd);
 

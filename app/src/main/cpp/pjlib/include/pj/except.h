@@ -1,28 +1,22 @@
-/* $Id: except.h 4537 2013-06-19 06:47:43Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
+ * 	C 语言异常处理
+ * 		PJ_USE_EXCEPTION;
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * 		PJ_TRY{
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * 		}PJ_CATCH(expression){
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ * 		}PJ_END;
+ *
+ * 	Liunx  实际上使用的是  setjmp 和 longjmp
  */
 #ifndef __PJ_EXCEPTION_H__
 #define __PJ_EXCEPTION_H__
 
 /**
  * @file except.h
- * @brief Exception Handling in C.
+ * @brief C 异常处理
  */
 
 #include <pj/types.h>
@@ -34,31 +28,27 @@ PJ_BEGIN_DECL
 
 
 /**
- * @defgroup PJ_EXCEPT Exception Handling
+ * @defgroup PJ_EXCEPT 异常处理
  * @ingroup PJ_MISC
  * @{
  *
- * \section pj_except_sample_sec Quick Example
+ * \section pj_except_sample_sec 快速示例
  *
- * For the impatient, take a look at some examples:
+ * 快速集成的例子：
  *  - @ref page_pjlib_samples_except_c
  *  - @ref page_pjlib_exception_test
  *
- * \section pj_except_except Exception Handling
+ * \section pj_except_except 异常处理
  *
- * This module provides exception handling syntactically similar to C++ in
- * C language. In Win32 systems, it uses Windows Structured Exception
- * Handling (SEH) if macro PJ_EXCEPTION_USE_WIN32_SEH is non-zero.
- * Otherwise it will use setjmp() and longjmp().
+ * 这个模块在C语言中提供了类似于C++的语法异常处理。在Win32系统中，如果宏 PJ_EXCEPTION_USE_WIN32_SEH 为非零，
+ * 则使用 Windows结构化异常处理（SEH）。否则它将使用 setjmp() 和longjmp()
  *
- * On some platforms where setjmp/longjmp is not available, setjmp/longjmp 
- * implementation is provided. See <pj/compat/setjmp.h> for compatibility.
+ * 在一些 setjmp/longjmp 不可用的平台上，提供了 setjmp/longjmp 实现。
+ * 有关兼容性，请参见<pj/compat/setjmp.h>
  *
- * The exception handling mechanism is completely thread safe, so the exception
- * thrown by one thread will not interfere with other thread.
+ * 异常处理机制是完全线程安全的，因此一个线程引发的异常不会干扰其他线程
  *
- * The exception handling constructs are similar to C++. The blocks will be
- * constructed similar to the following sample:
+ * 异常处理构造类似于 C++。模块的构造类似于以下示例：
  *
  * \verbatim
    #define NO_MEMORY     1
@@ -66,7 +56,7 @@ PJ_BEGIN_DECL
   
    int sample1()
    {
-      PJ_USE_EXCEPTION;  // declare local exception stack.
+      PJ_USE_EXCEPTION;  // 声明本地异常堆栈
   
       PJ_TRY {
         ...// do something..
@@ -79,49 +69,41 @@ PJ_BEGIN_DECL
 
    int sample2()
    {
-      PJ_USE_EXCEPTION;  // declare local exception stack.
+      PJ_USE_EXCEPTION;  // 声明本地异常堆栈
   
       PJ_TRY {
         ...// do something..
       }
       PJ_CATCH_ANY {
          if (PJ_GET_EXCEPTION() == NO_MEMORY)
-	    ...; // handle no memory situation
+	    ...; // 没有内存
 	 else if (PJ_GET_EXCEPTION() == SYNTAX_ERROR)
-	    ...; // handle syntax error
+	    ...; // 语法错误
       }
       PJ_END;
    }
    \endverbatim
  *
- * The above sample uses hard coded exception ID. It is @b strongly
- * recommended that applications request a unique exception ID instead
- * of hard coded value like above.
+ * 上面的示例使用硬编码的异常ID。强烈建议应用程序请求唯一的异常ID，而不是像上面那样的硬编码值
  *
- * \section pj_except_reg Exception ID Allocation
+ * \section pj_except_reg 异常ID 分配
  *
- * To ensure that exception ID (number) are used consistently and to
- * prevent ID collisions in an application, it is strongly suggested that 
- * applications allocate an exception ID for each possible exception
- * type. As a bonus of this process, the application can identify
- * the name of the exception when the particular exception is thrown.
+ * 为了确保一致地使用异常ID（number）并防止应用程序中的ID冲突，强烈建议应用程序为每个可能的异常类型分配一个异常ID。
+ * 作为此过程的额外功能，应用程序可以在抛出特定异常时标识异常的名称
  *
- * Exception ID management are performed with the following APIs:
- *  - #pj_exception_id_alloc().
- *  - #pj_exception_id_free().
- *  - #pj_exception_id_name().
+ * 使用以下API执行异常ID管理：
+ *  - pj_exception_id_alloc().
+ *  - pj_exception_id_free().
+ *  - pj_exception_id_name().
  *
  *
- * PJLIB itself automatically allocates one exception id, i.e.
- * #PJ_NO_MEMORY_EXCEPTION which is declared in <pj/pool.h>. This exception
- * ID is raised by default pool policy when it fails to allocate memory.
+ * PJLIB 本身自动分配一个异常id，即在 <pj/pool.h>中声明的 PJ_NO_MEMORY_EXCEPTION。
+ * 默认池策略在分配内存失败时引发此异常ID
  *
- * CAVEATS:
- *  - unlike C++ exception, the scheme here won't call destructors of local
- *    objects if exception is thrown. Care must be taken when a function
- *    hold some resorce such as pool or mutex etc.
- *  - You CAN NOT make nested exception in one single function without using
- *    a nested PJ_USE_EXCEPTION. Samples:
+ * 注意事项：
+ * 		与C++异常不同，如果抛出异常，这里的方案不会调用局部对象的析构函数。当一个函数拥有一些资源，如池或互斥等时，必须小心。
+		-如果不使用嵌套的 PJ_USE_EXCEPTION，就不能在单个函数中生成嵌套异常。样品：
+
   \verbatim
 	void wrong_sample()
 	{
@@ -136,8 +118,7 @@ PJ_BEGIN_DECL
 		....
 		..
 
-		// The following block is WRONG! You MUST declare 
-		// PJ_USE_EXCEPTION once again in this block.
+ 		//下面的方块是错误的！必须在此块中再次声明PJ_USE_EXCEPTION
 		PJ_TRY {
 		    ..
 		}
@@ -151,10 +132,8 @@ PJ_BEGIN_DECL
 
   \endverbatim
 
- *  - You MUST NOT exit the function inside the PJ_TRY block. The correct way
- *    is to return from the function after PJ_END block is executed. 
- *    For example, the following code will yield crash not in this code,
- *    but rather in the subsequent execution of PJ_TRY block:
+ 	不能退出 PJ_TRY 块中的函数。正确的方法是在执行PJ_END 之后从函数返回。
+ 	例如，以下代码将不会在该代码中产生崩溃，而是在PJ_TRY 块的后续执行中产生崩溃：
   \verbatim
         void wrong_sample()
 	{
@@ -171,92 +150,71 @@ PJ_BEGIN_DECL
 	}
   \endverbatim
   
- *  - You can not provide more than PJ_CATCH or PJ_CATCH_ANY nor use PJ_CATCH
- *    and PJ_CATCH_ANY for a single PJ_TRY.
- *  - Exceptions will always be caught by the first handler (unlike C++ where
- *    exception is only caught if the type matches.
+ *  - 您不能提供超过 PJ_CATCH 或 PJ_CATCH_ANY，也不能将PJ_CATCH和 PJ_CATCH_ANY 用于一次 PJ_TRY尝试
+ *  - 异常将总是由第一个处理程序捕获（与C++不同，只有类型匹配时才会捕获异常）
 
- * \section PJ_EX_KEYWORDS Keywords
+ * \section PJ_EX_KEYWORDS 关键字
  *
  * \subsection PJ_THROW PJ_THROW(expression)
- * Throw an exception. The expression thrown is an integer as the result of
- * the \a expression. This keyword can be specified anywhere within the 
- * program.
+ * 抛出异常。抛出的表达式是作为表达式结果的整数。这个关键字可以在程序的任何地方指定
  *
  * \subsection PJ_USE_EXCEPTION PJ_USE_EXCEPTION
- * Specify this in the variable definition section of the function block 
- * (or any blocks) to specify that the block has \a PJ_TRY/PJ_CATCH exception 
- * block. 
- * Actually, this is just a macro to declare local variable which is used to
- * push the exception state to the exception stack.
- * Note: you must specify PJ_USE_EXCEPTION as the last statement in the
- * local variable declarations, since it may evaluate to nothing.
+ * 在函数块（或任何块）的变量定义部分中指定此项，以指定该块具有 PJ_TRY/PJ_CATCH 异常块。
+ * 实际上，这只是一个声明局部变量的宏，用于将异常状态推送到异常堆栈。
+ *
+ * 注意：您必须指定 PJ_USE_EXCEPTION 作为局部变量声明中的最后一条语句，因为它的计算结果可能为 nothing
  *
  * \subsection PJ_TRY PJ_TRY
- * The \a PJ_TRY keyword is typically followed by a block. If an exception is
- * thrown in this block, then the execution will resume to the \a PJ_CATCH 
- * handler.
+ * PJ_TRY 关键字后面通常跟一个块。如果此块中抛出异常，则执行将恢复到 PJ_CATCH 处理程序
  *
  * \subsection PJ_CATCH PJ_CATCH(expression)
- * The \a PJ_CATCH is normally followed by a block. This block will be executed
- * if the exception being thrown is equal to the expression specified in the
- * \a PJ_CATCH.
+ * PJ_CATCH 通常有一个方块。如果抛出的异常等于 PJ_CATCH 中指定的表达式，则将执行此块
  *
  * \subsection PJ_CATCH_ANY PJ_CATCH_ANY
- * The \a PJ_CATCH is normally followed by a block. This block will be executed
- * if any exception was raised in the TRY block.
+ * PJ_CATCH 后面通常跟一个块。如果 TRY 块中出现任何异常，将执行此块。
  *
  * \subsection PJ_END PJ_END
- * Specify this keyword to mark the end of \a PJ_TRY / \a PJ_CATCH blocks.
+ * 指定此关键字以标记 PJ_TRY/PJ_CATCH 块的结束
  *
  * \subsection PJ_GET_EXCEPTION PJ_GET_EXCEPTION(void)
- * Get the last exception thrown. This macro is normally called inside the
- * \a PJ_CATCH or \a PJ_CATCH_ANY block, altough it can be used anywhere where
- * the \a PJ_USE_EXCEPTION definition is in scope.
+ * 获取引发的最后一个异常。此宏通常在 PJ_CATCH 或 PJ_CATCH_ANY 块内调用，尽管它可以在PJ_USE_EXCEPTION 定义所在的任何位置使用
  *
  * 
- * \section pj_except_examples_sec Examples
+ * \section pj_except_examples_sec 例子
  *
- * For some examples on how to use the exception construct, please see:
+ * 有关如何使用异常构造的一些示例，请参见：
  *  - @ref page_pjlib_samples_except_c
  *  - @ref page_pjlib_exception_test
  */
 
 /**
- * Allocate a unique exception id.
- * Applications don't have to allocate a unique exception ID before using
- * the exception construct. However, by doing so it ensures that there is
- * no collisions of exception ID.
+ * 分配唯一的异常id
+ * 在使用异常构造之前，应用程序不必分配唯一的异常ID。但是，这样做可以确保异常ID没有冲突。
+ * 另外，当通过此函数获取异常编号时，库可以为异常分配名称（仅当 PJ_HAS_EXCEPTION_NAMES 处于启用状态（默认值为yes））并在捕获异常时找到异常名称
  *
- * As a bonus, when exception number is acquired through this function,
- * the library can assign name to the exception (only if 
- * PJ_HAS_EXCEPTION_NAMES is enabled (default is yes)) and find out the
- * exception name when it catches an exception.
+ * @param name      要与异常ID关联的名称
+ * @param id        接收ID的指针
  *
- * @param name      Name to be associated with the exception ID.
- * @param id        Pointer to receive the ID.
- *
- * @return          PJ_SUCCESS on success or PJ_ETOOMANY if the library 
- *                  is running out out ids.
+ * @return          成功返回 PJ_SUCCESS，Id 耗尽则返回 PJ_ETOOMANY
  */
 PJ_DECL(pj_status_t) pj_exception_id_alloc(const char *name,
                                            pj_exception_id_t *id);
 
 /**
- * Free an exception id.
+ * 释放异常ID
  *
- * @param id        The exception ID.
+ * @param id        异常ID
  *
- * @return          PJ_SUCCESS or the appropriate error code.
+ * @return          成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_exception_id_free(pj_exception_id_t id);
 
 /**
- * Retrieve name associated with the exception id.
+ * 检索与异常id关联的名称
  *
- * @param id        The exception ID.
+ * @param id        异常ID
  *
- * @return          The name associated with the specified ID.
+ * @return          与指定ID关联的名称
  */
 PJ_DECL(const char*) pj_exception_id_name(pj_exception_id_t id);
 
@@ -330,13 +288,12 @@ public:
 #else
 /*****************************************************************************
  **
- ** IMPLEMENTATION OF EXCEPTION USING GENERIC SETJMP/LONGJMP
+ ** 使用通用的 setjmp /longjmp 来实现异常处理
  **
  ****************************************************************************/
 
 /**
- * This structure (which should be invisible to user) manages the TRY handler
- * stack.
+ * 这个结构（用户应该看不见）管理TRY处理程序堆栈
  */
 struct pj_exception_state_t
 {    
@@ -345,30 +302,30 @@ struct pj_exception_state_t
 };
 
 /**
- * Throw exception.
- * @param id    Exception Id.
+ * 抛出异常
+ * @param id    异常ID
  */
 PJ_DECL_NO_RETURN(void) 
 pj_throw_exception_(pj_exception_id_t id) PJ_ATTR_NORETURN;
 
 /**
- * Push exception handler.
+ * 推送异常处理程序
  */
 PJ_DECL(void) pj_push_exception_handler_(struct pj_exception_state_t *rec);
 
 /**
- * Pop exception handler.
+ * 弹出异常处理程序
  */
 PJ_DECL(void) pj_pop_exception_handler_(struct pj_exception_state_t *rec);
 
 /**
- * Declare that the function will use exception.
+ * 声明函数将使用 exception
  * @hideinitializer
  */
 #define PJ_USE_EXCEPTION    struct pj_exception_state_t pj_x_except__; int pj_x_code__
 
 /**
- * Start exception specification block.
+ * 启动异常规范块
  * @hideinitializer
  */
 #define PJ_TRY		    if (1) { \
@@ -376,35 +333,35 @@ PJ_DECL(void) pj_pop_exception_handler_(struct pj_exception_state_t *rec);
 				pj_x_code__ = pj_setjmp(pj_x_except__.state); \
 				if (pj_x_code__ == 0)
 /**
- * Catch the specified exception Id.
- * @param id    The exception number to catch.
+ * 捕获指定的异常Id
+ * @param id    捕获的异常 Id
  * @hideinitializer
  */
 #define PJ_CATCH(id)	    else if (pj_x_code__ == (id))
 
 /**
- * Catch any exception number.
+ * 捕获任何异常id
  * @hideinitializer
  */
 #define PJ_CATCH_ANY	    else
 
 /**
- * End of exception specification block.
+ * 异常规范块结束
  * @hideinitializer
  */
 #define PJ_END			pj_pop_exception_handler_(&pj_x_except__); \
 			    } else {}
 
 /**
- * Throw exception.
- * @param exception_id  The exception number.
+ * 抛出异常
+ * @param exception_id  异常id
  * @hideinitializer
  */
 #define PJ_THROW(exception_id)	pj_throw_exception_(exception_id)
 
 /**
- * Get current exception.
- * @return      Current exception code.
+ * 获取当前异常
+ * @return      当前异常的 code
  * @hideinitializer
  */
 #define PJ_GET_EXCEPTION()	(pj_x_code__)

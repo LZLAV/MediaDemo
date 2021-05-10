@@ -1,21 +1,6 @@
-/* $Id: config.h 5879 2018-09-05 03:40:41Z riza $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
+/**
+ * 已完成：
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 #ifndef __PJ_CONFIG_H__
 #define __PJ_CONFIG_H__
@@ -338,7 +323,7 @@
 #endif
 
 /**
- * @defgroup pj_config 构建配置Build Configuration
+ * @defgroup pj_config 构建配置
  * @{
  *
  * 本节包含可以在 PJLIB 构建过程中设置的宏，以控制库的各个方面
@@ -490,15 +475,10 @@
 
 
 /**
- * Set this flag to non-zero to enable various checking for pool
- * operations. When this flag is set, assertion must be enabled
- * in the application.
+ * 将此标志设置为非零以启用对池操作的各种检查。设置此标志时，必须在应用程序中启用断言。
+ * 这将减慢池的创建和销毁，并将增加几个字节的开销，所以应用程序通常希望在发布版本中禁用此功能
  *
- * This will slow down pool creation and destruction and will add
- * few bytes of overhead, so application would normally want to 
- * disable this feature on release build.
- *
- * Default: 0
+ * 默认值: 0
  */
 #ifndef PJ_SAFE_POOL
 #   define PJ_SAFE_POOL		    0
@@ -506,12 +486,10 @@
 
 
 /**
- * If pool debugging is used, then each memory allocation from the pool
- * will call malloc(), and pool will release all memory chunks when it
- * is destroyed. This works better when memory verification programs
- * such as Rational Purify is used.
+ * 如果使用了池调试，那么池中的每个内存分配都将调用malloc()，当内存块被销毁时，池将释放所有内存块。
+ * 当使用诸如 Rational Purify（软件纠错工具） 之类的内存验证程序时，这种方法效果更好
  *
- * Default: 0
+ * 默认值: 0
  */
 #ifndef PJ_POOL_DEBUG
 #  define PJ_POOL_DEBUG		    0
@@ -519,12 +497,10 @@
 
 
 /**
- * Enable timer heap debugging facility. When this is enabled, application
- * can call pj_timer_heap_dump() to show the contents of the timer heap
- * along with the source location where the timer entries were scheduled.
- * See https://trac.pjsip.org/repos/ticket/1527 for more info.
+ * 启用计时器堆调试工具。启用此选项后，应用程序可以调用 pj_timer_heap_dump() 来显示计时器堆的内容以及调度计时器项的源位置。
+ * 更多信息详见：https://trac.pjsip.org/repos/ticket/1527
  *
- * Default: 0
+ * 默认值: 0
  */
 #ifndef PJ_TIMER_DEBUG
 #  define PJ_TIMER_DEBUG	    0
@@ -532,7 +508,7 @@
 
 
 /**
- * Set this to 1 to enable debugging on the group lock. Default: 0
+ * 将其设置为 1 以启用对组锁的调试。默认值：0
  */
 #ifndef PJ_GRP_LOCK_DEBUG
 #  define PJ_GRP_LOCK_DEBUG	0
@@ -540,10 +516,9 @@
 
 
 /**
- * Specify this as \a stack_size argument in #pj_thread_create() to specify
- * that thread should use default stack size for the current platform.
+ * 在 pj_thread_create() 中将此参数指定为堆栈大小参数，以指定线程应使用当前平台的默认堆栈大小
  *
- * Default: 8192
+ * 默认值: 8192
  */
 #ifndef PJ_THREAD_DEFAULT_STACK_SIZE 
 #  define PJ_THREAD_DEFAULT_STACK_SIZE    8192
@@ -551,11 +526,8 @@
 
 
 /**
- * Specify if PJ_CHECK_STACK() macro is enabled to check the sanity of 
- * the stack. The OS implementation may check that no stack overflow 
- * occurs, and it also may collect statistic about stack usage. Note
- * that this will increase the footprint of the libraries since it
- * tracks the filename and line number of each functions.
+ * 指定是否启用 PJ_CHECK_STACK() 宏来检查堆栈的健全性。操作系统实现可以检查没有发生堆栈溢出，
+ * 还可以收集有关堆栈使用情况的统计信息。注意，这将增加库的占用空间，因为它跟踪每个函数的文件名和行号
  */
 #ifndef PJ_OS_HAS_CHECK_STACK
 #	define PJ_OS_HAS_CHECK_STACK		0
@@ -572,52 +544,45 @@
 
 
 /**
- * Support TCP in the library.
- * Disabling TCP will reduce the footprint slightly (about 6KB).
+ * 库中支持TCP。禁用TCP将略微减少占用空间（约6KB）
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_HAS_TCP
 #  define PJ_HAS_TCP		    1
 #endif
 
 /**
- * Support IPv6 in the library. If this support is disabled, some IPv6 
- * related functions will return PJ_EIPV6NOTSUP.
+ * 在库中支持IPv6。如果禁用此支持，一些与IPv6相关的函数将返回PJ_EIPV6NOTSUP
  *
- * Default: 0 (disabled, for now)
+ * 默认值: 0 (现在暂不支持)
  */
 #ifndef PJ_HAS_IPV6
 #  define PJ_HAS_IPV6		    0
 #endif
 
  /**
- * Maximum hostname length.
- * Libraries sometimes needs to make copy of an address to stack buffer;
- * the value here affects the stack usage.
+ *  最大主机名长度
+  * 库有时需要将地址复制到堆栈缓冲区；这里的值影响堆栈的使用
  *
- * Default: 128
+ * 默认值: 128
  */
 #ifndef PJ_MAX_HOSTNAME
 #  define PJ_MAX_HOSTNAME	    (128)
 #endif
 
 /**
- * Maximum consecutive identical error for accept() operation before
- * activesock stops calling the next ioqueue accept.
+ * activesock 停止调用下一个 ioqueue accept 之前 accept() 操作的最大连续相同错误数
  *
- * Default: 50
+ * 默认值: 50
  */
 #ifndef PJ_ACTIVESOCK_MAX_CONSECUTIVE_ACCEPT_ERROR
 #   define PJ_ACTIVESOCK_MAX_CONSECUTIVE_ACCEPT_ERROR 50
 #endif
 
 /**
- * Constants for declaring the maximum handles that can be supported by
- * a single IOQ framework. This constant might not be relevant to the 
- * underlying I/O queue impelementation, but still, developers should be 
- * aware of this constant, to make sure that the program will not break when
- * the underlying implementation changes.
+ * 用于声明单个IO队列框架可以支持的最大句柄的常量。这个常量可能与底层的 I/O 队列实现无关，但是开发人员仍然应该注意这个常量，
+ * 以确保在底层实现发生更改时程序不会中断
  */
 #ifndef PJ_IOQUEUE_MAX_HANDLES
 #   define PJ_IOQUEUE_MAX_HANDLES	(64)
@@ -625,20 +590,14 @@
 
 
 /**
- * If PJ_IOQUEUE_HAS_SAFE_UNREG macro is defined, then ioqueue will do more
- * things to ensure thread safety of handle unregistration operation by
- * employing reference counter to each handle.
  *
- * In addition, the ioqueue will preallocate memory for the handles, 
- * according to the maximum number of handles that is specified during 
- * ioqueue creation.
+ * 如果 PJ_IOQUEUE_HAS_SAFE_UNREG 宏被定义，那么 ioqueue 将通过对每个句柄使用引用计数器来确保句柄注销操作的线程安全。
+ * 此外，ioqueue 将根据 ioqueue 创建期间指定的最大句柄数，为句柄预先分配内存。
+ * 所有应用程序通常都希望启用此功能，但您可以在以下情况下禁用此功能：
+ *  -没有对所有ioqueue进行动态注销。
+ *  -没有线程，或者没有抢先多任务
  *
- * All applications would normally want this enabled, but you may disable
- * this if:
- *  - there is no dynamic unregistration to all ioqueues.
- *  - there is no threading, or there is no preemptive multitasking.
- *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_IOQUEUE_HAS_SAFE_UNREG
 #   define PJ_IOQUEUE_HAS_SAFE_UNREG	1
@@ -646,24 +605,20 @@
 
 
 /**
- * Default concurrency setting for sockets/handles registered to ioqueue.
- * This controls whether the ioqueue is allowed to call the key's callback
- * concurrently/in parallel. The default is yes, which means that if there
- * are more than one pending operations complete simultaneously, more
- * than one threads may call the key's callback at the same time. This
- * generally would promote good scalability for application, at the 
- * expense of more complexity to manage the concurrent accesses.
+ * 注册到 ioqueue 的套接字/句柄的默认并发设置
+ * 这控制是否允许 ioqueue 并发/并行地调用键的回调。默认值为 yes，这意味着如果有多个挂起的操作同时完成，则多个线程可能同时调用键的回调。
+ * 这通常会促进应用程序良好的可伸缩性，但会牺牲管理并发访问的复杂性。
  *
- * Please see the ioqueue documentation for more info.
+ * 有关详细信息，请参阅ioqueue文档
  */
 #ifndef PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY
 #   define PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY   1
 #endif
 
 
-/* Sanity check:
- *  if ioqueue concurrency is disallowed, PJ_IOQUEUE_HAS_SAFE_UNREG
- *  must be enabled.
+/*
+ * 健全性检查：
+ *  如果不允许ioqueue并发，则必须启用 PJ_IOQUEUE_HAS_SAFE_UNREG
  */
 #if (PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY==0) && (PJ_IOQUEUE_HAS_SAFE_UNREG==0)
 #   error PJ_IOQUEUE_HAS_SAFE_UNREG must be enabled if ioqueue concurrency \
@@ -672,13 +627,10 @@
 
 
 /**
- * When safe unregistration (PJ_IOQUEUE_HAS_SAFE_UNREG) is configured in
- * ioqueue, the PJ_IOQUEUE_KEY_FREE_DELAY macro specifies how long the
- * ioqueue key is kept in closing state before it can be reused.
+ * 在 IOQUEUE 中配置安全注销（PJ_IOQUEUE_HAS_SAFE_UNREG）时，PJ_IOQUEUE_KEY_FREE_DELAY 宏指定 IOQUEUE 密钥在可重用之前保持关闭状态的时间。
+ * 该值以毫秒为单位
  *
- * The value is in miliseconds.
- *
- * Default: 500 msec.
+ * 默认值: 500 msec.
  */
 #ifndef PJ_IOQUEUE_KEY_FREE_DELAY
 #   define PJ_IOQUEUE_KEY_FREE_DELAY	500
@@ -686,9 +638,7 @@
 
 
 /**
- * Determine if FD_SETSIZE is changeable/set-able. If so, then we will
- * set it to PJ_IOQUEUE_MAX_HANDLES. Currently we detect this by checking
- * for Winsock.
+ * 确定 FD_SETSIZE是否可更改/可设置。如果是这样，那么我们将其设置为 PJ_IOQUEUE_MAX_HANDLES。目前我们通过检查 Winsock来检测这一点
  */
 #ifndef PJ_FD_SETSIZE_SETABLE
 #   if (defined(PJ_HAS_WINSOCK_H) && PJ_HAS_WINSOCK_H!=0) || \
@@ -700,10 +650,9 @@
 #endif
 
 /**
- * Overrides FD_SETSIZE so it is consistent throughout the library.
- * We only do this if we detected that FD_SETSIZE is changeable. If
- * FD_SETSIZE is not set-able, then PJ_IOQUEUE_MAX_HANDLES must be
- * set to value lower than FD_SETSIZE.
+ * 重写 FD_SETSIZE，使其在整个库中保持一致。
+ * 只有当我们检测到 FD_SETSIZE 是可变的时，我们才会这样做。如果 FD_SETSIZE 不可设置，
+ * 则 PJ_IOQUEUE_MAX_HANDLES 必须设置为低于 FD_SETSIZE 的值
  */
 #if PJ_FD_SETSIZE_SETABLE
     /* Only override FD_SETSIZE if the value has not been set */
@@ -711,12 +660,9 @@
 #	define FD_SETSIZE		PJ_IOQUEUE_MAX_HANDLES
 #   endif
 #else
-    /* When FD_SETSIZE is not changeable, check if PJ_IOQUEUE_MAX_HANDLES
-     * is lower than FD_SETSIZE value.
-     *
-     * Update: Not all ioqueue backends require this (such as epoll), so
-     * this check will be done on the ioqueue implementation itself, such as
-     * ioqueue select.
+    /*
+     * 当 FD_SETSIZE 不可更改时，检查 PJ_IOQUEUE_MAX_HANDLES 是否低于 FD_SETSIZE 值。
+     * 更新：并不是所有 ioqueue 后端都需要这样做（比如 epoll ），所以这个检查将在 ioqueue 实现本身上完成，比如 ioqueue select
      */
 /*
 #   ifdef FD_SETSIZE
@@ -729,10 +675,9 @@
 
 
 /**
- * Specify whether #pj_enum_ip_interface() function should exclude
- * loopback interfaces.
+ * 指定 pj_enum_ip_interface() 函数是否应排除环回接口
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_IP_HELPER_IGNORE_LOOPBACK_IF
 #   define PJ_IP_HELPER_IGNORE_LOOPBACK_IF	1
@@ -740,9 +685,9 @@
 
 
 /**
- * Has semaphore functionality?
+ * 是否有信号量功能
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_HAS_SEMAPHORE
 #  define PJ_HAS_SEMAPHORE	    1
@@ -750,9 +695,9 @@
 
 
 /**
- * Event object (for synchronization, e.g. in Win32)
+ * 事件对象(应用于同步, e.g. in Win32)
  *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_HAS_EVENT_OBJ
 #  define PJ_HAS_EVENT_OBJ	    1
@@ -760,7 +705,7 @@
 
 
 /**
- * Maximum file name length.
+ * 最大文件名长度
  */
 #ifndef PJ_MAXPATH
 #   define PJ_MAXPATH		    260
@@ -768,15 +713,11 @@
 
 
 /**
- * Enable library's extra check.
- * If this macro is enabled, #PJ_ASSERT_RETURN macro will expand to
- * run-time checking. If this macro is disabled, #PJ_ASSERT_RETURN
- * will simply evaluate to #pj_assert().
+ * 启用库的额外检查。
+ * 如果启用此宏，PJ_ASSERT_RETURN 宏将扩展到运行时检查。如果禁用此宏，PJ_ASSERT_RETURN 将直接计算为 pj_assert()
+ * 如果将无效值（例如NULL）传递给库，则可以禁用此宏以减小大小，但有发生崩溃的风险
  *
- * You can disable this macro to reduce size, at the risk of crashes
- * if invalid value (e.g. NULL) is passed to the library.
- *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_ENABLE_EXTRA_CHECK
 #   define PJ_ENABLE_EXTRA_CHECK    1
@@ -784,64 +725,57 @@
 
 
 /**
- * Enable name registration for exceptions with #pj_exception_id_alloc().
- * If this feature is enabled, then the library will keep track of
- * names associated with each exception ID requested by application via
- * #pj_exception_id_alloc().
+ * 使用 pj_exception_id_alloc() 为异常启用名称注册
+ * 如果启用此功能，则库将跟踪与应用程序通过 pj_exception_id_alloc() 请求的每个异常ID关联的名称
+ * 禁用此宏将使 代码和.bss大小减少一点点。
+ * 另请参见 PJ_MAX_EXCEPTION_ID
  *
- * Disabling this macro will reduce the code and .bss size by a tad bit.
- * See also #PJ_MAX_EXCEPTION_ID.
- *
- * Default: 1
+ * 默认值: 1
  */
 #ifndef PJ_HAS_EXCEPTION_NAMES
 #   define PJ_HAS_EXCEPTION_NAMES   1
 #endif
 
 /**
- * Maximum number of unique exception IDs that can be requested
- * with #pj_exception_id_alloc(). For each entry, a small record will
- * be allocated in the .bss segment.
+ * 使用 pj_exception_id_alloc()可以请求的唯一异常id的最大数目。对于每个条目，将在 .bss段中分配一个小记录
  *
- * Default: 16
+ * 默认值: 16
  */
 #ifndef PJ_MAX_EXCEPTION_ID
 #   define PJ_MAX_EXCEPTION_ID      16
 #endif
 
 /**
- * Should we use Windows Structured Exception Handling (SEH) for the
- * PJLIB exceptions.
+ * 我们是否应该对 PJLIB异常使用 Windows 结构化异常处理（SEH）
  *
- * Default: 0
+ * 默认值: 0
  */
 #ifndef PJ_EXCEPTION_USE_WIN32_SEH
 #  define PJ_EXCEPTION_USE_WIN32_SEH 0
 #endif
 
 /**
- * Should we attempt to use Pentium's rdtsc for high resolution
- * timestamp.
+ * 我们是否应该尝试使用 Pentium 的 rdtsc 作为高分辨率时间戳
  *
- * Default: 0
+ * 默认值: 0
  */
 #ifndef PJ_TIMESTAMP_USE_RDTSC
 #   define PJ_TIMESTAMP_USE_RDTSC   0
 #endif
 
 /**
- * Is native platform error positive number?
- * Default: 1 (yes)
+ * 本机平台错误是正数吗？
+ * 默认值：1（是）
  */
 #ifndef PJ_NATIVE_ERR_POSITIVE
 #   define PJ_NATIVE_ERR_POSITIVE   1
 #endif
  
 /**
- * Include error message string in the library (pj_strerror()).
- * This is very much desirable!
+ * 在库中包含错误消息字符串（pj_strerror()）。
+ * 这是非常可取的！
  *
- * Default: 1
+ * 默认值：1
  */
 #ifndef PJ_HAS_ERROR_STRING
 #   define PJ_HAS_ERROR_STRING	    1
@@ -849,12 +783,11 @@
 
 
 /**
- * Include pj_stricmp_alnum() and pj_strnicmp_alnum(), i.e. custom
- * functions to compare alnum strings. On some systems, they're faster
- * then stricmp/strcasecmp, but they can be slower on other systems.
- * When disabled, pjlib will fallback to stricmp/strnicmp.
- * 
- * Default: 0
+ * 包括 pj_stricmp_alnum()和 pj_strnicmp_alnum()，即用于比较 alnum 字符串的自定义函数。
+ * 在某些系统上，它们比 stricmp/strcasecmp 更快，但在其他系统上可能较慢。
+ * 禁用时，pjlib将回退到stricmp/strnicmp
+ *
+ * 默认值：0
  */
 #ifndef PJ_HAS_STRICMP_ALNUM
 #   define PJ_HAS_STRICMP_ALNUM	    0
@@ -862,29 +795,28 @@
 
 
 /*
- * Types of QoS backend implementation.
+ * QoS后端实现的类型
  */
 
 /** 
- * Dummy QoS backend implementation, will always return error on all
- * the APIs.
+ * 虚拟 QoS 后端实现，将始终在所有API上返回错误
  */
 #define PJ_QOS_DUMMY	    1
 
-/** QoS backend based on setsockopt(IP_TOS) */
+/** 基于setsockopt（IP_TOS）的QoS后端 */
 #define PJ_QOS_BSD	    2
 
-/** QoS backend for Windows Mobile 6 */
+/** Windows Mobile 6的 QoS后端 */
 #define PJ_QOS_WM	    3
 
-/** QoS backend for Symbian */
+/** Symbian 的QoS 后端  */
 #define PJ_QOS_SYMBIAN	    4
 
-/** QoS backend for Darwin */
+/** Darwin的QoS 后端 */
 #define PJ_QOS_DARWIN	    5
 
 /**
- * Force the use of some QoS backend API for some platforms.
+ * 强制对某些平台使用某些QoS后端API
  */
 #ifndef PJ_QOS_IMPLEMENTATION
 #   if defined(PJ_WIN32_WINCE) && PJ_WIN32_WINCE && _WIN32_WCE >= 0x502
@@ -898,12 +830,9 @@
 
 
 /**
- * Enable secure socket. For most platforms, this is implemented using
- * OpenSSL or GnuTLS, so this will require one of those libraries to
- * be installed. For Symbian platform, this is implemented natively
- * using CSecureSocket.
+ * 启用安全套接字。对于大多数平台，这是使用 OpenSSL 或 GnuTLS 实现的，因此需要安装其中一个库。对于 Symbian平台，这是使用 CSecureSocket 本机实现的。
  *
- * Default: 0 (for now)
+ * 默认值：0（暂时）
  */
 #ifndef PJ_HAS_SSL_SOCK
 #  define PJ_HAS_SSL_SOCK	    0
@@ -911,22 +840,20 @@
 
 
 /*
- * Secure socket implementation.
- * Select one of these implementations in PJ_SSL_SOCK_IMP.
+ * 安全套接字实现。
+ * 在 PJ_SSL_SOCK_IMP 中选择其中一个实现
  */
-#define PJ_SSL_SOCK_IMP_NONE 	    0	/**< Disable SSL socket.    */
-#define PJ_SSL_SOCK_IMP_OPENSSL	    1	/**< Using OpenSSL.	    */
-#define PJ_SSL_SOCK_IMP_GNUTLS      2	/**< Using GnuTLS.	    */
+#define PJ_SSL_SOCK_IMP_NONE 	    0	/**< 禁用 SSL socket.    */
+#define PJ_SSL_SOCK_IMP_OPENSSL	    1	/**< 使用 OpenSSL.	    */
+#define PJ_SSL_SOCK_IMP_GNUTLS      2	/**< 使用 GnuTLS.	    */
 
 
 /**
- * Select which SSL socket implementation to use. Currently pjlib supports
- * PJ_SSL_SOCK_IMP_OPENSSL, which uses OpenSSL, and PJ_SSL_SOCK_IMP_GNUTLS,
- * which uses GnuTLS. Setting this to PJ_SSL_SOCK_IMP_NONE will disable
- * secure socket.
+ * 选择要使用的 SSL套接字实现。目前 pjlib支持使用 OPENSSL 的 PJ_SSL_SOCK_IMP_OPENSSL和使用 GNUTLS 的 PJ_SSL_SOCK_IMP_GNUTLS。
+ * 将此设置为 PJ_SSL_SOCK_IMP_NONE 将禁用安全套接字。
  *
- * Default is PJ_SSL_SOCK_IMP_NONE if PJ_HAS_SSL_SOCK is not set, otherwise
- * it is PJ_SSL_SOCK_IMP_OPENSSL.
+ * 默认值为 PJ_SSL_SOCK_IMP_NONE如果PJ_HAS_SSL_SOCK未设置
+ * 否则为PJ_SSL_SOCK_IMP_OPENSSL
  */
 #ifndef PJ_SSL_SOCK_IMP
 #   if PJ_HAS_SSL_SOCK==0
@@ -938,9 +865,9 @@
 
 
 /**
- * Define the maximum number of ciphers supported by the secure socket.
+ * 定义安全套接字支持的最大密码数。
  *
- * Default: 256
+ * 默认值：256
  */
 #ifndef PJ_SSL_SOCK_MAX_CIPHERS
 #  define PJ_SSL_SOCK_MAX_CIPHERS   256
@@ -948,11 +875,8 @@
 
 
 /**
- * Specify what should be set as the available list of SSL_CIPHERs. For
- * example, set this as "DEFAULT" to use the default cipher list (Note:
- * PJSIP release 2.4 and before used this "DEFAULT" setting).
- *
- * Default: "HIGH:-COMPLEMENTOFDEFAULT"
+ * 指定应设置为可用 SSL_CIPHERs 列表的内容。例如，将此设置为 "DEFAULT" 以使用默认密码列表（注意：PJSIP release 2.4 和使用此"DEFAULT"设置之前）
+ * 默认值："HIGH:-COMPLEMENTOFDEFAULT"
  */
 #ifndef PJ_SSL_SOCK_OSSL_CIPHERS
 #  define PJ_SSL_SOCK_OSSL_CIPHERS   "HIGH:-COMPLEMENTOFDEFAULT"
@@ -960,9 +884,8 @@
 
 
 /**
- * Define the maximum number of curves supported by the secure socket.
- *
- * Default: 32
+ * 定义安全套接字支持的最大曲线数。
+ * 默认值：32
  */
 #ifndef PJ_SSL_SOCK_MAX_CURVES
 #  define PJ_SSL_SOCK_MAX_CURVES   32
@@ -970,10 +893,10 @@
 
 
 /**
- * Disable WSAECONNRESET error for UDP sockets on Win32 platforms. See
- * https://trac.pjsip.org/repos/ticket/1197.
+ * 对Win32平台上的UDP套接字禁用 WSAECONNRESET错误。
+ * 详见 ：https://trac.pjsip.org/repos/ticket/1197.
  *
- * Default: 1
+ * 默认值：1
  */
 #ifndef PJ_SOCK_DISABLE_WSAECONNRESET
 #   define PJ_SOCK_DISABLE_WSAECONNRESET    1
@@ -981,9 +904,9 @@
 
 
 /**
- * Maximum number of socket options in pj_sockopt_params.
+ * pj_sockopt_params 中套接字选项的最大数目。
  *
- * Default: 4
+ * 默认值：4
  */
 #ifndef PJ_MAX_SOCKOPT_PARAMS
 #   define PJ_MAX_SOCKOPT_PARAMS	    4
@@ -994,100 +917,65 @@
 /** @} */
 
 /********************************************************************
- * General macros.
+ * 常规宏
  */
 
 /**
- * @defgroup pj_dll_target Building Dynamic Link Libraries (DLL/DSO)
+ * @defgroup pj_dll_target 构建动态链接库（DLL/DSO）
  * @ingroup pj_config
  * @{
  *
- * The libraries support generation of dynamic link libraries for
- * Symbian ABIv2 target (.dso/Dynamic Shared Object files, in Symbian
- * terms). Similar procedures may be applied for Win32 DLL with some 
- * modification.
+ * 这些库支持为 Symbian ABIv2 目标生成动态链接库（.dso/Symbian术语中的动态共享对象文件）。
+ * 类似的过程可以应用于win32dll，但需要做一些修改
  *
- * Depending on the platforms, these steps may be necessary in order to
- * produce the dynamic libraries:
- *  - Create the (Visual Studio) projects to produce DLL output. PJLIB
- *    does not provide ready to use project files to produce DLL, so
- *    you need to create these projects yourself. For Symbian, the MMP
- *    files have been setup to produce DSO files for targets that 
- *    require them.
- *  - In the (Visual Studio) projects, some macros need to be declared
- *    so that appropriate modifiers are added to symbol declarations
- *    and definitions. Please see the macro section below for information
- *    regarding these macros. For Symbian, these have been taken care by the
- *    MMP files.
- *  - Some build systems require .DEF file to be specified when creating
- *    the DLL. For Symbian, .DEF files are included in pjlib distribution,
- *    in <tt>pjlib/build.symbian</tt> directory. These DEF files are 
- *    created by running <tt>./makedef.sh all</tt> from this directory,
- *    inside Mingw.
  *
- * Macros related for building DLL/DSO files:
- *  - For platforms that supports dynamic link libraries generation,
- *    it must declare <tt>PJ_EXPORT_SPECIFIER</tt> macro which value contains
- *    the prefix to be added to symbol definition, to export this 
- *    symbol in the DLL/DSO. For example, on Win32/Visual Studio, the
- *    value of this macro is \a __declspec(dllexport), and for ARM 
- *    ABIv2/Symbian, the value is \a EXPORT_C. 
- *  - For platforms that supports linking with dynamic link libraries,
- *    it must declare <tt>PJ_IMPORT_SPECIFIER</tt> macro which value contains
- *    the prefix to be added to symbol declaration, to import this 
- *    symbol from a DLL/DSO. For example, on Win32/Visual Studio, the
- *    value of this macro is \a __declspec(dllimport), and for ARM 
- *    ABIv2/Symbian, the value is \a IMPORT_C. 
- *  - Both <tt>PJ_EXPORT_SPECIFIER</tt> and <tt>PJ_IMPORT_SPECIFIER</tt> 
- *    macros above can be declared in your \a config_site.h if they are not
- *    declared by pjlib.
- *  - When PJLIB is built as DLL/DSO, both <tt>PJ_DLL</tt> and 
- *    <tt>PJ_EXPORTING</tt> macros must be declared, so that 
- *     <tt>PJ_EXPORT_SPECIFIER</tt> modifier will be added into function
- *    definition.
- *  - When application wants to link dynamically with PJLIB, then it
- *    must declare <tt>PJ_DLL</tt> macro when using/including PJLIB header,
- *    so that <tt>PJ_IMPORT_SPECIFIER</tt> modifier is properly added into 
- *    symbol declarations.
+ * 根据平台的不同，生成动态库可能需要以下步骤：
+ *  -创建（visualstudio）项目以生成DLL输出。PJLIB不提供现成的项目文件来生成DLL，所以您需要自己创建这些项目。
+ *      对于Symbian，MMP文件已设置为需要它们的目标生成DSO文件。
+ *  -在（visualstudio）项目中，需要声明一些宏，以便向符号声明和定义添加适当的修饰符。有关这些宏的信息，请参见下面的宏部分。
+ *      对于Symbian，这些都是由MMP文件处理的。
+ *  -某些生成系统需要在创建DLL时指定.DEF文件。对于Symbian，.DEF文件包含在 pjlib 发行版的 pjlib/build.Symbian 目录中。
+ *      这些DEF文件是从 Mingw 中的这个目录运行 /makedef.sh all 创建的
  *
- * When <b>PJ_DLL</b> macro is not declared, static linking is assumed.
+ * 与生成DLL/DSO文件相关的宏：
+ * -对于支持动态链接库生成的平台，它必须声明包含要添加到符号定义的前缀的 PJ_EXPORT_SPECIFIER 宏，才能在DLL/DSO中导出此符号。
+ *      例如，在Win32/Visual Studio上，此宏的值是 __declspec（dllexport），而对于ARM ABIv2/Symbian，该值是 EXPORT_C
+ * -对于支持与动态链接库链接的平台，它必须声明包含要添加到符号声明的前缀的 PJ_IMPORT_SPECIFIER 宏，才能从DLL/DSO导入此符号。
+ *      例如，在Win32/Visual Studio上，此宏的值是 __declspec（dllimport），而对于ARM ABIv2/Symbian，该值是 IMPORT_C
+ * -如果 pjlib 未声明上述 PJ_EXPORT_SPECIFIER 和 PJ_EXPORT_SPECIFIER 宏，则它们都可以在 config_site.h 中声明
+ * -当 PJLIB 构建为 DLL/DSO 时，必须声明 PJ_DLL 和 PJ_EXPORTING 宏，以便将 PJ_EXPORT_SPECIFIER 修饰符添加到函数定义中
+ * -当应用程序要与 PJLIB 动态链接时，则必须在使用/包括 PJLIB 头时声明 PJ_DLL 宏，以便将 PJ_IMPORT_SPECIFIER 修饰符正确地添加到符号声明中
  *
- * For example, here are some settings to produce DLLs with Visual Studio
- * on Windows/Win32:
- *  - Create Visual Studio projects to produce DLL. Add the appropriate 
- *    project dependencies to avoid link errors.
- *  - In the projects, declare <tt>PJ_DLL</tt> and <tt>PJ_EXPORTING</tt> 
- *    macros.
- *  - Declare these macros in your <tt>config_site.h</tt>:
+ * 如果未声明 PJ_DLL 宏，则假定为静态链接
+ *
+ * 例如，以下是在 Windows/Win32 上使用 Visual Studio生成DLL的一些设置：
+ *  -创建VisualStudio项目以生成 DLL。添加适当的项目依赖项以避免链接错误
+ *  -在项目中，声明 PJ_DLL 和 PJ_EXPORTING 宏
+ *  -在 config_site.h 中声明这些宏：
  \verbatim
 	#define PJ_EXPORT_SPECIFIER  __declspec(dllexport)
 	#define PJ_IMPORT_SPECIFIER  __declspec(dllimport)
  \endverbatim
- *  - And in the application (that links with the DLL) project, add 
- *    <tt>PJ_DLL</tt> in the macro declarations.
+    在应用程序（与DLL链接）项目中，在宏声明中添加 PJ_DLL
  */
 
 /** @} */
 
 /**
- * @defgroup pj_config Build Configuration
+ * @defgroup pj_config 生成配置
  * @{
  */
 
 /**
  * @def PJ_INLINE(type)
- * @param type The return type of the function.
- * Expand the function as inline.
+ * @param 键入函数的返回类型
+ * 将函数展开为inline
  */
 #define PJ_INLINE(type)	  PJ_INLINE_SPECIFIER type
 
 /**
- * This macro declares platform/compiler specific specifier prefix
- * to be added to symbol declaration to export the symbol when PJLIB
- * is built as dynamic library.
- *
- * This macro should have been added by platform specific headers,
- * if the platform supports building dynamic library target. 
+ * 当 PJLIB 构建为动态库时，此宏声明要添加到符号声明中的平台/编译器特定说明符前缀，以导出符号。
+ * 如果平台支持构建动态库目标，则此宏应该由特定于平台的标头添加
  */
 #ifndef PJ_EXPORT_DECL_SPECIFIER
 #   define PJ_EXPORT_DECL_SPECIFIER
@@ -1095,12 +983,8 @@
 
 
 /**
- * This macro declares platform/compiler specific specifier prefix
- * to be added to symbol definition to export the symbol when PJLIB
- * is built as dynamic library.
- *
- * This macro should have been added by platform specific headers,
- * if the platform supports building dynamic library target. 
+ * 当 PJLIB 构建为动态库时，此宏声明要添加到符号定义的平台/编译器特定说明符前缀，以导出符号。
+ * 如果平台支持构建动态库目标，则此宏应该由特定于平台的标头添加
  */
 #ifndef PJ_EXPORT_DEF_SPECIFIER
 #   define PJ_EXPORT_DEF_SPECIFIER
@@ -1108,11 +992,8 @@
 
 
 /**
- * This macro declares platform/compiler specific specifier prefix
- * to be added to symbol declaration to import the symbol.
- *
- * This macro should have been added by platform specific headers,
- * if the platform supports building dynamic library target.
+ * 此宏声明要添加到符号声明以导入符号的平台/编译器特定说明符前缀。
+ * 如果平台支持构建动态库目标，则此宏应该由特定于平台的标头添加
  */
 #ifndef PJ_IMPORT_DECL_SPECIFIER
 #   define PJ_IMPORT_DECL_SPECIFIER
@@ -1120,7 +1001,7 @@
 
 
 /**
- * This macro has been deprecated. It will evaluate to nothing.
+ * 此宏已被弃用。它将评估为零
  */
 #ifndef PJ_EXPORT_SYMBOL
 #   define PJ_EXPORT_SYMBOL(x)
@@ -1129,8 +1010,8 @@
 
 /**
  * @def PJ_DECL(type)
- * @param type The return type of the function.
- * Declare a function.
+ * @param type 函数的返回类型
+ * 声明函数
  */
 #if defined(PJ_DLL)
 #   if defined(PJ_EXPORTING)
@@ -1149,8 +1030,8 @@
 
 /**
  * @def PJ_DEF(type)
- * @param type The return type of the function.
- * Define a function.
+ * @param type 函数的返回类型
+ * 定义一个函数
  */
 #if defined(PJ_DLL) && defined(PJ_EXPORTING)
 #   define PJ_DEF(type)		    PJ_EXPORT_DEF_SPECIFIER type
@@ -1161,21 +1042,21 @@
 
 /**
  * @def PJ_DECL_NO_RETURN(type)
- * @param type The return type of the function.
- * Declare a function that will not return.
+ * @param type 函数的返回类型
+ * 声明一个没有返回值的函数。
  */
 /**
  * @def PJ_IDECL_NO_RETURN(type)
- * @param type The return type of the function.
- * Declare an inline function that will not return.
+ * @param type 函数的返回类型
+ * 声明一个没有返回值的内联函数
  */
 /**
  * @def PJ_BEGIN_DECL
- * Mark beginning of declaration section in a header file.
+ * 在头文件中标记声明节的开头
  */
 /**
  * @def PJ_END_DECL
- * Mark end of declaration section in a header file.
+ * 在头文件中标记声明节的结尾
  */
 #ifdef __cplusplus
 #  define PJ_DECL_NO_RETURN(type)   PJ_DECL(type) PJ_NORETURN
@@ -1193,8 +1074,8 @@
 
 /**
  * @def PJ_DECL_DATA(type)
- * @param type The data type.
- * Declare a global data.
+ * @param type 数据类型
+ * 声明全局变量
  */ 
 #if defined(PJ_DLL)
 #   if defined(PJ_EXPORTING)
@@ -1209,8 +1090,8 @@
 
 /**
  * @def PJ_DEF_DATA(type)
- * @param type The data type.
- * Define a global data.
+ * @param type 数据类型
+ * 定义一个全局变量
  */ 
 #if defined(PJ_DLL) && defined(PJ_EXPORTING)
 #   define PJ_DEF_DATA(type)	    PJ_EXPORT_DEF_SPECIFIER type
@@ -1221,13 +1102,13 @@
 
 /**
  * @def PJ_IDECL(type)
- * @param type  The function's return type.
- * Declare a function that may be expanded as inline.
+ * @param type  函数返回类型
+ * 声明一个可以扩展为内联的函数
  */
 /**
  * @def PJ_IDEF(type)
- * @param type  The function's return type.
- * Define a function that may be expanded as inline.
+ * @param type  函数返回类型
+ * 定义一个可以扩展为内联的函数
  */
 
 #if PJ_FUNCTIONS_ARE_INLINED
@@ -1241,15 +1122,15 @@
 
 /**
  * @def PJ_UNUSED_ARG(arg)
- * @param arg   The argument name.
- * PJ_UNUSED_ARG prevents warning about unused argument in a function.
+ * @param arg   参数名称
+ * PJ_UNUSED_ARG 防止对函数中未使用的参数发出警告
  */
 #define PJ_UNUSED_ARG(arg)  (void)arg
 
 /**
  * @def PJ_TODO(id)
- * @param id    Any identifier that will be printed as TODO message.
- * PJ_TODO macro will display TODO message as warning during compilation.
+ * @param id    将作为TODO消息打印的标识符
+ * PJ_TODO 宏在编译期间将TODO消息显示为警告
  * Example: PJ_TODO(CLEAN_UP_ERROR);
  */
 #ifndef PJ_TODO
@@ -1257,24 +1138,24 @@
 #endif
 
 /**
- * Simulate race condition by sleeping the thread in strategic locations.
- * Default: no!
+ * 通过在战略位置休眠线程来模拟竞争条件。
+ * 默认值：否
  */
 #ifndef PJ_RACE_ME
 #  define PJ_RACE_ME(x)
 #endif
 
 /**
- * Function attributes to inform that the function may throw exception.
+ * 函数属性来通知函数可能引发异常
  *
- * @param x     The exception list, enclosed in parenthesis.
+ * @param x     异常列表，用括号括起来
  */
 #define __pj_throw__(x)
 
 /** @} */
 
 /********************************************************************
- * Sanity Checks
+ * 健全性检查
  */
 #ifndef PJ_HAS_HIGH_RES_TIMER
 #  error "PJ_HAS_HIGH_RES_TIMER is not defined!"
@@ -1306,44 +1187,46 @@
 
 PJ_BEGIN_DECL
 
-/** PJLIB version major number. */
+/** PJLIB 主版本号 */
 #define PJ_VERSION_NUM_MAJOR	2
 
-/** PJLIB version minor number. */
+/** PJLIB 次版本号 */
 #define PJ_VERSION_NUM_MINOR	8
 
-/** PJLIB version revision number. */
+/** PJLIB 修订版本号 */
 #define PJ_VERSION_NUM_REV      0
 
 /**
- * Extra suffix for the version (e.g. "-trunk"), or empty for
- * web release version.
+ * 版本的附加后缀（例如 "-trunk"），或对于web发布版本为空
  */
 #define PJ_VERSION_NUM_EXTRA	""
 
 /**
- * PJLIB version number consists of three bytes with the following format:
- * 0xMMIIRR00, where MM: major number, II: minor number, RR: revision
- * number, 00: always zero for now.
+ * PJLIB 版本号由以下格式的三个字节组成：
+ *  0xMMIIRR00，
+ *      其中MM:主要编号，
+ *      II:次要编号，
+ *      RR:修订编号，
+ *      00:目前始终为零
  */
 #define PJ_VERSION_NUM	((PJ_VERSION_NUM_MAJOR << 24) |	\
 			 (PJ_VERSION_NUM_MINOR << 16) | \
 			 (PJ_VERSION_NUM_REV << 8))
 
 /**
- * PJLIB version string constant. @see pj_get_version()
+ * PJLIB 版本字符串常量 @see pj_get_version()
  */
 PJ_DECL_DATA(const char*) PJ_VERSION;
 
 /**
- * Get PJLIB version string.
+ * Get PJLIB 版本字符串
  *
- * @return #PJ_VERSION constant.
+ * @return #PJ_VERSION 常量
  */
 PJ_DECL(const char*) pj_get_version(void);
 
 /**
- * Dump configuration to log with verbosity equal to info(3).
+ * 将配置转储到日志，详细程度等于 info（3）
  */
 PJ_DECL(void) pj_dump_config(void);
 

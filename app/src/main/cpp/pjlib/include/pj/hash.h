@@ -22,7 +22,7 @@
 
 /**
  * @file hash.h
- * @brief Hash Table.
+ * @brief 哈希表
  */
 
 #include <pj/types.h>
@@ -30,85 +30,75 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_HASH Hash Table
+ * @defgroup PJ_HASH 哈希表
  * @ingroup PJ_DS
  * @{
- * A hash table is a dictionary in which keys are mapped to array positions by
- * hash functions. Having the keys of more than one item map to the same 
- * position is called a collision. In this library, we will chain the nodes
- * that have the same key in a list.
+ * 哈希表是一种字典，其中键通过哈希函数映射到数组位置。将多个项目的关键点映射到同一位置称为碰撞。
+ * 在这个库中，我们将链接列表中具有相同键的节点
  */
 
 /**
- * If this constant is used as keylen, then the key is interpreted as
- * NULL terminated string.
+ * 如果该常量用作 keylen，则该键将被解释为以 NULL结尾的字符串
  */
 #define PJ_HASH_KEY_STRING	((unsigned)-1)
 
 /**
- * This indicates the size of of each hash entry.
+ * 这表示每个哈希项的大小
  */
 #define PJ_HASH_ENTRY_BUF_SIZE	(3*sizeof(void*) + 2*sizeof(pj_uint32_t))
 
 /**
- * Type declaration for entry buffer, used by #pj_hash_set_np()
+ * 条目缓冲区的类型声明，由 pj_hash_set_np() 使用
  */
 typedef void *pj_hash_entry_buf[(PJ_HASH_ENTRY_BUF_SIZE+sizeof(void*)-1)/(sizeof(void*))];
 
 /**
- * This is the function that is used by the hash table to calculate hash value
- * of the specified key.
+ * 这是哈希表用来计算指定键的哈希值的函数
  *
- * @param hval	    the initial hash value, or zero.
- * @param key	    the key to calculate.
- * @param keylen    the length of the key, or PJ_HASH_KEY_STRING to treat 
- *		    the key as null terminated string.
+ * @param hval	    初始哈希值，或零
+ * @param key	    计算的key
+ * @param keylen    密钥的长度，或 PJ_HASH_KEY_STRING 将密钥视为以 null结尾的字符串
  *
- * @return          the hash value.
+ * @return          哈希值
  */
 PJ_DECL(pj_uint32_t) pj_hash_calc(pj_uint32_t hval, 
 				  const void *key, unsigned keylen);
 
 
 /**
- * Convert the key to lowercase and calculate the hash value. The resulting
- * string is stored in \c result.
+ * 将密钥转换为小写并计算哈希值。结果字符串存储在结果中
  *
- * @param hval      The initial hash value, normally zero.
- * @param result    Optional. Buffer to store the result, which must be enough
- *                  to hold the string.
- * @param key       The input key to be converted and calculated.
+ * @param hval      初始散列值，通常为零
+ * @param result    可选。缓冲区来存储结果，结果必须足以容纳字符串
+ * @param key       要转换和计算的输入key
  *
- * @return          The hash value.
+ * @return          哈希值
  */
 PJ_DECL(pj_uint32_t) pj_hash_calc_tolower(pj_uint32_t hval,
                                           char *result,
                                           const pj_str_t *key);
 
 /**
- * Create a hash table with the specified 'bucket' size.
+ * 创建具有指定 'bucket' 大小的哈希表
  *
- * @param pool	the pool from which the hash table will be allocated from.
- * @param size	the bucket size, which will be round-up to the nearest 2^n-1
+ * @param pool	从中分配哈希表的池
+ * @param size	桶大小，将四舍五入到最接近的 2^n-1
  *
- * @return the hash table.
+ * @return 哈希表
  */
 PJ_DECL(pj_hash_table_t*) pj_hash_create(pj_pool_t *pool, unsigned size);
 
 
 /**
- * Get the value associated with the specified key.
+ * 获取与指定键关联的值
  *
- * @param ht	    the hash table.
- * @param key	    the key to look for.
- * @param keylen    the length of the key, or PJ_HASH_KEY_STRING to use the
- *		    string length of the key.
- * @param hval	    if this argument is not NULL and the value is not zero,
- *		    the value will be used as the computed hash value. If
- *		    the argument is not NULL and the value is zero, it will
- *		    be filled with the computed hash upon return.
+ * @param ht	    哈希表
+ * @param key	    要查找的key
+ * @param keylen    key 的长度，或 PJ_HASH_KEY_STRING来使用密钥的字符串长度
+ * @param hval	    如果此参数不为NULL且值不为零，则该值将用作计算的哈希值。如果参数不为NULL且值为零，
+ * 					则返回时将用计算的哈希值填充
  *
- * @return the value associated with the key, or NULL if the key is not found.
+ * @return 与键关联的值，如果找不到键，则为NULL
  */
 PJ_DECL(void *) pj_hash_get( pj_hash_table_t *ht,
 			     const void *key, unsigned keylen,
@@ -116,8 +106,7 @@ PJ_DECL(void *) pj_hash_get( pj_hash_table_t *ht,
 
 
 /**
- * Variant of #pj_hash_get() with the key being converted to lowercase when
- * calculating the hash value.
+ * pj_hash_get() 的变体，在计算哈希值时将键转换为小写
  *
  * @see pj_hash_get()
  */
@@ -127,25 +116,15 @@ PJ_DECL(void *) pj_hash_get_lower( pj_hash_table_t *ht,
 
 
 /**
- * Associate/disassociate a value with the specified key. If value is not
- * NULL and entry already exists, the entry's value will be overwritten.
- * If value is not NULL and entry does not exist, a new one will be created
- * with the specified pool. Otherwise if value is NULL, entry will be
- * deleted if it exists.
+ * 将值与指定键关联/取消关联。如果值不为NULL且条目已存在，则将覆盖该条目的值。
+ * 如果值不为NULL且条目不存在，则将使用指定的池创建一个新条目。否则，如果值为空，则条目将被删除（如果存在）
  *
- * @param pool	    the pool to allocate the new entry if a new entry has to be
- *		    created.
- * @param ht	    the hash table.
- * @param key	    the key. If pool is not specified, the key MUST point to
- * 		    buffer that remains valid for the duration of the entry.
- * @param keylen    the length of the key, or PJ_HASH_KEY_STRING to use the 
- *		    string length of the key.
- * @param hval	    if the value is not zero, then the hash table will use
- *		    this value to search the entry's index, otherwise it will
- *		    compute the key. This value can be obtained when calling
- *		    #pj_hash_get().
- * @param value	    value to be associated, or NULL to delete the entry with
- *		    the specified key.
+ * @param pool	    如果必须创建新条目，则分配新条目的池
+ * @param ht	    哈希表
+ * @param key	    key。如果未指定pool，则键必须指向在条目期间保持有效的缓冲区
+ * @param keylen    key的长度，或 PJ_HASH_KEY_STRING 来使用密钥的字符串长度
+ * @param hval		如果该值不为零，则哈希表将使用该值搜索条目的索引，否则将计算 key。调用 pj_hash_get() 时可以获取此值
+ * @param value	    要关联的值，或 NULL以删除具有指定键的条目
  */
 PJ_DECL(void) pj_hash_set( pj_pool_t *pool, pj_hash_table_t *ht,
 			   const void *key, unsigned keylen, pj_uint32_t hval,
@@ -153,8 +132,7 @@ PJ_DECL(void) pj_hash_set( pj_pool_t *pool, pj_hash_table_t *ht,
 
 
 /**
- * Variant of #pj_hash_set() with the key being converted to lowercase when
- * calculating the hash value.
+ * pj_hash_set() 的变体，在计算哈希值时将键转换为小写
  *
  * @see pj_hash_set()
  */
