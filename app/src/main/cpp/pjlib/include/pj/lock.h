@@ -22,48 +22,45 @@
 
 /**
  * @file lock.h
- * @brief Higher abstraction for locking objects.
+ * @brief 锁的高级抽象
  */
 #include <pj/types.h>
 
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_LOCK Lock Objects
+ * @defgroup PJ_LOCK 锁对象
  * @ingroup PJ_OS
  * @{
  *
- * <b>Lock Objects</b> are higher abstraction for different lock mechanisms.
- * It offers the same API for manipulating different lock types (e.g.
- * @ref PJ_MUTEX "mutex", @ref PJ_SEM "semaphores", or null locks).
- * Because Lock Objects have the same API for different types of lock
- * implementation, it can be passed around in function arguments. As the
- * result, it can be used to control locking policy for  a particular
- * feature.
+ * 锁对象是对不同锁机制的更高抽象，它提供相同的API来操作不同的锁类型
+ * （例如@ref PJ_MUTEX "mutex"、@ref PJ_SEM "semaphores"或空锁）。
+ * 因为锁对象对于不同类型的锁实现具有相同的API，所以可以在函数参数中传递。因此，它可以用于控制特定功能的锁定策略
+ *
  */
 
 
 /**
- * Create simple, non recursive mutex lock object.
+ * 创建简单的非递归互斥锁对象
  *
- * @param pool	    Memory pool.
- * @param name	    Lock object's name.
- * @param lock	    Pointer to store the returned handle.
+ * @param pool	    内存池
+ * @param name	    锁对象名称
+ * @param lock	    存储返回锁句柄的指针
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_create_simple_mutex( pj_pool_t *pool,
 						  const char *name,
 						  pj_lock_t **lock );
 
 /**
- * Create recursive mutex lock object.
+ * 创建一个递归锁
  *
- * @param pool	    Memory pool.
- * @param name	    Lock object's name.
- * @param lock	    Pointer to store the returned handle.
+ * @param pool	    内存池
+ * @param name	    锁对象的名称
+ * @param lock	    存储返回锁句柄的指针
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_create_recursive_mutex( pj_pool_t *pool,
 						     const char *name,
@@ -71,14 +68,13 @@ PJ_DECL(pj_status_t) pj_lock_create_recursive_mutex( pj_pool_t *pool,
 
 
 /**
- * Create NULL mutex. A NULL mutex doesn't actually have any synchronization
- * object attached to it.
+ * 创建空互斥体。空互斥体实际上没有任何同步对象附加到它
  *
- * @param pool	    Memory pool.
- * @param name	    Lock object's name.
- * @param lock	    Pointer to store the returned handle.
+ * @param pool	    内存池
+ * @param name	    锁对象的名称
+ * @param lock	    存储返回锁句柄的指针
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_create_null_mutex( pj_pool_t *pool,
 						const char *name,
@@ -87,15 +83,15 @@ PJ_DECL(pj_status_t) pj_lock_create_null_mutex( pj_pool_t *pool,
 
 #if defined(PJ_HAS_SEMAPHORE) && PJ_HAS_SEMAPHORE != 0
 /**
- * Create semaphore lock object.
+ * 创建信号量锁对象
  *
- * @param pool	    Memory pool.
- * @param name	    Lock object's name.
- * @param initial   Initial value of the semaphore.
- * @param max	    Maximum value of the semaphore.
- * @param lock	    Pointer to store the returned handle.
+ * @param pool	    内存池
+ * @param name	    锁对象的名称
+ * @param initial   信号量的初始值
+ * @param max	    信号量的最大值
+ * @param lock	    存储返回锁句柄的指针
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_create_semaphore( pj_pool_t *pool,
 					       const char *name,
@@ -106,41 +102,41 @@ PJ_DECL(pj_status_t) pj_lock_create_semaphore( pj_pool_t *pool,
 #endif	/* PJ_HAS_SEMAPHORE */
 
 /**
- * Acquire lock on the specified lock object.
+ * 获取指定锁对象上的锁
  *
- * @param lock	    The lock object.
+ * @param lock	    锁对象
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_acquire( pj_lock_t *lock );
 
 
 /**
- * Try to acquire lock on the specified lock object.
+ * 尝试获取指定锁对象上的锁
  *
- * @param lock	    The lock object.
+ * @param lock	    锁对象
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_tryacquire( pj_lock_t *lock );
 
 
 /**
- * Release lock on the specified lock object.
+ * 释放指定对象上的锁
  *
- * @param lock	    The lock object.
+ * @param lock	    锁对象
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_release( pj_lock_t *lock );
 
 
 /**
- * Destroy the lock object.
+ * 销毁锁对象
  *
- * @param lock	    The lock object.
+ * @param lock	    锁对象
  *
- * @return	    PJ_SUCCESS or the appropriate error code.
+ * @return	    成功返回 PJ_SUCCESS，否则返回相应的错误码
  */
 PJ_DECL(pj_status_t) pj_lock_destroy( pj_lock_t *lock );
 
@@ -149,45 +145,33 @@ PJ_DECL(pj_status_t) pj_lock_destroy( pj_lock_t *lock );
 
 
 /**
- * @defgroup PJ_GRP_LOCK Group Lock
+ * @defgroup PJ_GRP_LOCK 组锁
  * @ingroup PJ_LOCK
  * @{
  *
- * Group lock is a synchronization object to manage concurrency among members
- * within the same logical group. Example of such groups are:
+ * 组锁是一个同步对象，用于管理同一逻辑组中成员之间的并发性。这类群体的例子有：
+ * 	-对话框，其成员包括对话框本身、邀请会话和多个事务
+ * 	-ICE，其成员包括 ICE流传输、ICE会话、STUN 套接字、TURN 套接字和向下到ioqueue key
+ * 	组锁有三个功能：
+ * 		-互斥：防止多个线程同时访问资源
+ * 		-会话管理：确保资源在其他人仍在使用或即将使用时不会被销毁
+ * 		-锁协调器：在多个锁对象之间提供统一的锁顺序，这是避免死锁所必需的
  *
- *   - dialog, which has members such as the dialog itself, an invite session,
- *     and several transactions
- *   - ICE, which has members such as ICE stream transport, ICE session, STUN
- *     socket, TURN socket, and down to ioqueue key
+ * 	组锁的要求是：
+ * 		-必须满足上述所有功能
+ * 		-必须允许成员加入或离开组（例如，可以在对话框中添加或删除事务）
+ * 		-必须能够与外部锁同步（例如，对话框锁必须能够与 PJSUA 锁同步）
  *
- * Group lock has three functions:
- *
- *   - mutual exclusion: to protect resources from being accessed by more than
- *     one threads at the same time
- *   - session management: to make sure that the resource is not destroyed
- *     while others are still using or about to use it.
- *   - lock coordinator: to provide uniform lock ordering among more than one
- *     lock objects, which is necessary to avoid deadlock.
- *
- * The requirements of the group lock are:
- *
- *    - must satisfy all the functions above
- *    - must allow members to join or leave the group (for example,
- *      transaction may be added or removed from a dialog)
- *    - must be able to synchronize with external lock (for example, a dialog
- *      lock must be able to sync itself with PJSUA lock)
- *
- * Please see https://trac.pjsip.org/repos/wiki/Group_Lock for more info.
+ * 更多信息详见： https://trac.pjsip.org/repos/wiki/Group_Lock
  */
 
 /**
- * Settings for creating the group lock.
+ * 创建组锁的设置
  */
 typedef struct pj_grp_lock_config
 {
     /**
-     * Creation flags, currently must be zero.
+     * 创建标识，当前必须为零
      */
     unsigned	flags;
 
@@ -195,42 +179,35 @@ typedef struct pj_grp_lock_config
 
 
 /**
- * Initialize the config with the default values.
+ * 使用默认值初始化配置
  *
- * @param cfg		The config to be initialized.
+ * @param cfg		要初始化的配置
  */
 PJ_DECL(void) pj_grp_lock_config_default(pj_grp_lock_config *cfg);
 
 /**
- * Create a group lock object. Initially the group lock will have reference
- * counter of one.
+ * 创建组锁对象。最初，组锁的引用计数器为1
  *
- * @param pool		The group lock only uses the pool parameter to get
- * 			the pool factory, from which it will create its own
- * 			pool.
- * @param cfg		Optional configuration.
- * @param p_grp_lock	Pointer to receive the newly created group lock.
+ * @param pool		组锁只使用 pool参数来获取池工厂，它将从中创建自己的池
+ * @param cfg		可选配置
+ * @param p_grp_lock	接收新创建的组锁的指针
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_create(pj_pool_t *pool,
                                         const pj_grp_lock_config *cfg,
                                         pj_grp_lock_t **p_grp_lock);
 
 /**
- * Create a group lock object, with the specified destructor handler, to be
- * called by the group lock when it is about to be destroyed. Initially the
- * group lock will have reference counter of one.
+ * 使用指定的析构函数处理程序创建一个组锁对象，在组锁即将被销毁时由组锁调用。最初，组锁的引用计数器为1
  *
- * @param pool		The group lock only uses the pool parameter to get
- * 			the pool factory, from which it will create its own
- * 			pool.
- * @param cfg		Optional configuration.
- * @param member	A pointer to be passed to the handler.
- * @param handler	The destroy handler.
- * @param p_grp_lock	Pointer to receive the newly created group lock.
+ * @param pool		组锁只使用 pool参数来获取池工厂，它将从中创建自己的池
+ * @param cfg		可选配置
+ * @param member	要传递给处理程序的指针
+ * @param handler	销毁的处理函数
+ * @param p_grp_lock	接收新创建的组锁的指针
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_create_w_handler(pj_pool_t *pool,
                                         	  const pj_grp_lock_config *cfg,
@@ -239,66 +216,61 @@ PJ_DECL(pj_status_t) pj_grp_lock_create_w_handler(pj_pool_t *pool,
                                         	  pj_grp_lock_t **p_grp_lock);
 
 /**
- * Forcibly destroy the group lock, ignoring the reference counter value.
+ * 强制销毁组锁，忽略引用计数器值
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_destroy( pj_grp_lock_t *grp_lock);
 
 /**
- * Move the contents of the old lock to the new lock and destroy the
- * old lock.
+ * 将旧锁的内容移动到新锁并销毁旧锁
  *
- * @param old_lock	The old group lock to be destroyed.
- * @param new_lock	The new group lock.
+ * @param old_lock	要销毁的旧组锁
+ * @param new_lock	新的组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_replace(pj_grp_lock_t *old_lock,
                                          pj_grp_lock_t *new_lock);
 
 /**
- * Acquire lock on the specified group lock.
+ * 获取指定组锁上的锁
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_acquire( pj_grp_lock_t *grp_lock);
 
 /**
- * Acquire lock on the specified group lock if it is available, otherwise
- * return immediately wihout waiting.
+ * 获取指定组锁上的锁（如果可用），否则立即返回而不等待
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_tryacquire( pj_grp_lock_t *grp_lock);
 
 /**
- * Release the previously held lock. This may cause the group lock
- * to be destroyed if it is the last one to hold the reference counter.
- * In that case, the function will return PJ_EGONE.
+ * 释放先前持有的锁。如果组锁是最后一个持有引用计数器的组锁，则可能会导致组锁被销毁。在这种情况下，函数将返回PJ_EGONE
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_release( pj_grp_lock_t *grp_lock);
 
 /**
- * Add a destructor handler, to be called by the group lock when it is
- * about to be destroyed.
+ * 添加一个析构函数处理程序，在组锁即将被销毁时由组锁调用
  *
- * @param grp_lock	The group lock.
- * @param pool		Pool to allocate memory for the handler.
- * @param member	A pointer to be passed to the handler.
- * @param handler	The destroy handler.
+ * @param grp_lock	组锁
+ * @param pool		池为处理程序分配内存
+ * @param member	要传递给处理程序的指针
+ * @param handler	销毁的处理函数
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_add_handler(pj_grp_lock_t *grp_lock,
                                              pj_pool_t *pool,
@@ -306,25 +278,24 @@ PJ_DECL(pj_status_t) pj_grp_lock_add_handler(pj_grp_lock_t *grp_lock,
                                              void (*handler)(void *member));
 
 /**
- * Remove previously registered handler. All parameters must be the same
- * as when the handler was added.
+ * 删除以前注册的处理程序。所有参数必须与添加处理程序时相同
  *
- * @param grp_lock	The group lock.
- * @param member	A pointer to be passed to the handler.
- * @param handler	The destroy handler.
+ * @param grp_lock	组锁
+ * @param member	要传递给处理程序的指针
+ * @param handler	销毁的处理函数
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_del_handler(pj_grp_lock_t *grp_lock,
                                              void *member,
                                              void (*handler)(void *member));
 
 /**
- * Increment reference counter to prevent the group lock grom being destroyed.
+ * 增加参考计数器，以防止组锁被销毁
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 #if !PJ_GRP_LOCK_DEBUG
 PJ_DECL(pj_status_t) pj_grp_lock_add_ref(pj_grp_lock_t *grp_lock);
@@ -341,12 +312,11 @@ PJ_DECL(pj_status_t) pj_grp_lock_add_ref_dbg(pj_grp_lock_t *grp_lock,
 #endif
 
 /**
- * Decrement the reference counter. When the counter value reaches zero, the
- * group lock will be destroyed and all destructor handlers will be called.
+ * 减少参考计数器。当计数器值达到零时，将销毁组锁并调用所有析构函数处理程序
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 #if !PJ_GRP_LOCK_DEBUG
 PJ_DECL(pj_status_t) pj_grp_lock_dec_ref(pj_grp_lock_t *grp_lock);
@@ -363,55 +333,46 @@ PJ_DECL(pj_status_t) pj_grp_lock_dec_ref_dbg(pj_grp_lock_t *grp_lock,
 #endif
 
 /**
- * Get current reference count value. This normally is only used for
- * debugging purpose.
+ * 获取当前引用计数值。这通常仅用于调试目的
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  *
- * @return		The reference count value.
+ * @return		引用数值
  */
 PJ_DECL(int) pj_grp_lock_get_ref(pj_grp_lock_t *grp_lock);
 
 
 /**
- * Dump group lock info for debugging purpose. If group lock debugging is
- * enabled (via PJ_GRP_LOCK_DEBUG) macro, this will print the group lock
- * reference counter value along with the source file and line. If
- * debugging is disabled, this will only print the reference counter.
+ * 转储组锁信息以进行调试。如果启用了组锁调试（通过 PJ_GRP_LOCK_DEBUG）宏，这将打印组锁引用计数器值以及源文件和行。
+ * 如果禁用调试，这将只打印引用计数器
  *
- * @param grp_lock	The group lock.
+ * @param grp_lock	组锁
  */
 PJ_DECL(void) pj_grp_lock_dump(pj_grp_lock_t *grp_lock);
 
 
 /**
- * Synchronize an external lock with the group lock, by adding it to the
- * list of locks to be acquired by the group lock when the group lock is
- * acquired.
+ * 将外部锁与组锁同步，方法是在获取组锁时将其添加到组锁要获取的锁列表中。
+ * 'pos' 参数指定锁顺序，以及相对于组锁的锁顺序的相对位置。
+ * 'pos' 值较低的锁将首先锁定，值为负值的锁将在组锁之前锁定（组锁的 'pos' 值为零）
  *
- * The ''pos'' argument specifies the lock order and also the relative
- * position with regard to lock ordering against the group lock. Locks with
- * lower ''pos'' value will be locked first, and those with negative value
- * will be locked before the group lock (the group lock's ''pos'' value is
- * zero).
+ * @param grp_lock	组锁
+ * @param ext_lock	外部锁
+ * @param pos		位置
  *
- * @param grp_lock	The group lock.
- * @param ext_lock	The external lock
- * @param pos		The position.
- *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_chain_lock(pj_grp_lock_t *grp_lock,
                                             pj_lock_t *ext_lock,
                                             int pos);
 
 /**
- * Remove an external lock from group lock's list of synchronized locks.
+ * 从组锁的同步锁列表中删除外部锁
  *
- * @param grp_lock	The group lock.
- * @param ext_lock	The external lock
+ * @param grp_lock	组锁
+ * @param ext_lock	外部锁
  *
- * @return		PJ_SUCCESS or the appropriate error code.
+ * @return		成功返回 PJ_SUCCESS，否则返回相应错误码
  */
 PJ_DECL(pj_status_t) pj_grp_lock_unchain_lock(pj_grp_lock_t *grp_lock,
                                               pj_lock_t *ext_lock);

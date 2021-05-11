@@ -22,7 +22,7 @@
 
 /**
  * @file list.h
- * @brief Linked List data structure.
+ * @brief 链表数据结构
  */
 
 #include <pj/types.h>
@@ -30,33 +30,27 @@
 PJ_BEGIN_DECL
 
 /*
- * @defgroup PJ_DS Data Structure.
+ * @defgroup PJ_DS 数据结构
  */
 
 /**
- * @defgroup PJ_LIST Linked List
+ * @defgroup PJ_LIST 链表
  * @ingroup PJ_DS
  * @{
  *
- * List in PJLIB is implemented as doubly-linked list, and it won't require
- * dynamic memory allocation (just as all PJLIB data structures). The list here
- * should be viewed more like a low level C list instead of high level C++ list
- * (which normally are easier to use but require dynamic memory allocations),
- * therefore all caveats with C list apply here too (such as you can NOT put
- * a node in more than one lists).
+ * PJLIB中的 List 实现为双链表，它不需要动态内存分配（就像所有PJLIB数据结构一样）。此处的列表应该更像是一个低级别的C列表，
+ * 而不是高级C++列表（通常更容易使用，但需要动态内存分配），因此所有C列表的注意事项也适用于这里（比如，不能放置一个节点到多个列表中）
  *
- * \section pj_list_example_sec Examples
+ * \section pj_list_example_sec 例子
  *
- * See below for examples on how to manipulate linked list:
+ * 有关如何操作链表的示例，请参见下文：
  *  - @ref page_pjlib_samples_list_c
  *  - @ref page_pjlib_list_test
  */
 
 
 /**
- * Use this macro in the start of the structure declaration to declare that
- * the structure can be used in the linked list operation. This macro simply
- * declares additional member @a prev and @a next to the structure.
+ * 在结构声明的开头使用此宏可以声明该结构可用于链表操作。这个宏只是附加结构声明 prev和 next 成员
  * @hideinitializer
  */
 #define PJ_DECL_LIST_MEMBER(type)                       \
@@ -67,9 +61,7 @@ PJ_BEGIN_DECL
 
 
 /**
- * This structure describes generic list node and list. The owner of this list
- * must initialize the 'value' member to an appropriate value (typically the
- * owner itself).
+ * 此结构描述通用列表节点和列表。此列表的所有者必须将 'value' 成员初始化为适当的值（通常是所有者本身）
  */
 struct pj_list
 {
@@ -78,12 +70,10 @@ struct pj_list
 
 
 /**
- * Initialize the list.
- * Initially, the list will have no member, and function pj_list_empty() will
- * always return nonzero (which indicates TRUE) for the newly initialized 
- * list.
+ * 初始化列表
+ * 最初，列表将没有成员，函数 pj_list_empty() 将始终为新初始化的列表返回非零（表示TRUE）
  *
- * @param node The list head.
+ * @param node 链表头
  */
 PJ_INLINE(void) pj_list_init(pj_list_type * node)
 {
@@ -92,11 +82,11 @@ PJ_INLINE(void) pj_list_init(pj_list_type * node)
 
 
 /**
- * Check that the list is empty.
+ * 检查链表是否为空表
  *
- * @param node	The list head.
+ * @param node	链表头
  *
- * @return Non-zero if the list is empty, or zero if it is not empty.
+ * @return  空返回非零值，否则为零值
  *
  */
 PJ_INLINE(int) pj_list_empty(const pj_list_type * node)
@@ -106,10 +96,10 @@ PJ_INLINE(int) pj_list_empty(const pj_list_type * node)
 
 
 /**
- * Insert the node to the list before the specified element position.
+ * 将节点插入到指定元素位置之前的列表中
  *
- * @param pos	The element to which the node will be inserted before. 
- * @param node	The element to be inserted.
+ * @param pos	将在其前面插入节点的元素
+ * @param node	待插入的元素
  *
  * @return void.
  */
@@ -117,11 +107,10 @@ PJ_IDECL(void)	pj_list_insert_before(pj_list_type *pos, pj_list_type *node);
 
 
 /**
- * Insert the node to the back of the list. This is just an alias for
- * #pj_list_insert_before().
+ * 将节点插入列表的后面。这只是 pj_list_insert_before() 的别名
  *
- * @param list	The list. 
- * @param node	The element to be inserted.
+ * @param list	链表
+ * @param node	待插入的元素
  */
 PJ_INLINE(void) pj_list_push_back(pj_list_type *list, pj_list_type *node)
 {
@@ -130,20 +119,19 @@ PJ_INLINE(void) pj_list_push_back(pj_list_type *list, pj_list_type *node)
 
 
 /**
- * Inserts all nodes in \a nodes to the target list.
+ * 将节点列表中的节点插入到目标链表
  *
- * @param lst	    The target list.
- * @param nodes	    Nodes list.
+ * @param lst	    目标链表
+ * @param nodes	    节点列表
  */
 PJ_IDECL(void) pj_list_insert_nodes_before(pj_list_type *lst,
 					   pj_list_type *nodes);
 
 /**
- * Insert a node to the list after the specified element position.
+ * 在指定的元素位置之后向列表中插入节点
  *
- * @param pos	    The element in the list which will precede the inserted 
- *		    element.
- * @param node	    The element to be inserted after the position element.
+ * @param pos	    列表中位于插入元素之前的元素
+ * @param node	    要插入位置元素之后的元素
  *
  * @return void.
  */
@@ -151,11 +139,10 @@ PJ_IDECL(void) pj_list_insert_after(pj_list_type *pos, pj_list_type *node);
 
 
 /**
- * Insert the node to the front of the list. This is just an alias for
- * #pj_list_insert_after().
+ * 将节点插入列表的前面。这只是 pj_list_insert_after() 的别名
  *
- * @param list	The list. 
- * @param node	The element to be inserted.
+ * @param list	链表
+ * @param node	要插入的元素
  */
 PJ_INLINE(void) pj_list_push_front(pj_list_type *list, pj_list_type *node)
 {
@@ -164,26 +151,22 @@ PJ_INLINE(void) pj_list_push_front(pj_list_type *list, pj_list_type *node)
 
 
 /**
- * Insert all nodes in \a nodes to the target list.
+ * 将节点列表中的所有节点插入目标列表
  *
- * @param lst	    The target list.
- * @param nodes	    Nodes list.
+ * @param lst	    目标链表
+ * @param nodes	    节点列表
  */
 PJ_IDECL(void) pj_list_insert_nodes_after(pj_list_type *lst,
 					  pj_list_type *nodes);
 
 
 /**
- * Remove elements from the source list, and insert them to the destination
- * list. The elements of the source list will occupy the
- * front elements of the target list. Note that the node pointed by \a list2
- * itself is not considered as a node, but rather as the list descriptor, so
- * it will not be inserted to the \a list1. The elements to be inserted starts
- * at \a list2->next. If \a list2 is to be included in the operation, use
- * \a pj_list_insert_nodes_before.
+ * 从源列表中删除元素，然后将它们插入到目标列表中。源列表的元素将占据目标列表的前元素。
+ * 请注意，list2 本身所指向的节点不被视为节点，而是作为列表描述符，因此它不会被插入list1。
+ * 要插入的元素从 list2->next 开始。如果要在操作中包括 list2，请使用 pj_list_insert_nodes_before
  *
- * @param list1	The destination list.
- * @param list2	The source list.
+ * @param list1	目标链表
+ * @param list2	源链表
  *
  * @return void.
  */
@@ -191,17 +174,12 @@ PJ_IDECL(void) pj_list_merge_first(pj_list_type *list1, pj_list_type *list2);
 
 
 /**
- * Remove elements from the second list argument, and insert them to the list 
- * in the first argument. The elements from the second list will be appended
- * to the first list. Note that the node pointed by \a list2
- * itself is not considered as a node, but rather as the list descriptor, so
- * it will not be inserted to the \a list1. The elements to be inserted starts
- * at \a list2->next. If \a list2 is to be included in the operation, use
- * \a pj_list_insert_nodes_before.
+ * 从第二个 list 参数中删除元素，并将它们插入到第一个参数中的列表中。第二个列表中的元素将附加到第一个列表中。
+ * 请注意，list2 本身所指向的节点不被视为节点，而是作为列表描述符，因此它不会被插入 list1。要插入的元素从
+ * list2->next开始。如果要在操作中包括 list2，请使用 pj_list_insert_nodes_before
  *
- * @param list1	    The element in the list which will precede the inserted 
- *		    element.
- * @param list2	    The element in the list to be inserted.
+ * @param list1	    列表中位于插入元素之前的元素
+ * @param list2	    要插入的列表中的元素
  *
  * @return void.
  */
@@ -209,39 +187,34 @@ PJ_IDECL(void) pj_list_merge_last( pj_list_type *list1, pj_list_type *list2);
 
 
 /**
- * Erase the node from the list it currently belongs.
+ * 从节点当前所属的列表中删除该节点
  *
- * @param node	    The element to be erased.
+ * @param node	    要删除的元素
  */
 PJ_IDECL(void) pj_list_erase(pj_list_type *node);
 
 
 /**
- * Find node in the list.
+ * 在列表中查找节点
  *
- * @param list	    The list head.
- * @param node	    The node element to be searched.
+ * @param list	    链表头
+ * @param node	    要搜索的节点元素
  *
- * @return The node itself if it is found in the list, or NULL if it is not 
- *         found in the list.
+ * @return  如果在列表中找到节点，则返回节点本身；如果在列表中找不到节点，则返回NULL
  */
 PJ_IDECL(pj_list_type*) pj_list_find_node(pj_list_type *list, 
 					  pj_list_type *node);
 
 
 /**
- * Search the list for the specified value, using the specified comparison
- * function. This function iterates on nodes in the list, started with the
- * first node, and call the user supplied comparison function until the
- * comparison function returns ZERO.
+ * 使用指定的比较函数在列表中搜索指定的值。此函数在列表中的节点上迭代，
+ * 从第一个节点开始，并调用用户提供的比较函数，直到比较函数返回零
  *
- * @param list	    The list head.
- * @param value	    The user defined value to be passed in the comparison 
- *		    function
- * @param comp	    The comparison function, which should return ZERO to 
- *		    indicate that the searched value is found.
+ * @param list	    链表头
+ * @param value	    要在比较函数中传递的用户定义值
+ * @param comp	    比较函数，该函数应返回 0 以指示找到了搜索的值
  *
- * @return The first node that matched, or NULL if it is not found.
+ * @return  匹配的第一个节点，如果找不到则为NULL
  */
 PJ_IDECL(pj_list_type*) pj_list_search(pj_list_type *list, void *value,
 				       int (*comp)(void *value, 
@@ -250,11 +223,11 @@ PJ_IDECL(pj_list_type*) pj_list_search(pj_list_type *list, void *value,
 
 
 /**
- * Traverse the list to get the number of elements in the list.
+ * 遍历列表以获取列表中的元素数
  *
- * @param list	    The list head.
+ * @param list	    链表头
  *
- * @return	    Number of elements.
+ * @return	    元素数
  */
 PJ_IDECL(pj_size_t) pj_list_size(const pj_list_type *list);
 

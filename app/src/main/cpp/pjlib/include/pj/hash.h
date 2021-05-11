@@ -142,22 +142,15 @@ PJ_DECL(void) pj_hash_set_lower( pj_pool_t *pool, pj_hash_table_t *ht,
 
 
 /**
- * Associate/disassociate a value with the specified key. This function works
- * like #pj_hash_set(), except that it doesn't use pool (hence the np -- no 
- * pool suffix). If new entry needs to be allocated, it will use the entry_buf.
+ * 将值与指定 Key 关联/取消关联。此函数的工作方式类似于 pj_hash_set()，只是它不使用pool
+ * （因此是np--no pool后缀）。如果需要分配新条目，它将使用 entry_buf
  *
- * @param ht	    the hash table.
- * @param key	    the key.
- * @param keylen    the length of the key, or PJ_HASH_KEY_STRING to use the 
- *		    string length of the key.
- * @param hval	    if the value is not zero, then the hash table will use
- *		    this value to search the entry's index, otherwise it will
- *		    compute the key. This value can be obtained when calling
- *		    #pj_hash_get().
- * @param entry_buf Buffer which will be used for the new entry, when one needs
- *		    to be created.
- * @param value	    value to be associated, or NULL to delete the entry with
- *		    the specified key.
+ * @param ht	    哈希表
+ * @param key	    key
+ * @param keylen    key 的长度，或者使用 PJ_HASH_KEY_STRING
+ * @param hval		如果该值不为零，则哈希表将使用该值搜索条目的索引，否则将计算键。调用 pj_hash_get() 时可以获取此值
+ * @param entry_buf	当需要创建新条目时，将用于新条目的条目缓冲区
+ * @param value	    要关联的值，或 NULL 以删除具有指定键的条目
  */
 PJ_DECL(void) pj_hash_set_np(pj_hash_table_t *ht,
 			     const void *key, unsigned keylen, 
@@ -165,8 +158,7 @@ PJ_DECL(void) pj_hash_set_np(pj_hash_table_t *ht,
 			     void *value);
 
 /**
- * Variant of #pj_hash_set_np() with the key being converted to lowercase
- * when calculating the hash value.
+ * pj_hash_set_np() 的变体， 在计算哈希值时将密钥转换为小写
  *
  * @see pj_hash_set_np()
  */
@@ -177,45 +169,45 @@ PJ_DECL(void) pj_hash_set_np_lower(pj_hash_table_t *ht,
 			           void *value);
 
 /**
- * Get the total number of entries in the hash table.
+ * 获取哈希表中的条目总数
  *
- * @param ht	the hash table.
+ * @param ht	哈希表
  *
- * @return the number of entries in the hash table.
+ * @return 哈希表中的条目数
  */
 PJ_DECL(unsigned) pj_hash_count( pj_hash_table_t *ht );
 
 
 /**
- * Get the iterator to the first element in the hash table. 
+ * 获取哈希表中第一个元素的迭代器
  *
- * @param ht	the hash table.
- * @param it	the iterator for iterating hash elements.
+ * @param ht	哈希表
+ * @param it	用于迭代哈希元素的迭代器
  *
- * @return the iterator to the hash element, or NULL if no element presents.
+ * @return 哈希元素的迭代器，如果不存在元素，则为NULL
  */
 PJ_DECL(pj_hash_iterator_t*) pj_hash_first( pj_hash_table_t *ht,
 					    pj_hash_iterator_t *it );
 
 
 /**
- * Get the next element from the iterator.
+ * 从迭代器中获取下一个元素
  *
- * @param ht	the hash table.
- * @param it	the hash iterator.
+ * @param ht	哈希表
+ * @param it	哈希迭代器
  *
- * @return the next iterator, or NULL if there's no more element.
+ * @return 下一个迭代器，如果没有更多元素，则为NULL
  */
 PJ_DECL(pj_hash_iterator_t*) pj_hash_next( pj_hash_table_t *ht, 
 					   pj_hash_iterator_t *it );
 
 /**
- * Get the value associated with a hash iterator.
+ * 获取与哈希迭代器关联的值
  *
- * @param ht	the hash table.
- * @param it	the hash iterator.
+ * @param ht	哈希表
+ * @param it	哈希迭代器
  *
- * @return the value associated with the current element in iterator.
+ * @return 与迭代器中的当前元素关联的值
  */
 PJ_DECL(void*) pj_hash_this( pj_hash_table_t *ht,
 			     pj_hash_iterator_t *it );
