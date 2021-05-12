@@ -23,7 +23,7 @@
 
 /**
  * @file math.h
- * @brief Mathematics and Statistics.
+ * @brief 数学和统计学
  */
 
 #include <pj/string.h>
@@ -32,10 +32,11 @@
 PJ_BEGIN_DECL
 
 /**
- * @defgroup pj_math Mathematics and Statistics
+ * @defgroup pj_math 数学和统计学
  * @ingroup PJ_MISC
  * @{
  *
+ * 提供常用的数学常数和运算，以及标准统计计算（最小值、最大值、平均值、标准差）。统计计算是实时完成的（统计状态在每次新样本到来时更新）。
  * Provides common mathematics constants and operations, and also standard
  * statistics calculation (min, max, mean, standard deviation). Statistics
  * calculation is done in realtime (statistics state is updated on time each
