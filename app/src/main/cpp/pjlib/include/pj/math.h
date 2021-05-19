@@ -1,21 +1,6 @@
-/* $Id: math.h 3553 2011-05-05 06:14:19Z nanang $ */
-/* 
- * Copyright (C) 2008-2011 Teluu Inc. (http://www.teluu.com)
- * Copyright (C) 2003-2008 Benny Prijono <benny@prijono.org>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+/**
+ * 已完成：
+ *  数学统计量
  */
 
 #ifndef __PJ_MATH_H__
@@ -36,36 +21,32 @@ PJ_BEGIN_DECL
  * @ingroup PJ_MISC
  * @{
  *
- * 提供常用的数学常数和运算，以及标准统计计算（最小值、最大值、平均值、标准差）。统计计算是实时完成的（统计状态在每次新样本到来时更新）。
- * Provides common mathematics constants and operations, and also standard
- * statistics calculation (min, max, mean, standard deviation). Statistics
- * calculation is done in realtime (statistics state is updated on time each
- * new sample comes).
+ * 提供常用的数学常数和运算，以及标准统计计算（最小值、最大值、平均值、标准差）。统计计算是实时完成的（统计状态在每次新样本到来时更新）
  */
 
 /**
- * Mathematical constants
+ * 数学常量
  */
 #define PJ_PI		    3.14159265358979323846	/* pi	    */
 #define PJ_1_PI		    0.318309886183790671538	/* 1/pi	    */
 
 /**
- * Mathematical macro
+ * 数学宏
  */
 #define	PJ_ABS(x)	((x) >  0 ? (x) : -(x))
 #define	PJ_MAX(x, y)	((x) > (y)? (x) : (y))
 #define	PJ_MIN(x, y)	((x) < (y)? (x) : (y))
 
 /**
- * This structure describes statistics state.
+ * 此结构描述统计状态
  */
 typedef struct pj_math_stat
 {
-    int		     n;		/* number of samples	*/
-    int		     max;	/* maximum value	*/
-    int		     min;	/* minimum value	*/
-    int		     last;	/* last value		*/
-    int		     mean;	/* mean			*/
+    int		     n;		/* 样本数	*/
+    int		     max;	/* 最大值	*/
+    int		     min;	/* 最小值	*/
+    int		     last;	/* 最后一个值 	*/
+    int		     mean;	/* 均值			*/
 
     /* Private members */
 #if PJ_HAS_FLOATING_POINT
@@ -73,7 +54,7 @@ typedef struct pj_math_stat
 #else
     int		     mean_res_;	/* mean residu		*/
 #endif
-    pj_highprec_t    m2_;	/* variance * n		*/
+    pj_highprec_t    m2_;	/* 方差	*/
 } pj_math_stat;
 
 /**
@@ -104,9 +85,9 @@ PJ_INLINE(unsigned) pj_isqrt(unsigned i)
 }
 
 /**
- * Initialize statistics state.
+ * 初始化统计
  *
- * @param stat	    Statistic state.
+ * @param stat	    统计状态
  */
 PJ_INLINE(void) pj_math_stat_init(pj_math_stat *stat)
 {
@@ -114,10 +95,10 @@ PJ_INLINE(void) pj_math_stat_init(pj_math_stat *stat)
 }
 
 /**
- * Update statistics state as a new sample comes.
+ * 当新样本出现时更新统计状态
  *
- * @param stat	    Statistic state.
- * @param val	    The new sample data.
+ * @param stat	    统计状态
+ * @param val	    新的样本值
  */
 PJ_INLINE(void) pj_math_stat_update(pj_math_stat *stat, int val)
 {
@@ -163,11 +144,11 @@ PJ_INLINE(void) pj_math_stat_update(pj_math_stat *stat, int val)
 }
 
 /**
- * Get the standard deviation of specified statistics state.
+ * 获取指定统计状态的标准差
  *
- * @param stat	    Statistic state.
+ * @param stat	    统计状态
  *
- * @return	    The standard deviation.
+ * @return	    标准差
  */
 PJ_INLINE(unsigned) pj_math_stat_get_stddev(const pj_math_stat *stat)
 {
@@ -176,13 +157,11 @@ PJ_INLINE(unsigned) pj_math_stat_get_stddev(const pj_math_stat *stat)
 }
 
 /**
- * Set the standard deviation of statistics state. This is useful when
- * the statistic state is operated in 'read-only' mode as a storage of 
- * statistical data.
+ * 设置统计状态的标准差。当统计状态以“只读”模式作为统计数据的存储时，这很有用
  *
- * @param stat	    Statistic state.
+ * @param stat	    统计状态
  *
- * @param dev	    The standard deviation.
+ * @param dev	    标准差
  */
 PJ_INLINE(void) pj_math_stat_set_stddev(pj_math_stat *stat, unsigned dev)
 {

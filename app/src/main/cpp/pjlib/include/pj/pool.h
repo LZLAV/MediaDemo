@@ -20,8 +20,9 @@
 
 #include <pj/list.h>
 
-/* See if we use pool's alternate API.
- * The alternate API is used e.g. to implement pool debugging.
+/*
+ * 是否使用pool的备用API
+ * 备用API用于实现内存池调试
  */
 #if PJ_HAS_POOL_ALT_API
 #  include <pj/pool_alt.h>
@@ -33,141 +34,75 @@
 
 /**
  * @file pool.h
- * @brief Memory Pool.
+ * @brief 内存池
  */
 
 PJ_BEGIN_DECL
 
 /**
- * @defgroup PJ_POOL_GROUP Fast Memory Pool
+ * @defgroup PJ_POOL_GROUP 快速内存池
  * @brief
- * Memory pools allow dynamic memory allocation comparable to malloc or the 
- * new in operator C++. Those implementations are not desirable for very
- * high performance applications or real-time systems, because of the 
- * performance bottlenecks and it suffers from fragmentation issue.
+ * 内存池允许动态内存分配与 malloc 或 new 相媲美。这些实现对于高性能的应用程序或实时系统来说是不可取的，
+ * 因为存在性能瓶颈，而且还存在碎片问题
  *
- * \section PJ_POOL_INTRO_SEC PJLIB's Memory Pool
- * \subsection PJ_POOL_ADVANTAGE_SUBSEC Advantages
+ * \section PJ_POOL_INTRO_SEC PJLIB's 内存池
+ * \subsection PJ_POOL_ADVANTAGE_SUBSEC 优势
+ *
+ *
+ * 与传统的malloc/new操作符和其他内存池实现相比，PJLIB的池具有许多优势，因为：
+ *  -与其他内存池实现不同，它允许分配不同大小的内存块，
+ *  -非常非常快。
+ *      内存块分配不仅是一个O(1)操作，而且非常简单（只有几个指针算术运算），而且不需要锁定，任何互斥锁，
+ *  -高效的内存
+ *      Pool不跟踪应用程序分配的单个内存块，因此每个内存分配不需要额外的开销（除了可能额外的几个字节，最多为 PJ_POOL_ALIGNMENT-1，用于对齐内存）。
+ *      但请参见下面的@ref PJ_POOL_CAVEATS_SUBSEC
+ *  -它可以防止内存泄漏。
+ *      内存池本身就具有垃圾收集功能。实际上，不需要释放内存池中分配的块。
+ *      一旦池本身被销毁，以前从池中分配的所有块都将被释放。这将防止数十年来困扰程序员的内存泄漏，并且与传统的 malloc/new操作符相比，它提供了额外的性能优势。
+ *  更重要的是，PJLIB的内存池为应用程序提供了一些额外的可用性和灵活性：
+ *      -内存泄漏很容易追踪，因为内存池被分配了名称，应用程序可以检查系统中当前活动的池。
+ *      -根据设计，来自池的内存分配不是线程安全的。我们假设池将由更高级别的对象拥有，线程安全应该由该对象处理。这样可以实现非常快速的池操作，并防止不必要的锁定操作，
+ *      -默认情况下，内存池 API 的行为更像 C++ 新操作符，因为当内存块分配失败时，它将抛出 PJ_NO_MEMORY_EXCEPTION 异常（参见@ REF PJ_EXCEPT）。
+ *          这使得故障处理可以在更高级的函数上完成（而不是每次都检查 pj_pool_alloc() 的结果）。如果应用程序不喜欢这样，可以通过向池工厂提供不同的策略，在全局基础上更改默认行为。
+ *      -可以使用任何内存分配后端分配器/释放定位器。默认情况下，策略使用malloc（）和free（）来管理池的块，但应用程序可能使用不同的策略，例如从全局静态内存位置分配内存块
+ *
+ *
+ * \subsection PJ_POOL_PERFORMANCE_SUBSEC 性能
  * 
- * PJLIB's pool has many advantages over traditional malloc/new operator and
- * over other memory pool implementations, because:
- *  - unlike other memory pool implementation, it allows allocation of
- *    memory chunks of different sizes,
- *  - it's very very fast. 
- *    \n
- *    Memory chunk allocation is not only an O(1) 
- *    operation, but it's also very simple (just 
- *    few pointer arithmetic operations) and it doesn't require locking 
- *    any mutex,
- *  - it's memory efficient.
- *    \n
- *    Pool doesn't keep track individual memory chunks allocated by
- *    applications, so there is no additional overhead needed for each
- *    memory allocation (other than possible additional of few bytes, up to
- *    PJ_POOL_ALIGNMENT-1, for aligning the memory). 
- *    But see the @ref PJ_POOL_CAVEATS_SUBSEC below.
- *  - it prevents memory leaks. 
- *    \n
- *    Memory pool inherently has garbage collection functionality. In fact, 
- *    there is no need to free the chunks allocated from the memory pool.
- *    All chunks previously allocated from the pool will be freed once the
- *    pool itself is destroyed. This would prevent memory leaks that haunt
- *    programmers for decades, and it provides additional performance 
- *    advantage over traditional malloc/new operator.
+ * PJLIB的内存设计和精心实现的结果是一种内存分配策略，与标准 malloc()/free()（在 P4/3.0GHz Linux机器上每秒分配超过1.5亿次）相比，它可以将内存分配和释放速度提高30倍。
+ * （注意：当然，您的里程数可能会有所不同。您可以通过运行 pjlib-test 应用程序，了解PJLIB池在目标系统中比 malloc()/free() 提高性能的程度。
+
+创建池时，PJLIB要求应用程序指定初始池大小，并且一旦创建池，PJLIB就按该大小从系统分配内存。应用程序设计者必须仔细选择初始池大小，因为选择太大的值会导致系统内存的浪费。
+但游泳池会长出来。应用程序设计器可以通过指定创建池时的大小增量来指定池的大小增长方式。
+但是，池不能</b>收缩！由于没有释放内存块的功能，因此池无法将未使用的内存释放回系统。
+应用程序设计者必须注意，来自具有无限生命周期的池中的恒定内存分配可能会导致应用程序的内存使用量随时间的推移而增长。
+
+ * \subsection PJ_POOL_CAVEATS_SUBSEC 附加说明
  *
- * Even more, PJLIB's memory pool provides some additional usability and
- * flexibility for applications:
- *  - memory leaks are easily traceable, since memory pool is assigned name,
- *    and application can inspect what pools currently active in the system.
- *  - by design, memory allocation from a pool is not thread safe. We assumed
- *    that a pool will be owned by a higher level object, and thread safety 
- *    should be handled by that object. This enables very fast pool operations
- *    and prevents unnecessary locking operations,
- *  - by default, the memory pool API behaves more like C++ new operator, 
- *    in that it will throw PJ_NO_MEMORY_EXCEPTION exception (see 
- *    @ref PJ_EXCEPT) when memory chunk allocation fails. This enables failure
- *    handling to be done on more high level function (instead of checking
- *    the result of pj_pool_alloc() everytime). If application doesn't like
- *    this, the default behavior can be changed on global basis by supplying 
- *    different policy to the pool factory.
- *  - any memory allocation backend allocator/deallocator may be used. By
- *    default, the policy uses malloc() and free() to manage the pool's block,
- *    but application may use different strategy, for example to allocate
- *    memory blocks from a globally static memory location.
+ * 还有一些附加说明！
+ *  创建池时，PJLIB要求应用程序指定初始池大小，并且一旦创建池，PJLIB就按该大小从系统分配内存。应用程序设计者必须仔细选择初始池大小，因为选择太大的值会导致系统内存的浪费
+ *  但内存池是可以增长的。开发人员可以通过指定创建池时的大小增量来指定池的大小增长方式
+ *  但是，内存池不能收缩！由于没有释放内存块的功能，因此池无法将未使用的内存释放回系统
+ *  开发人员必须注意，来自具有无限生命周期的池中的恒定内存分配可能会导致应用程序的内存使用量随时间的推移而增长
  *
+ * \section PJ_POOL_USING_SEC 内存池的使用
  *
- * \subsection PJ_POOL_PERFORMANCE_SUBSEC Performance
- * 
- * The result of PJLIB's memory design and careful implementation is a
- * memory allocation strategy that can speed-up the memory allocations
- * and deallocations by up to <b>30 times</b> compared to standard
- * malloc()/free() (more than 150 million allocations per second on a
- * P4/3.0GHz Linux machine).
+ * 本节介绍如何使用PJLIB的内存池框架。
+ * 我们希望读者能够看到，PJLIB的内存池API非常简单。
  *
- * (Note: your mileage may vary, of course. You can see how much PJLIB's
- *  pool improves the performance over malloc()/free() in your target
- *  system by running pjlib-test application).
- *
- *
- * \subsection PJ_POOL_CAVEATS_SUBSEC Caveats
- *
- * There are some caveats though!
- *
- * When creating pool, PJLIB requires applications to specify the initial
- * pool size, and as soon as the pool is created, PJLIB allocates memory
- * from the system by that size. Application designers MUST choose the 
- * initial pool size carefully, since choosing too big value will result in
- * wasting system's memory.
- *
- * But the pool can grow. Application designer can specify how the
- * pool will grow in size, by specifying the size increment when creating
- * the pool.
- *
- * The pool, however, <b>cannot</b> shrink! Since there is <b>no</b> 
- * function to deallocate memory chunks, there is no way for the pool to 
- * release back unused memory to the system. 
- * Application designers must be aware that constant memory allocations 
- * from pool that has infinite life-time may cause the memory usage of 
- * the application to grow over time.
- *
- *
- * \section PJ_POOL_USING_SEC Using Memory Pool
- *
- * This section describes how to use PJLIB's memory pool framework.
- * As we hope the readers will witness, PJLIB's memory pool API is quite
- * straightforward. 
- *
- * \subsection PJ_POOL_USING_F Create Pool Factory
- * First, application needs to initialize a pool factory (this normally
- * only needs to be done once in one application). PJLIB provides
- * a pool factory implementation called caching pool (see @ref 
- * PJ_CACHING_POOL), and it is initialized by calling #pj_caching_pool_init().
- *
- * \subsection PJ_POOL_USING_P Create The Pool
- * Then application creates the pool object itself with #pj_pool_create(),
- * specifying among other thing the pool factory where the pool should
- * be created from, the pool name, initial size, and increment/expansion
- * size.
- *
- * \subsection PJ_POOL_USING_M Allocate Memory as Required
- * Then whenever application needs to allocate dynamic memory, it would
- * call #pj_pool_alloc(), #pj_pool_calloc(), or #pj_pool_zalloc() to
- * allocate memory chunks from the pool.
- *
- * \subsection PJ_POOL_USING_DP Destroy the Pool
- * When application has finished with the pool, it should call 
- * #pj_pool_release() to release the pool object back to the factory. 
- * Depending on the types of the factory, this may release the memory back 
- * to the operating system.
- *
- * \subsection PJ_POOL_USING_Dc Destroy the Pool Factory
- * And finally, before application quites, it should deinitialize the
- * pool factory, to make sure that all memory blocks allocated by the
- * factory are released back to the operating system. After this, of 
- * course no more memory pool allocation can be requested.
- *
- * \subsection PJ_POOL_USING_EX Example
- * Below is a sample complete program that utilizes PJLIB's memory pool.
+ * PJ_POOL_USING_F 创建池工厂
+ *  首先，应用程序需要初始化池工厂（这通常只需要在一个应用程序中完成一次）。PJLIB 提供了一个名为 caching pool 的池工厂实现（请参见@ref PJ_caching_pool），
+ *  它通过调用 pj_caching_pool_init() 进行初始化。
+ * PJ_POOL_USING_P 创建池
+ *  然后应用程序用 pj_pool_create() 创建池对象本身，并指定创建池的池工厂、池名称、初始大小和增量/扩展大小。
+ * PJ_POOL_USING_M 根据需要分配内存
+ *  然后，每当应用程序需要分配动态内存时，它都会调用 pj_pool_alloc()、pj_pool_calloc()或 pj_pool_zalloc()从池中分配内存块。
+ * PJ_POOL_USING_DP 销毁池
+ *  应用程序处理完池后，应该调用#pj_pool_release（），将池对象释放回工厂。根据工厂的类型，这可能会将内存释放回操作系统。
+ * PJ_POOL_USING_Dc 销毁内存池工厂
+ *  最后，在应用程序退出之前，应该取消池工厂的初始化，以确保工厂分配的所有内存块都释放回操作系统。在此之后，当然不能再请求内存池分配了。
+ * PJ_POOL_USING_EX 示例
+ *  下面是一个利用PJLIB内存池的完整程序示例
  *
  * \code
 
@@ -188,30 +123,30 @@ PJ_BEGIN_DECL
 	unsigned i;
 	pj_pool_t *pool;
 
-	// Must create pool before we can allocate anything
+	// 必须先创建池才能分配任何内容
 	pool = pj_pool_create(pfactory,	 // the factory
 			      "pool1",	 // pool's name
-			      4000,	 // initial size
-			      4000,	 // increment size
-			      NULL);	 // use default callback.
+			      4000,	 // 初始化大小
+			      4000,	 // 增量大小
+			      NULL);	 // 使用默认的回调
 	if (pool == NULL) {
 	    my_perror("Error creating pool", PJ_ENOMEM);
 	    return;
 	}
 
-	// Demo: allocate some memory chunks
+	// Demo: 分配一些内存块
 	for (i=0; i<1000; ++i) {
 	    void *p;
 
 	    p = pj_pool_alloc(pool, (pj_rand()+1) % 512);
 
-	    // Do something with p
+	    // p 的一些操作
 	    ...
 
-	    // Look! No need to free p!!
+	    // 不需要释放 p
 	}
 
-	// Done with silly demo, must free pool to release all memory.
+	// 必须释放内存池去释放所有内存
 	pj_pool_release(pool);
    }
 
@@ -220,21 +155,20 @@ PJ_BEGIN_DECL
 	pj_caching_pool cp;
 	pj_status_t status;
 
-        // Must init PJLIB before anything else
+        // 必须提前初始化 PJLIB
 	status = pj_init();
 	if (status != PJ_SUCCESS) {
 	    my_perror("Error initializing PJLIB", status);
 	    return 1;
 	}
 
-	// Create the pool factory, in this case, a caching pool,
-	// using default pool policy.
+	//  使用默认池策略创建池工厂（在本例中为缓存池）。
 	pj_caching_pool_init(&cp, NULL, 1024*1024 );
 
 	// Do a demo
 	pool_demo_1(&cp.factory);
 
-	// Done with demos, destroy caching pool before exiting app.
+	// 应用退出，销毁缓存池
 	pj_caching_pool_destroy(&cp);
 
 	return 0;
@@ -242,119 +176,100 @@ PJ_BEGIN_DECL
 
    \endcode
  *
- * More information about pool factory, the pool object, and caching pool
- * can be found on the Module Links below.
+ * 关于池工厂、池对象和缓存池的更多信息可以在下面的模块链接中找到
  */
 
 
 /**
- * @defgroup PJ_POOL Memory Pool Object
+ * @defgroup PJ_POOL 内存池对象
  * @ingroup PJ_POOL_GROUP
  * @brief
- * The memory pool is an opaque object created by pool factory.
- * Application uses this object to request a memory chunk, by calling
- * #pj_pool_alloc(), #pj_pool_calloc(), or #pj_pool_zalloc(). 
- * When the application has finished using
- * the pool, it must call #pj_pool_release() to free all the chunks previously
- * allocated and release the pool back to the factory.
+ * 内存池是由池工厂创建的不透明对象。
+ * 应用程序通过调用 pj_pool_alloc()、pj_pool_calloc() 或 pj_pool_zalloc()，使用此对象请求内存块。应用程序使用完池后，必须调用 pj_pool_release()，
+ * 释放先前分配的所有块，并将池释放回工厂。
  *
- * A memory pool is initialized with an initial amount of memory, which is
- * called a block. Pool can be configured to dynamically allocate more memory 
- * blocks when it runs out of memory. 
+ * 内存池是用初始内存量初始化的，称为块。池可以配置为在内存耗尽时动态分配更多内存块。
+ * 池不按用户跟踪单个内存分配，用户也不必释放这些独立的分配。这使得内存分配简单且非常快速。当池本身被销毁时，从池中分配的所有内存都将被销毁
  *
- * The pool doesn't keep track of individual memory allocations
- * by user, and the user doesn't have to free these indidual allocations. This
- * makes memory allocation simple and very fast. All the memory allocated from
- * the pool will be destroyed when the pool itself is destroyed.
+ * \section PJ_POOL_THREADING_SEC 有关线程策略的详细信息
+ * -根据设计，来自池的内存分配不是线程安全的。我们假设一个池将由一个对象拥有，线程安全应该由该对象处理。因此，这些函数不是线程安全的：
+ *  - pj_pool_alloc
+ *  - pj_pool_calloc
+ *  -以及其他池统计函数。
+ *  -池工厂中的线程由创建工厂时为工厂设置的策略决定。
  *
- * \section PJ_POOL_THREADING_SEC More on Threading Policies
- * - By design, memory allocation from a pool is not thread safe. We assumed 
- *   that a pool will be owned by an object, and thread safety should be 
- *   handled by that object. Thus these functions are not thread safe: 
- *	- #pj_pool_alloc, 
- *	- #pj_pool_calloc, 
- *	- and other pool statistic functions.
- * - Threading in the pool factory is decided by the policy set for the
- *   factory when it was created.
+ * \section PJ_POOL_EXAMPLES_SEC 示例
  *
- * \section PJ_POOL_EXAMPLES_SEC Examples
- *
- * For some sample codes on how to use the pool, please see:
+ * 有关如何使用池的一些示例代码，请参见：
  *  - @ref page_pjlib_pool_test
  *
  * @{
  */
 
 /**
- * The type for function to receive callback from the pool when it is unable
- * to allocate memory. The elegant way to handle this condition is to throw
- * exception, and this is what is expected by most of this library 
- * components.
+ * 函数无法分配内存时从池接收回调的类型。处理这种情况的优雅方法是抛出异常，这是大多数库组件所期望的
  */
 typedef void pj_pool_callback(pj_pool_t *pool, pj_size_t size);
 
 /**
- * This class, which is used internally by the pool, describes a single 
- * block of memory from which user memory allocations will be allocated from.
+ * 这个类由池内部使用，它描述了一个内存块，从中可以分配用户内存分配
  */
 typedef struct pj_pool_block
 {
     PJ_DECL_LIST_MEMBER(struct pj_pool_block);  /**< List's prev and next.  */
-    unsigned char    *buf;                      /**< Start of buffer.       */
-    unsigned char    *cur;                      /**< Current alloc ptr.     */
-    unsigned char    *end;                      /**< End of buffer.         */
+    unsigned char    *buf;                      /**< 缓存区的起始地址       */
+    unsigned char    *cur;                      /**< 当前分配的指针     */
+    unsigned char    *end;                      /**< 缓存区的结束         */
 } pj_pool_block;
 
 
 /**
- * This structure describes the memory pool. Only implementors of pool factory
- * need to care about the contents of this structure.
+ * 此结构描述内存池。只有池工厂的实现者需要关心这个结构的内容
  */
 struct pj_pool_t
 {
-    PJ_DECL_LIST_MEMBER(struct pj_pool_t);  /**< Standard list elements.    */
+    PJ_DECL_LIST_MEMBER(struct pj_pool_t);  /**< 标准列表成员    */
 
-    /** Pool name */
+    /** 内存池的名称 */
     char	    obj_name[PJ_MAX_OBJ_NAME];
 
-    /** Pool factory. */
+    /** 内存池的工厂类 */
     pj_pool_factory *factory;
 
     /** Data put by factory */
     void	    *factory_data;
 
-    /** Current capacity allocated by the pool. */
+    /** 池分配的当前容量 */
     pj_size_t	    capacity;
 
-    /** Size of memory block to be allocated when the pool runs out of memory */
+    /** 增量 */
     pj_size_t	    increment_size;
 
-    /** List of memory blocks allcoated by the pool. */
+    /** 内存池所分配的所有内存块的列表 */
     pj_pool_block   block_list;
 
-    /** The callback to be called when the pool is unable to allocate memory. */
+    /** 当池无法分配内存时要调用的回调 */
     pj_pool_callback *callback;
 
 };
 
 
 /**
- * Guidance on how much memory required for initial pool administrative data.
+ * 定义初始内存池管理数据需要的内存大小
  */
 #define PJ_POOL_SIZE	        (sizeof(struct pj_pool_t))
 
 /** 
- * Pool memory alignment (must be power of 2). 
+ * 内存池对齐，必须是2的幂
  */
 #ifndef PJ_POOL_ALIGNMENT
 #   define PJ_POOL_ALIGNMENT    4
 #endif
 
 /**
- * Create a new pool from the pool factory. This wrapper will call create_pool
- * member of the pool factory.
+ * 从池工厂创建新池。此包装器将调用池工厂的 create_pool 成员
  *
- * @param factory	    The pool factory.
+ * @param factory	    内存池工厂
  * @param name		    The name to be assigned to the pool. The name should 
  *			    not be longer than PJ_MAX_OBJ_NAME (32 chars), or 
  *			    otherwise it will be truncated.
