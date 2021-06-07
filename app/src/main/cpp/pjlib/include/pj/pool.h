@@ -270,25 +270,13 @@ struct pj_pool_t
  * 从池工厂创建新池。此包装器将调用池工厂的 create_pool 成员
  *
  * @param factory	    内存池工厂
- * @param name		    The name to be assigned to the pool. The name should 
- *			    not be longer than PJ_MAX_OBJ_NAME (32 chars), or 
- *			    otherwise it will be truncated.
- * @param initial_size	    The size of initial memory blocks taken by the pool.
- *			    Note that the pool will take 68+20 bytes for 
- *			    administrative area from this block.
- * @param increment_size    the size of each additional blocks to be allocated
- *			    when the pool is running out of memory. If user 
- *			    requests memory which is larger than this size, then 
- *			    an error occurs.
- *			    Note that each time a pool allocates additional block, 
- *			    it needs PJ_POOL_SIZE more to store some 
- *			    administrative info.
- * @param callback	    Callback to be called when error occurs in the pool.
- *			    If this value is NULL, then the callback from pool
- *			    factory policy will be used.
- *			    Note that when an error occurs during pool creation, 
- *			    the callback itself is not called. Instead, NULL 
- *			    will be returned.
+ * @param name		    要分配给池的名称。名称不应长于 PJ_MAX_OBJ_NAME（32个字符），否则将被截断
+ * @param initial_size	池使用的初始内存块的大小。
+ *                      请注意，对于来自此块的管理区域，池将占用 68+20 字节
+ * @param increment_size    池内存不足时要分配的每个附加块的大小。如果用户请求的内存大于此大小，则会发生错误。
+ *                          注意，每次池分配额外的块时，都需要 PJ_POOL_SIZE 来存储一些管理信息
+ * @param callback      当池中发生错误时要调用的回调。如果此值为 NULL，则将使用池工厂策略的回调。
+ *                      请注意，在创建池期间发生错误时，不会调用回调本身。相反，将返回NULL
  *
  * @return                  The memory pool, or NULL.
  */
